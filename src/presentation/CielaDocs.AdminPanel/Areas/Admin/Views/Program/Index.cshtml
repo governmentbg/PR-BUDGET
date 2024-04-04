@@ -1,0 +1,345 @@
+﻿@using CielaDocs.Application.Dtos
+@model CourtDto
+@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .select2-dropdown {
+        z-index: 10001;
+    }
+</style>
+<div class="spacer_20"></div>
+<h3>БЮДЖЕТНИ ПРОГРАМИ</h3>
+<div style="display:inline-block">Избор</div>
+<select class="form-control" id="selectProgram" style="width:280px;display:inline-block;padding-left:5px;">
+    <option> </option>
+</select>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="programTitle" style="color:red;"></div>
+<div id="grid"></div>
+<span>Конто кодове:&nbsp;</span><div id="elem-info" style="margin-top:10px;color:red;"></div>
+@await Html.PartialAsync("_ModalDialogPartial")
+@section scripts {
+    <script>
+        const anyModal = $('#anyModal');
+        const anyContent = $('#anyContent');
+        const anyTitle = $('#anyTitle');
+        var selectedId = 0;
+        let selectedFnSubAreaId = 0;
+        $('#btnAnySave').on('click', saveRow);
+        $('#btnAnyCancel').on('click', function () {
+            anyModal.modal('hide');
+            $("#grid").dxDataGrid("instance").refresh();
+        });
+
+        function addProgram() {
+            let spurl = EduDl.baseUrl + "Program/AddProgramPartial";
+            anyContent.empty();
+            anyTitle.text('Добавяне');
+            anyContent.html('<p>Зареждам данни…</p>')
+            $.ajax({
+                type: 'Get',
+                url: spurl,
+                data: { functionalSubAreaId: selectedFnSubAreaId },
+                success: function (data) {
+                    anyContent.html(data);
+                }
+            });
+
+            anyModal.modal('show');
+        }
+        function saveRow() {
+
+            var postData = $("#anyForm").serialize();
+
+
+            $.ajax({
+                beforeSend: function (request) {
+                    request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                },
+                url: "@Url.Action("Save", "Program",new {area="Admin"})", method: 'POST', data: postData
+
+            })
+                .done(function (result) {
+                    if (result.success === true) {
+                        $("#grid").dxDataGrid("instance").refresh();
+                        anyModal.modal('hide');
+                        DevExpress.ui.notify(result.msg);
+
+                    }
+                    else {
+                        DevExpress.ui.notify(result.msg);
+                    }
+
+                })
+                .fail(function (e) {
+                    DevExpress.ui.notify('Failed to save! ' + e);
+                    anyModal.modal('hide');
+                });
+        };
+
+
+
+        $(() => {
+
+
+            $("#selectProgram").select2({
+                placeholder: "",
+                allowClear: true,
+                ajax: {
+                    url: "@Url.Action("GetFunctionalSubArea", "Noms",new {area="Admin"} )",
+                    contentType: "application/json; charset=utf-8",
+                    data: function (params) {
+                        var query =
+                        {
+                            term: params.term,
+                        };
+                        return query;
+                    },
+                    processResults: function (result) {
+                        return {
+                            results: $.map(result, function (item) {
+                                return {
+                                    id: item.Id,
+                                    text: item.Name
+                                };
+                            }),
+                        };
+                    }
+                }
+            }).on('change', function (e) {
+                selectedFnSubAreaId = $(e.currentTarget).val();
+                $('#programTitle').empty();
+                $('#programTitle').text($('#selectProgram :selected').text());
+                $("#grid").dxDataGrid("instance").refresh();
+            });
+            //end of ------
+
+            $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(EduDl.baseUrl + "Noms/GetProgramDefItemsByProgramId", 'Get', { id: selectedFnSubAreaId });
+                        }
+                    }),
+                }),
+                paging: {
+                    pageSize: 10,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                columns: [{
+                    dataField: "PrnCode",
+                    width: "5%",
+                    caption: ""
+                },
+                    
+                    {
+                        dataField: "Name",
+                        width: "45%",
+                        caption: "Наименование"
+                },
+                {
+                    dataField: "RowNum",
+                    width: "10%",
+                    caption: "№"
+                },
+                    {
+                        dataField: "ParentRowNum",
+                        width: "10%",
+                        caption: "Към ред №"
+                    }
+                    , {
+                        dataField: "IsActive",
+                        caption: "[A]",
+                        width: "4%",
+                        cellTemplate: function (element, info) {
+                            if (info.text == 'Да') {
+                                element.append("<div><img alt='.' src='../images/green-flag.png'></img></div>");
+                            }
+                            else {
+                                element.append("<div><img alt='.' src='../images/red-flag.png'></img></div>");
+                            }
+
+                        },
+                }, {
+                    dataField: "ValueAllowed",
+                    caption: "Въвеждане",
+                    width: "8%",
+                    cellTemplate: function (element, info) {
+                        if (info.text == 'Да') {
+                            element.append("<div><img alt='.' src='../images/green-flag.png'></img></div>");
+                        }
+                        else {
+                            element.append("<div><img alt='.' src='../images/red-flag.png'></img></div>");
+                        }
+
+                    },
+                },
+                    , {
+                    dataField: "IsCalculated",
+                    caption: "Изчисляем ред",
+                    width: "10%",
+                    cellTemplate: function (element, info) {
+                        if (info.text == 'Да') {
+                            element.append("<div><img alt='.' src='../images/green-flag.png'></img></div>");
+                        }
+                        else {
+                            element.append("<div><img alt='.' src='../images/red-flag.png'></img></div>");
+                        }
+
+                    },
+                },
+
+                {
+                    dataField: "KontoCodes",
+                    width: "10%",
+                    caption: "Конто"
+                },
+
+                {
+                    dataField: "ProgCode",
+                    width: "10%",
+                    caption: "Код програма"
+                },
+                    {
+                        type: 'buttons',
+                        width: 96,
+                        buttons: [{
+                            hint: 'Редакция',
+                            icon: 'edit',
+
+                            onClick(e) {
+                                editProgramDef(e.row.data.Id)
+                                e.component.refresh(true);
+                                e.event.preventDefault();
+                            },
+                        }
+                        ],
+                    }
+                ],
+
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                onSelectionChanged: function (items) {
+                    if (items.selectedRowsData[0]) {
+                        selectedId = items.selectedRowsData[0].Id;
+                    }
+                },
+                focusedRowEnabled: true,
+                onFocusedRowChanged(e) {
+                    if (e) {
+                        getExtraDataItem(e.row);
+                    }
+                },
+            });
+
+
+        });
+        async function getExtraDataItem(row) {
+
+
+            $('#elem-info').empty();
+            $('#elem-info').html(row.data.KontoCodes);
+            return false;
+        }
+        function editProgramDef(id) {
+            let url = EduDl.baseUrl + "Program/EditProgramPartial";
+            anyContent.empty();
+            anyTitle.text('Редакция');
+            anyContent.html('<p>Зареждам данни…</p>')
+            $.ajax({
+                type: 'Get',
+                url: url,
+                data: { id: id },
+                success: function (data) {
+                    anyContent.html(data);
+                }
+            });
+            anyModal.modal('show');
+        }
+        const menuData = [
+            {
+                id: '1',
+                name: 'Нов',
+                icon: '../images/add.png',
+
+            },
+            {
+                id: '6_1',
+                name: 'Експорт',
+                icon: '../images/exporter.svg',
+
+
+            }, {
+                id: '4',
+                name: 'Обнови',
+                icon: '../images/refresh.png',
+
+            }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+                        case '1': addProgram();
+                            break;
+
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("Owners");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "Owners.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+
+
+    </script>
+}

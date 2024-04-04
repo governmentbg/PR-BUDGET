@@ -1,0 +1,35 @@
+﻿<div id="commonModal" class="modal modal fade" role="dialog" aria-labelledby="commonTitle" aria-hidden="true" data-backdrop="false">
+   <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header" >
+
+                <h6 class="modal-title" id="commonTitle">
+                 @*  Действие*@
+                </h6>
+                <button type="button" class="close"
+                        data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                    <span class="sr-only">Close</span>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body" id="commonContent">
+            </div>
+            <div class="modal-footer">
+      </div>
+        </div>
+    </div>
+</div>
+<script>
+    $('.modal-content').resizable({
+        minHeight: 300,
+        minWidth: 300
+    });
+    $('.modal-dialog').draggable();
+    $('#commonModal').on('show.bs.modal', function () {
+        $(this).find('.modal-body').css({
+            'max-height': '100%'
+        });
+    });
+</script>

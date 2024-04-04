@@ -1,0 +1,102 @@
+﻿<h4>Единна бюджетна класификация</h4>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+
+<div id="ebks"></div>
+<script>
+    $(() => {
+        const tlistData = new DevExpress.data.DataSource({
+            store: new DevExpress.data.CustomStore({
+                key: 'Id',
+                load() {
+                    return sendRequest(EduDl.baseUrl + "Ebk/GetTreeListData", 'Get', {});
+                }
+            }),
+        });
+        $('#ebks').dxTreeList({
+            dataSource: tlistData,
+            rootValue: 0,
+            keyExpr: 'Id',
+            parentIdExpr: 'Head_Id',
+            columnAutoWidth: true,
+            selection: {
+                mode: 'single',
+            },
+            columns: [{
+                dataField: 'Name',
+                caption: 'Наименование',
+            }],
+            showRowLines: true,
+            showBorders: true,
+            columnAutoWidth: true,
+        });
+    });
+    const menuData = [
+        {
+            id: '1',
+            name: 'Нов',
+            icon: '../images/add.png',
+
+        },
+        {
+            id: '2',
+            name: 'Редакция',
+            icon: '../images/edit.svg',
+
+        },
+        {
+            id: '6_1',
+            name: 'Експорт',
+            icon: '../images/exporter.svg',
+
+
+        }, {
+            id: '4',
+            name: 'Обнови',
+            icon: '../images/refresh.png',
+
+        }];
+    const dxMenu = $('#menu').dxMenu({
+        dataSource: menuData,
+        hideSubmenuOnMouseLeave: false,
+        displayExpr: 'name',
+        onItemClick(data) {
+            const item = data.itemData;
+            if (item.id) {
+
+                switch (item.id) {
+                    case '1': javascript:void(0);
+                        break;
+                    case '2': javascript: void (0);
+                        break;
+                    case '4':
+                        $("#ebks").dxTreeList("instance").refresh();
+                        break;
+                    case '6_1':
+                        var workbook = new ExcelJS.Workbook();
+                        var worksheet = workbook.addWorksheet("Owners");
+
+                        DevExpress.excelExporter.exportDataGrid({
+                            component: $("#grid").dxDataGrid("instance"),
+                            worksheet: worksheet
+                        }).then(function () {
+                            workbook.xlsx.writeBuffer().then(function (buffer) {
+                                saveAs(new Blob([buffer], { type: "application/octet-stream" }), "Owners.xlsx");
+                            });
+                        });
+                        break;
+                }
+            }
+        },
+    }).dxMenu('instance');
+
+    const showSubmenuModes = [{
+        name: 'onHover',
+        delay: { show: 0, hide: 500 },
+    }, {
+        name: 'onClick',
+        delay: { show: 0, hide: 300 },
+    }];
+
+
+</script>

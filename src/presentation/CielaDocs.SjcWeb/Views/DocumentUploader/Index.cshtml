@@ -1,0 +1,166 @@
+﻿@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+}
+<style type="text/css">
+    .fileUpload {
+        position: relative;
+        overflow: hidden;
+        margin: 10px;
+    }
+
+        .fileUpload input.upload {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 0;
+            padding: 0;
+            /* font-size: 20px;*/
+            cursor: pointer;
+            opacity: 0;
+            filter: alpha(opacity=0);
+        }
+</style>
+<div class="spacer_20"></div>
+<h3>
+    <img src="~/images/Auto-Archive-WF.png" alt="Scheduler" title="Scheduler"> Архив на документи
+</h3>
+<div class="spacer_10"></div>
+
+<script>
+    $(() => {
+
+        $('#divUploading').hide();
+
+        var customProvider = new DevExpress.fileManagement.CustomFileSystemProvider({
+            getItems: function (pathInfo) {
+                var url = "/api/docarchive/getitems";
+                var data = { pathInfo: pathInfo.key };
+                return SendAjaxRequest(url, data);
+            },
+            deleteItem: function (item) {
+                var url = "/api/docarchive/DeleteItem";
+                var data = { pathInfo: item.key };
+                return SendAjaxRequest(url, data);
+            },
+            renameItem: function (item, newName) {
+                var url = "/api/docarchive/RenameItem";
+                var data = { pathInfo: item.key, newName: newName };
+                return SendAjaxRequest(url, data);
+            },
+            createDirectory: function (parentDir, name) {
+                var url = "/api/docarchive/CreateDirectory";
+                var data = { pathInfo: parentDir.key, name: name };
+                return SendAjaxRequest(url, data);
+            },
+            moveItem: function (item, destinationDirectory) {
+                var url = "/api/docarchive/MoveItem";
+                var data = { pathInfo: item.key, destinationDirectory: destinationDirectory.key };
+                return SendAjaxRequest(url, data);
+            },
+            copyItem: function (item, destinationDirectory) {
+                var url = "/api/docarchive/CopyItem";
+                var data = { pathInfo: item.key, destinationDirectory: destinationDirectory.key };
+                return SendAjaxRequest(url, data);
+            },
+
+            downloadItems: function (items) {
+                var myitems = [];
+                items.forEach(item => {
+                    myitems.push(item.key);
+                });
+                var json = encodeURIComponent(JSON.stringify(myitems));
+                var a = document.createElement("a");
+                document.body.appendChild(a);
+                a.href = "/api/docarchive/DownloadItems/" + json;
+                a.download = items.length == 1 ? items[0].name : "archive.zip";
+                a.click();
+            },
+            uploadFileChunk: function (file, uploadInfo, destinationDirectory) {
+                const formData = new FormData();
+                if (uploadInfo.chunkIndex === 0) {
+                    uploadInfo.customData.uploadId = new DevExpress.data.Guid().toString();
+                }
+                formData.append('chunkMetadata', JSON.stringify({
+                    uploadId: uploadInfo.customData.uploadId,
+                    fileName: file.name,
+                    index: uploadInfo.chunkIndex,
+                    totalCount: uploadInfo.chunkCount,
+                    fileSize: file.size
+                }));
+                formData.append('fileChunk', uploadInfo.chunkBlob);
+                formData.append('destinationDirectory', JSON.stringify(destinationDirectory));
+                var url = "/api/docarchive/UploadFileChunk";
+                return SendAjaxRequest(url, formData, "post");
+            }
+        });
+
+
+        function SendAjaxRequest(url, data, requestType = "get") {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: url,
+                    data: data,
+                    type: requestType,
+                    dataType: 'json',
+                    contentType: requestType == "get" ? "application/json; charset=utf-8" : false,
+                    processData: requestType == "get",
+                    async: false,
+                    success: function (response) {
+                        if (response.success == false) {
+                            reject(new DevExpress.fileManagement.FileSystemError(response.errorCode, null, response.errorText));
+                        }
+                        else {
+                            resolve(response.result)
+                        }
+                    }
+                });
+            });
+        }
+       const fileManager= $('#file-manager').dxFileManager({
+            name: 'fileManager',
+            permissions: {
+                create: true,
+                download: true,
+                copy: true,
+                move: true,
+                delete: true,
+                rename: true,
+                upload: true
+            },
+            fileSystemProvider: customProvider,
+            rootFolderName: 'localdocarchive',
+            onSelectedFileOpened(e) {
+                const extension = e.file.name.substring(e.file.name.lastIndexOf('.') );
+                if (!fileExtensions.includes(extension.toLowerCase())) {
+                    DevExpress.ui.dialog.alert('Този файл не може да бъде отворен от системата. Можете да го изтеглите и прегледате.','Внимание');
+                    return;
+                }
+                openFile(fileManager.getSelectedItems())
+            },
+        }).dxFileManager('instance');
+        const fileExtensions = ['.txt','.rtf','.xlsx','.xlsm','.docx','.pdf'];
+
+      
+        function openFile(items) {
+            var myitems = [];
+            items.forEach(item => {
+                myitems.push(item.key);
+            });
+            var json = encodeURIComponent(JSON.stringify(myitems));
+            var a = document.createElement("a");
+            document.body.appendChild(a);
+            a.href = "/api/docarchive/OpenFile/" + json;
+            a.setAttribute('target', '_blank');
+            a.click();
+        }
+    });
+
+
+</script>
+
+<form>
+    <div id="file-manager"></div>
+</form>

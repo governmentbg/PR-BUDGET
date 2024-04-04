@@ -1,0 +1,372 @@
+﻿@using CielaDocs.Application.Dtos
+@using System.Linq
+@using CielaDocs.SjcWeb.Models;
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    Layout = "~/Views/Shared/_LayoutMax.cshtml";
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    var court = ViewData["court"] as CielaDocs.Application.Dtos.CourtDto;
+    var mainArea = $"{ViewBag.FunctionalAreaName}";
+    var mainSubArea = $"{ViewBag.FunctionalSubAreaName}";
+    var title = $" Отчетна единица: {@court?.Name}, година: {ViewBag.Year} месец: {Toolbox.MonthStr[(int)ViewBag.Month]}";
+}
+<h3></h3>
+<div class="spacer_20"></div>
+<h3>@mainArea</h3>
+<h3>@mainSubArea</h3>
+<div class="spacer_5"></div>
+<h4>@title</h4>
+<div class="spacer_5"></div>
+<div id="typeOfIndicatorFilter" style="width:180px;display:inline-block;padding-left:5px;"></div><div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="grid"></div>
+<div class="school-info" id="school-info" style="color: #bf4e6a;"></div>
+@await Html.PartialAsync("_ModalDialogPartial")
+@Html.Hidden("CourtId",@court?.Id)
+@section scripts {
+    <script>
+        const anyModal = $('#anyModal');
+        const anyContent = $('#anyContent');
+        const anyTitle = $('#anyTitle');
+        var selectedId = 0;
+        let selectedTypeOfIndicatorId = 0;
+        $('#btnAnyCancel').on('click', function () {
+            anyModal.modal('hide');
+            $("#grid").dxDataGrid("instance").refresh();
+        });
+        $('#btnAnySave').on('click', Save);
+
+        function Save() {
+
+            var postData = $("#anyForm").serialize();
+
+            let inputs = document.getElementById("anyForm").elements;
+            let mainDataId = inputs["MainDataId"].value;
+            let mainIndicatorsId = inputs["MainIndicatorsId"].value;
+           
+            $.ajax({
+                beforeSend: function (request) {
+                    request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                },
+                url: "@Url.Action("SaveMainDataItems", "MainDataPeriod")", method: 'POST', data: postData
+
+            })
+                .done(function (result) {
+                    if (result.success === true) {
+                        $("#grid").dxDataGrid("instance").refresh();
+                        anyModal.modal('hide');
+                       
+                    }
+                    else {
+                        DevExpress.ui.dialog.alert(result.msg);
+                    }
+                })
+                .fail(function (e) {
+
+                    DevExpress.ui.notify('Failed to save! ' + e);
+                    anyModal.modal('hide');
+                });
+
+
+
+        };
+       
+        $(() => {
+
+            $('#typeOfIndicatorFilter').dxSelectBox({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        loadMode: "raw",
+                        load() {
+                            return sendRequest(Ciela.baseUrl + "Noms/GetTypeOfIndicator", 'Get', {});
+                        }
+                    }),
+                }),
+                value: 0,
+                valueExpr: 'Id',
+                displayExpr: 'Name',
+                label: "Вид показатели",
+                labelMode: "floating",
+                stylingMode:"underlined",
+                onValueChanged(data) {
+                    selectedTypeOfIndicatorId = data.value;
+                    $("#grid").dxDataGrid("instance").refresh();
+                },
+            });
+
+            $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(Ciela.baseUrl + "MainDataPeriod/GetMainDataGrid", 'Get', { typeOfIndicatorId: selectedTypeOfIndicatorId });
+                        },
+                        update(key, values) {
+                            return sendRequest(Ciela.baseUrl + "MainDataPeriod/UpdateMainData", 'Post', {
+                                key: key,
+                                values: JSON.stringify(values),
+                            });
+                        },
+                    }),
+                }),
+                paging: {
+                    pageSize: 50,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                decimalSeparator: '.',
+                columns: [
+                    {
+                        dataField: "Code",
+                        width: "5%",
+                        caption: "Код"
+                    },
+
+                    {
+                        dataField: "MainIndicatorName",
+                        width: "50%",
+                        caption: "Наименование"
+                    },
+                    {
+                        dataField: "TypeOfIndicatorName",
+                        width: "10%",
+                        caption: "Тип"
+                    },
+                    {
+                        dataField: "MeasureName",
+                        width: "10%",
+                        caption: "Мернa единица"
+                    },
+                    {
+                        dataField: "Nvalue",
+                        width: "10%",
+                        caption: "Изчислена С-т",
+                        alllowEditing: false,
+                        valueFormat: '#0.00',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                    {
+                        dataField: "EnteredOn",
+                        width: "10%",
+                        caption: "Въведено на",
+                        alllowEditing: false,
+                        valueFormat: 'dd.MM.yyyy',
+                        dataType: 'date',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                    {
+                        dataField: "EnteredValue",
+                        width: "10%",
+                        caption: "Въведена С-т",
+                        alllowEditing: true,
+                        valueFormat: '#0.00',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+
+                    {
+                        type: 'buttons',
+                        width: 96,
+                        buttons: [{
+                            hint: 'Входни данни',
+                            icon: 'edit',
+
+                            onClick(e) {
+                                setMainDataItem(e.row.data.Id)
+                                e.component.refresh(true);
+                                e.event.preventDefault();
+                            },
+                        }
+                        ],
+                    }
+
+                ],
+                editing: {
+                    mode: 'cell',
+                    allowUpdating: true,
+                    allowDeleting: false,
+                    allowAdding: false,
+                },
+                onEditorPreparing: function (e) {
+                    if (e.dataField != "EnteredValue") e.editorOptions.disabled = true
+                    if (e.dataField === "EnteredValue" && e.parentType === "dataRow") {
+                        const defaultValueChangeHandler = e.editorOptions.onValueChanged;
+                        e.editorOptions.onValueChanged = function (args) { // Override the default handler
+                            defaultValueChangeHandler(args);
+                        }
+                    }
+                    if (e.dataField === "EnteredOn" && e.parentType === "dataRow") {
+                        const defaultValueChangeHandler = e.editorOptions.onValueChanged;
+                        e.editorOptions.onValueChanged = function (args) { // Override the default handler
+                            defaultValueChangeHandler(args);
+                        }
+                    }
+                },
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                focusedRowEnabled: true,
+                onFocusedRowChanged(e) {
+                    if (e) {
+                        getExtraDataItem(e.row);
+                    }
+                },
+                hoverStateEnabled: true,
+                onRowPrepared: function (info) {
+                    if (info.rowType != 'header' && info.data.Disabled == true) {
+                        info.rowElement.addClass('disabledRow');
+                        info.rowElement.css('background', 'yellow');
+                    }
+                },
+
+            });
+
+
+        });
+        async function getExtraDataItem(row) {
+
+
+            $('#school-info').empty();
+            $('#school-info').html(row.data.Calculation);
+            // $.ajax({
+            //     url: Edu.baseUrl + "Schools/GetSchoolDetails", data: { schoolId: row.data.Id }, success: function (result) {
+
+            //         $('#school-info').html(result);
+            //     }
+            // });
+
+            return false;
+        }
+        function setMainDataItem(id) {
+            let url = Ciela.baseUrl + "MainDataPeriod/GetMainDataItemsPartial";
+            anyContent.empty();
+            anyTitle.text('Входни данни');
+            anyContent.html('<p>Зареждам данни…</p>')
+            $.ajax({
+                type: 'Get',
+                url: url,
+                data: { id: id },
+                success: function (data) {
+                    anyContent.html(data);
+                }
+            });
+            anyModal.modal('show');
+        }
+
+        const menuData = [
+            {
+                id: '6_1',
+                name: 'Експорт',
+                icon: './images/exporter.svg',
+
+
+            }, {
+                id: '3',
+                name: 'Изчисли',
+                icon: './images/calculator.png',
+
+            }, {
+                id: '4',
+                name: 'Обнови',
+                icon: './images/refresh.png',
+
+            }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+                       
+
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+                        case '3': recalc();
+
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("Owners");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "MainData.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+
+        function recalc() {
+            $.ajax({
+                beforeSend: function (request) {
+                    request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                },
+                url: "@Url.Action("RecalculateMainData", "MainDataPeriod")", method: 'POST'
+
+            })
+                .done(function (result) {
+                    if (result.success === true) {
+                        $("#grid").dxDataGrid("instance").refresh();
+                    }
+                    else {
+                        DevExpress.ui.dialog.alert(result.msg);
+                    }
+                })
+                .fail(function (e) {
+
+                    DevExpress.ui.notify('Failed to calculate! ' + e);
+                });
+        }
+    </script>
+}

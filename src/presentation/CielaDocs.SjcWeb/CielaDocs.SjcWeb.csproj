@@ -1,0 +1,1618 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\lib\icons\dxicons.woff2" />
+    <Content Remove="wwwroot\lib\icons\dxiconsmaterial.woff2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Protos\message.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BuildBundlerMinifier" Version="3.2.449" />
+    <PackageReference Include="ClosedXML" Version="0.100.3" />
+    <PackageReference Include="DevExpress.AspNetCore.RichEdit" Version="21.2.4" />
+    <PackageReference Include="DevExpress.AspNetCore.Spreadsheet" Version="21.2.4" />
+    <PackageReference Include="DevExtreme.AspNet.Core" Version="21.2.4" />
+    <PackageReference Include="DevExtreme.AspNet.Data" Version="2.8.2" />
+    <PackageReference Include="DeviceId" Version="6.3.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.22.1" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.52.0" />
+    <PackageReference Include="Grpc.Net.ClientFactory" Version="2.52.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.51.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="itext7" Version="7.2.4" />
+    <PackageReference Include="ITfoxtec.Identity.Saml2" Version="4.8.8" />
+    <PackageReference Include="ITfoxtec.Identity.Saml2.MvcCore" Version="4.8.8" />
+    <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Owin" Version="6.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.11">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="6.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions" Version="6.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="6.0.11" />
+    <PackageReference Include="Microsoft.Graph.Core" Version="2.0.9" />
+    <PackageReference Include="Microsoft.Identity.Web.MicrosoftGraph" Version="1.25.0" />
+    <PackageReference Include="Microsoft.Identity.Web.UI" Version="1.25.10" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.16" />
+    <PackageReference Include="SendGrid" Version="9.28.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
+    <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.0" />
+    <PackageReference Include="Serilog.Enrichers.Process" Version="2.0.2" />
+    <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+    <PackageReference Include="Serilog.Exceptions" Version="8.4.0" />
+    <PackageReference Include="Serilog.Formatting.Compact" Version="1.1.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\CielaDocs.Application\CielaDocs.Application.csproj" />
+    <ProjectReference Include="..\..\infrastructure\CielaDocs.Data\CielaDocs.Data.csproj" />
+    <ProjectReference Include="..\..\infrastructure\CielaDocs.Shared\CielaDocs.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Areas\Admin\Data\" />
+    <Folder Include="Areas\Admin\ViewModels\" />
+    <Folder Include="Areas\CourtUser\Data\" />
+    <Folder Include="Areas\CourtUser\Models\" />
+    <Folder Include="Filters\" />
+    <Folder Include="Logs\" />
+    <Folder Include="temp-keys\" />
+    <Folder Include="ViewComponents\" />
+    <Folder Include="wwwroot\localdocarchive\Docs\" />
+    <Folder Include="wwwroot\localdocarchive\Отчети\2024\" />
+    <Folder Include="wwwroot\localdocarchive\Справки\" />
+    <Folder Include="wwwroot\localdocarchive\Pdf\" />
+    <Folder Include="wwwroot\localdocarchive\Xlsx\" />
+    <Folder Include="wwwroot\uploads\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\App_Data\Documents\SampleDocuments\AutoFilter.xlsx" />
+    <None Include="wwwroot\App_Data\Documents\SampleDocuments\MainData.xlsx" />
+    <None Include="wwwroot\App_Data\Documents\SampleDocuments\test.xlsx" />
+    <None Include="wwwroot\App_Data\HibernationStorage\test.txt" />
+    <None Include="wwwroot\Cert\User1.pfx" />
+    <None Include="wwwroot\cldr-data\.gitattributes" />
+    <None Include="wwwroot\cldr-data\.gitignore" />
+    <None Include="wwwroot\cldr-data\DCO.md" />
+    <None Include="wwwroot\cldr-data\index.js" />
+    <None Include="wwwroot\cldr-data\install.js" />
+    <None Include="wwwroot\cldr-data\LICENSE" />
+    <None Include="wwwroot\cldr-data\README.md" />
+    <None Include="wwwroot\css\devextreme\fonts\Roboto-300.woff2" />
+    <None Include="wwwroot\css\devextreme\fonts\Roboto-400.woff2" />
+    <None Include="wwwroot\css\devextreme\fonts\Roboto-500.woff2" />
+    <None Include="wwwroot\css\devextreme\fonts\Roboto-700.woff2" />
+    <None Include="wwwroot\css\icons\dxicons.woff2" />
+    <None Include="wwwroot\css\icons\dxiconsmaterial.woff2" />
+    <None Include="wwwroot\gijgo\combined\fonts\gijgo-material.svg" />
+    <None Include="wwwroot\gijgo\combined\js\gijgo.js" />
+    <None Include="wwwroot\gijgo\combined\js\gijgo.min.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.bg-bg.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.bg-bg.min.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.de-de.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.de-de.min.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.es-es.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.es-es.min.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.fr-fr.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.fr-fr.min.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.it-it.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.it-it.min.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.ja-jp.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.ja-jp.min.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.pt-br.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.pt-br.min.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.ru-ru.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.ru-ru.min.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.tr-tr.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.tr-tr.min.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.zh-cn.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.zh-cn.min.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.zh-tw.js" />
+    <None Include="wwwroot\gijgo\combined\js\messages\messages.zh-tw.min.js" />
+    <None Include="wwwroot\gijgo\modular\fonts\gijgo-material.svg" />
+    <None Include="wwwroot\gijgo\modular\js\checkbox.js" />
+    <None Include="wwwroot\gijgo\modular\js\checkbox.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\colorpicker.js" />
+    <None Include="wwwroot\gijgo\modular\js\colorpicker.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\core.js" />
+    <None Include="wwwroot\gijgo\modular\js\core.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\datepicker.js" />
+    <None Include="wwwroot\gijgo\modular\js\datepicker.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\datetimepicker.js" />
+    <None Include="wwwroot\gijgo\modular\js\datetimepicker.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\dialog.js" />
+    <None Include="wwwroot\gijgo\modular\js\dialog.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\draggable.js" />
+    <None Include="wwwroot\gijgo\modular\js\draggable.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\dropdown.js" />
+    <None Include="wwwroot\gijgo\modular\js\dropdown.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\droppable.js" />
+    <None Include="wwwroot\gijgo\modular\js\droppable.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\editor.js" />
+    <None Include="wwwroot\gijgo\modular\js\editor.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\grid.js" />
+    <None Include="wwwroot\gijgo\modular\js\grid.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\slider.js" />
+    <None Include="wwwroot\gijgo\modular\js\slider.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\timepicker.js" />
+    <None Include="wwwroot\gijgo\modular\js\timepicker.min.js" />
+    <None Include="wwwroot\gijgo\modular\js\tree.js" />
+    <None Include="wwwroot\gijgo\modular\js\tree.min.js" />
+    <None Include="wwwroot\images\Scheduler.svg" />
+    <None Include="wwwroot\images\user.svg" />
+    <None Include="wwwroot\jqueryui\jquery-ui.js" />
+    <None Include="wwwroot\jqueryui\jquery-ui.min.js" />
+    <None Include="wwwroot\js\alertify.js\alertify.js" />
+    <None Include="wwwroot\js\alertify.js\alertify.min.js" />
+    <None Include="wwwroot\js\alertify\alertify.js" />
+    <None Include="wwwroot\js\alertify\alertify.min.js" />
+    <None Include="wwwroot\js\devexbundle.js" />
+    <None Include="wwwroot\js\devextreme\aspnet\dx.aspnet.data.js" />
+    <None Include="wwwroot\js\devextreme\aspnet\dx.aspnet.mvc.js" />
+    <None Include="wwwroot\js\devextreme\bootstrap.js" />
+    <None Include="wwwroot\js\devextreme\bootstrap.min.js" />
+    <None Include="wwwroot\js\devextreme\cldr.js" />
+    <None Include="wwwroot\js\devextreme\cldr.min.js" />
+    <None Include="wwwroot\js\devextreme\cldr\event.js" />
+    <None Include="wwwroot\js\devextreme\cldr\event.min.js" />
+    <None Include="wwwroot\js\devextreme\cldr\supplemental.js" />
+    <None Include="wwwroot\js\devextreme\cldr\supplemental.min.js" />
+    <None Include="wwwroot\js\devextreme\cldr\unresolved.js" />
+    <None Include="wwwroot\js\devextreme\cldr\unresolved.min.js" />
+    <None Include="wwwroot\js\devextreme\dx-diagram.js" />
+    <None Include="wwwroot\js\devextreme\dx-diagram.min.js" />
+    <None Include="wwwroot\js\devextreme\dx-gantt.js" />
+    <None Include="wwwroot\js\devextreme\dx-gantt.min.js" />
+    <None Include="wwwroot\js\devextreme\dx.all.debug.js" />
+    <None Include="wwwroot\js\devextreme\dx.all.js" />
+    <None Include="wwwroot\js\devextreme\dx.viz.debug.js" />
+    <None Include="wwwroot\js\devextreme\dx.viz.js" />
+    <None Include="wwwroot\js\devextreme\dx.web.debug.js" />
+    <None Include="wwwroot\js\devextreme\dx.web.js" />
+    <None Include="wwwroot\js\devextreme\globalize.js" />
+    <None Include="wwwroot\js\devextreme\globalize.min.js" />
+    <None Include="wwwroot\js\devextreme\globalize\currency.js" />
+    <None Include="wwwroot\js\devextreme\globalize\currency.min.js" />
+    <None Include="wwwroot\js\devextreme\globalize\date.js" />
+    <None Include="wwwroot\js\devextreme\globalize\date.min.js" />
+    <None Include="wwwroot\js\devextreme\globalize\message.js" />
+    <None Include="wwwroot\js\devextreme\globalize\message.min.js" />
+    <None Include="wwwroot\js\devextreme\globalize\number.js" />
+    <None Include="wwwroot\js\devextreme\globalize\number.min.js" />
+    <None Include="wwwroot\js\devextreme\jquery.js" />
+    <None Include="wwwroot\js\devextreme\jquery.min.js" />
+    <None Include="wwwroot\js\devextreme\jszip.js" />
+    <None Include="wwwroot\js\devextreme\jszip.min.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.bg.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.bg.js.zip" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.cs.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.de.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.el.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.en.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.es.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.fi.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.fr.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.hu.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.it.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.ja.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.nl.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.pt.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.ru.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.sl.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.sv.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.tr.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.vi.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.zh-tw.js" />
+    <None Include="wwwroot\js\devextreme\localization\dx.messages.zh.js" />
+    <None Include="wwwroot\js\devextreme\sdr.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-data\africa.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-data\canada.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-data\eurasia.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-data\europe.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-data\usa.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-data\world.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-utils\dx.vectormaputils.debug.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-utils\dx.vectormaputils.js" />
+    <None Include="wwwroot\js\devextreme\vectormap-utils\dx.vectormaputils.node.js" />
+    <None Include="wwwroot\js\fullcalendar\bootstrap\main.js" />
+    <None Include="wwwroot\js\fullcalendar\bootstrap\main.min.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales-all.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales-all.min.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\af.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ar-dz.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ar-kw.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ar-ly.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ar-ma.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ar-sa.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ar-tn.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ar.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\bg.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\bs.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ca.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\cs.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\da.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\de.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\el.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\en-au.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\en-gb.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\en-nz.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\es-us.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\es.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\et.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\eu.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\fa.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\fi.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\fr-ca.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\fr-ch.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\fr.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\gl.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\he.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\hi.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\hr.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\hu.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\id.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\is.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\it.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ja.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ka.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\kk.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ko.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\lb.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\lt.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\lv.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\mk.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ms.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\nb.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\nl.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\nn.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\pl.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\pt-br.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\pt.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ro.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\ru.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\sk.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\sl.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\sq.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\sr-cyrl.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\sr.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\sv.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\th.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\tr.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\uk.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\vi.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\zh-cn.js" />
+    <None Include="wwwroot\js\fullcalendar\core\locales\zh-tw.js" />
+    <None Include="wwwroot\js\fullcalendar\core\main.js" />
+    <None Include="wwwroot\js\fullcalendar\core\main.min.js" />
+    <None Include="wwwroot\js\fullcalendar\daygrid\main.js" />
+    <None Include="wwwroot\js\fullcalendar\daygrid\main.min.js" />
+    <None Include="wwwroot\js\fullcalendar\google-calendar\main.js" />
+    <None Include="wwwroot\js\fullcalendar\google-calendar\main.min.js" />
+    <None Include="wwwroot\js\fullcalendar\interaction\main.js" />
+    <None Include="wwwroot\js\fullcalendar\interaction\main.min.js" />
+    <None Include="wwwroot\js\fullcalendar\list\main.js" />
+    <None Include="wwwroot\js\fullcalendar\list\main.min.js" />
+    <None Include="wwwroot\js\fullcalendar\locales-all.js" />
+    <None Include="wwwroot\js\fullcalendar\locales-all.min.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\af.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ar-dz.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ar-kw.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ar-ly.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ar-ma.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ar-sa.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ar-tn.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ar.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\az.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\bg.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\bn.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\bs.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ca.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\cs.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\cy.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\da.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\de-at.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\de.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\el.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\en-au.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\en-gb.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\en-nz.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\eo.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\es-us.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\es.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\et.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\eu.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\fa.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\fi.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\fr-ca.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\fr-ch.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\fr.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\gl.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\he.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\hi.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\hr.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\hu.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\hy-am.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\id.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\is.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\it.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ja.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ka.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\kk.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\km.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ko.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ku.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\lb.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\lt.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\lv.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\mk.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ms.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\nb.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ne.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\nl.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\nn.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\pl.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\pt-br.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\pt.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ro.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ru.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\si-lk.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\sk.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\sl.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\sm.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\sq.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\sr-cyrl.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\sr.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\sv.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ta-in.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\th.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\tr.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\ug.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\uk.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\uz.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\vi.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\zh-cn.js" />
+    <None Include="wwwroot\js\fullcalendar\locales\zh-tw.js" />
+    <None Include="wwwroot\js\fullcalendar\luxon\main.js" />
+    <None Include="wwwroot\js\fullcalendar\luxon\main.min.js" />
+    <None Include="wwwroot\js\fullcalendar\main.js" />
+    <None Include="wwwroot\js\fullcalendar\main.min.js" />
+    <None Include="wwwroot\js\fullcalendar\moment-timezone\main.js" />
+    <None Include="wwwroot\js\fullcalendar\moment-timezone\main.min.js" />
+    <None Include="wwwroot\js\fullcalendar\moment\main.js" />
+    <None Include="wwwroot\js\fullcalendar\moment\main.min.js" />
+    <None Include="wwwroot\js\fullcalendar\rrule\main.js" />
+    <None Include="wwwroot\js\fullcalendar\rrule\main.min.js" />
+    <None Include="wwwroot\js\fullcalendar\timegrid\main.js" />
+    <None Include="wwwroot\js\fullcalendar\timegrid\main.min.js" />
+    <None Include="wwwroot\js\jquery-confirm\jquery-confirm.min.js" />
+    <None Include="wwwroot\js\jtwain.js" />
+    <None Include="wwwroot\js\moment.js\locale\af.js" />
+    <None Include="wwwroot\js\moment.js\locale\af.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar-dz.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar-dz.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar-kw.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar-kw.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar-ly.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar-ly.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar-ma.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar-ma.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar-sa.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar-sa.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar-tn.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar-tn.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar.js" />
+    <None Include="wwwroot\js\moment.js\locale\ar.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\az.js" />
+    <None Include="wwwroot\js\moment.js\locale\az.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\be.js" />
+    <None Include="wwwroot\js\moment.js\locale\be.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\bg.js" />
+    <None Include="wwwroot\js\moment.js\locale\bg.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\bm.js" />
+    <None Include="wwwroot\js\moment.js\locale\bm.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\bn-bd.js" />
+    <None Include="wwwroot\js\moment.js\locale\bn-bd.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\bn.js" />
+    <None Include="wwwroot\js\moment.js\locale\bn.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\bo.js" />
+    <None Include="wwwroot\js\moment.js\locale\bo.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\br.js" />
+    <None Include="wwwroot\js\moment.js\locale\br.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\bs.js" />
+    <None Include="wwwroot\js\moment.js\locale\bs.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ca.js" />
+    <None Include="wwwroot\js\moment.js\locale\ca.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\cs.js" />
+    <None Include="wwwroot\js\moment.js\locale\cs.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\cv.js" />
+    <None Include="wwwroot\js\moment.js\locale\cv.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\cy.js" />
+    <None Include="wwwroot\js\moment.js\locale\cy.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\da.js" />
+    <None Include="wwwroot\js\moment.js\locale\da.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\de-at.js" />
+    <None Include="wwwroot\js\moment.js\locale\de-at.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\de-ch.js" />
+    <None Include="wwwroot\js\moment.js\locale\de-ch.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\de.js" />
+    <None Include="wwwroot\js\moment.js\locale\de.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\dv.js" />
+    <None Include="wwwroot\js\moment.js\locale\dv.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\el.js" />
+    <None Include="wwwroot\js\moment.js\locale\el.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-au.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-au.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-ca.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-ca.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-gb.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-gb.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-ie.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-ie.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-il.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-il.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-in.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-in.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-nz.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-nz.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-sg.js" />
+    <None Include="wwwroot\js\moment.js\locale\en-sg.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\eo.js" />
+    <None Include="wwwroot\js\moment.js\locale\eo.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\es-do.js" />
+    <None Include="wwwroot\js\moment.js\locale\es-do.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\es-mx.js" />
+    <None Include="wwwroot\js\moment.js\locale\es-mx.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\es-us.js" />
+    <None Include="wwwroot\js\moment.js\locale\es-us.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\es.js" />
+    <None Include="wwwroot\js\moment.js\locale\es.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\et.js" />
+    <None Include="wwwroot\js\moment.js\locale\et.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\eu.js" />
+    <None Include="wwwroot\js\moment.js\locale\eu.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\fa.js" />
+    <None Include="wwwroot\js\moment.js\locale\fa.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\fi.js" />
+    <None Include="wwwroot\js\moment.js\locale\fi.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\fil.js" />
+    <None Include="wwwroot\js\moment.js\locale\fil.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\fo.js" />
+    <None Include="wwwroot\js\moment.js\locale\fo.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\fr-ca.js" />
+    <None Include="wwwroot\js\moment.js\locale\fr-ca.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\fr-ch.js" />
+    <None Include="wwwroot\js\moment.js\locale\fr-ch.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\fr.js" />
+    <None Include="wwwroot\js\moment.js\locale\fr.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\fy.js" />
+    <None Include="wwwroot\js\moment.js\locale\fy.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ga.js" />
+    <None Include="wwwroot\js\moment.js\locale\ga.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\gd.js" />
+    <None Include="wwwroot\js\moment.js\locale\gd.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\gl.js" />
+    <None Include="wwwroot\js\moment.js\locale\gl.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\gom-deva.js" />
+    <None Include="wwwroot\js\moment.js\locale\gom-deva.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\gom-latn.js" />
+    <None Include="wwwroot\js\moment.js\locale\gom-latn.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\gu.js" />
+    <None Include="wwwroot\js\moment.js\locale\gu.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\he.js" />
+    <None Include="wwwroot\js\moment.js\locale\he.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\hi.js" />
+    <None Include="wwwroot\js\moment.js\locale\hi.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\hr.js" />
+    <None Include="wwwroot\js\moment.js\locale\hr.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\hu.js" />
+    <None Include="wwwroot\js\moment.js\locale\hu.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\hy-am.js" />
+    <None Include="wwwroot\js\moment.js\locale\hy-am.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\id.js" />
+    <None Include="wwwroot\js\moment.js\locale\id.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\is.js" />
+    <None Include="wwwroot\js\moment.js\locale\is.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\it-ch.js" />
+    <None Include="wwwroot\js\moment.js\locale\it-ch.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\it.js" />
+    <None Include="wwwroot\js\moment.js\locale\it.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ja.js" />
+    <None Include="wwwroot\js\moment.js\locale\ja.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\jv.js" />
+    <None Include="wwwroot\js\moment.js\locale\jv.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ka.js" />
+    <None Include="wwwroot\js\moment.js\locale\ka.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\kk.js" />
+    <None Include="wwwroot\js\moment.js\locale\kk.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\km.js" />
+    <None Include="wwwroot\js\moment.js\locale\km.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\kn.js" />
+    <None Include="wwwroot\js\moment.js\locale\kn.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ko.js" />
+    <None Include="wwwroot\js\moment.js\locale\ko.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ku.js" />
+    <None Include="wwwroot\js\moment.js\locale\ku.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ky.js" />
+    <None Include="wwwroot\js\moment.js\locale\ky.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\lb.js" />
+    <None Include="wwwroot\js\moment.js\locale\lb.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\lo.js" />
+    <None Include="wwwroot\js\moment.js\locale\lo.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\lt.js" />
+    <None Include="wwwroot\js\moment.js\locale\lt.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\lv.js" />
+    <None Include="wwwroot\js\moment.js\locale\lv.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\me.js" />
+    <None Include="wwwroot\js\moment.js\locale\me.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\mi.js" />
+    <None Include="wwwroot\js\moment.js\locale\mi.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\mk.js" />
+    <None Include="wwwroot\js\moment.js\locale\mk.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ml.js" />
+    <None Include="wwwroot\js\moment.js\locale\ml.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\mn.js" />
+    <None Include="wwwroot\js\moment.js\locale\mn.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\mr.js" />
+    <None Include="wwwroot\js\moment.js\locale\mr.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ms-my.js" />
+    <None Include="wwwroot\js\moment.js\locale\ms-my.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ms.js" />
+    <None Include="wwwroot\js\moment.js\locale\ms.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\mt.js" />
+    <None Include="wwwroot\js\moment.js\locale\mt.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\my.js" />
+    <None Include="wwwroot\js\moment.js\locale\my.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\nb.js" />
+    <None Include="wwwroot\js\moment.js\locale\nb.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ne.js" />
+    <None Include="wwwroot\js\moment.js\locale\ne.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\nl-be.js" />
+    <None Include="wwwroot\js\moment.js\locale\nl-be.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\nl.js" />
+    <None Include="wwwroot\js\moment.js\locale\nl.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\nn.js" />
+    <None Include="wwwroot\js\moment.js\locale\nn.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\oc-lnc.js" />
+    <None Include="wwwroot\js\moment.js\locale\oc-lnc.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\pa-in.js" />
+    <None Include="wwwroot\js\moment.js\locale\pa-in.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\pl.js" />
+    <None Include="wwwroot\js\moment.js\locale\pl.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\pt-br.js" />
+    <None Include="wwwroot\js\moment.js\locale\pt-br.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\pt.js" />
+    <None Include="wwwroot\js\moment.js\locale\pt.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ro.js" />
+    <None Include="wwwroot\js\moment.js\locale\ro.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ru.js" />
+    <None Include="wwwroot\js\moment.js\locale\ru.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\sd.js" />
+    <None Include="wwwroot\js\moment.js\locale\sd.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\se.js" />
+    <None Include="wwwroot\js\moment.js\locale\se.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\si.js" />
+    <None Include="wwwroot\js\moment.js\locale\si.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\sk.js" />
+    <None Include="wwwroot\js\moment.js\locale\sk.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\sl.js" />
+    <None Include="wwwroot\js\moment.js\locale\sl.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\sq.js" />
+    <None Include="wwwroot\js\moment.js\locale\sq.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\sr-cyrl.js" />
+    <None Include="wwwroot\js\moment.js\locale\sr-cyrl.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\sr.js" />
+    <None Include="wwwroot\js\moment.js\locale\sr.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ss.js" />
+    <None Include="wwwroot\js\moment.js\locale\ss.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\sv.js" />
+    <None Include="wwwroot\js\moment.js\locale\sv.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\sw.js" />
+    <None Include="wwwroot\js\moment.js\locale\sw.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ta.js" />
+    <None Include="wwwroot\js\moment.js\locale\ta.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\te.js" />
+    <None Include="wwwroot\js\moment.js\locale\te.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\tet.js" />
+    <None Include="wwwroot\js\moment.js\locale\tet.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\tg.js" />
+    <None Include="wwwroot\js\moment.js\locale\tg.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\th.js" />
+    <None Include="wwwroot\js\moment.js\locale\th.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\tk.js" />
+    <None Include="wwwroot\js\moment.js\locale\tk.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\tl-ph.js" />
+    <None Include="wwwroot\js\moment.js\locale\tl-ph.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\tlh.js" />
+    <None Include="wwwroot\js\moment.js\locale\tlh.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\tr.js" />
+    <None Include="wwwroot\js\moment.js\locale\tr.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\tzl.js" />
+    <None Include="wwwroot\js\moment.js\locale\tzl.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\tzm-latn.js" />
+    <None Include="wwwroot\js\moment.js\locale\tzm-latn.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\tzm.js" />
+    <None Include="wwwroot\js\moment.js\locale\tzm.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ug-cn.js" />
+    <None Include="wwwroot\js\moment.js\locale\ug-cn.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\uk.js" />
+    <None Include="wwwroot\js\moment.js\locale\uk.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\ur.js" />
+    <None Include="wwwroot\js\moment.js\locale\ur.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\uz-latn.js" />
+    <None Include="wwwroot\js\moment.js\locale\uz-latn.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\uz.js" />
+    <None Include="wwwroot\js\moment.js\locale\uz.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\vi.js" />
+    <None Include="wwwroot\js\moment.js\locale\vi.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\x-pseudo.js" />
+    <None Include="wwwroot\js\moment.js\locale\x-pseudo.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\yo.js" />
+    <None Include="wwwroot\js\moment.js\locale\yo.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\zh-cn.js" />
+    <None Include="wwwroot\js\moment.js\locale\zh-cn.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\zh-hk.js" />
+    <None Include="wwwroot\js\moment.js\locale\zh-hk.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\zh-mo.js" />
+    <None Include="wwwroot\js\moment.js\locale\zh-mo.min.js" />
+    <None Include="wwwroot\js\moment.js\locale\zh-tw.js" />
+    <None Include="wwwroot\js\moment.js\locale\zh-tw.min.js" />
+    <None Include="wwwroot\js\moment.js\moment-with-locales.js" />
+    <None Include="wwwroot\js\moment.js\moment-with-locales.min.js" />
+    <None Include="wwwroot\js\moment.js\moment-with-locales.min.js.map" />
+    <None Include="wwwroot\js\moment.js\moment.js" />
+    <None Include="wwwroot\js\moment.js\moment.min.js" />
+    <None Include="wwwroot\js\moment.js\moment.min.js.map" />
+    <None Include="wwwroot\js\notify.js" />
+    <None Include="wwwroot\js\popper.js\cjs\enums.js" />
+    <None Include="wwwroot\js\popper.js\cjs\enums.js.map" />
+    <None Include="wwwroot\js\popper.js\cjs\enums.min.js" />
+    <None Include="wwwroot\js\popper.js\cjs\popper-base.js" />
+    <None Include="wwwroot\js\popper.js\cjs\popper-base.js.map" />
+    <None Include="wwwroot\js\popper.js\cjs\popper-base.min.js" />
+    <None Include="wwwroot\js\popper.js\cjs\popper-lite.js" />
+    <None Include="wwwroot\js\popper.js\cjs\popper-lite.js.map" />
+    <None Include="wwwroot\js\popper.js\cjs\popper-lite.min.js" />
+    <None Include="wwwroot\js\popper.js\cjs\popper.js" />
+    <None Include="wwwroot\js\popper.js\cjs\popper.js.map" />
+    <None Include="wwwroot\js\popper.js\cjs\popper.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\createPopper.js" />
+    <None Include="wwwroot\js\popper.js\esm\createPopper.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\contains.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\contains.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getBoundingClientRect.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getBoundingClientRect.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getClippingRect.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getClippingRect.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getCompositeRect.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getCompositeRect.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getComputedStyle.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getComputedStyle.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getDocumentElement.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getDocumentElement.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getDocumentRect.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getDocumentRect.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getHTMLElementScroll.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getHTMLElementScroll.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getLayoutRect.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getLayoutRect.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getNodeName.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getNodeName.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getNodeScroll.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getNodeScroll.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getOffsetParent.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getOffsetParent.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getParentNode.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getParentNode.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getScrollParent.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getScrollParent.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getViewportRect.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getViewportRect.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getWindow.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getWindow.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getWindowScroll.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getWindowScroll.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getWindowScrollBarX.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\getWindowScrollBarX.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\instanceOf.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\instanceOf.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\isScrollParent.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\isScrollParent.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\isTableElement.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\isTableElement.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\listScrollParents.js" />
+    <None Include="wwwroot\js\popper.js\esm\dom-utils\listScrollParents.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\enums.js" />
+    <None Include="wwwroot\js\popper.js\esm\enums.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\index.js" />
+    <None Include="wwwroot\js\popper.js\esm\index.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\applyStyles.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\applyStyles.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\arrow.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\arrow.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\computeStyles.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\computeStyles.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\eventListeners.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\eventListeners.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\flip.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\flip.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\hide.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\hide.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\index.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\index.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\offset.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\offset.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\popperOffsets.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\popperOffsets.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\preventOverflow.js" />
+    <None Include="wwwroot\js\popper.js\esm\modifiers\preventOverflow.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\popper-base.js" />
+    <None Include="wwwroot\js\popper.js\esm\popper-base.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\popper-lite.js" />
+    <None Include="wwwroot\js\popper.js\esm\popper-lite.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\popper.js" />
+    <None Include="wwwroot\js\popper.js\esm\popper.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\types.js" />
+    <None Include="wwwroot\js\popper.js\esm\types.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\computeAutoPlacement.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\computeAutoPlacement.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\computeOffsets.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\computeOffsets.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\debounce.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\debounce.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\detectOverflow.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\detectOverflow.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\expandToHashMap.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\expandToHashMap.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\format.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\format.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getAltAxis.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getAltAxis.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getAltLen.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getAltLen.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getBasePlacement.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getBasePlacement.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getFreshSideObject.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getFreshSideObject.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getMainAxisFromPlacement.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getMainAxisFromPlacement.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getOppositePlacement.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getOppositePlacement.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getOppositeVariationPlacement.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getOppositeVariationPlacement.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getVariation.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\getVariation.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\math.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\math.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\mergeByName.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\mergeByName.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\mergePaddingObject.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\mergePaddingObject.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\orderModifiers.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\orderModifiers.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\rectToClientRect.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\rectToClientRect.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\uniqueBy.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\uniqueBy.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\validateModifiers.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\validateModifiers.min.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\within.js" />
+    <None Include="wwwroot\js\popper.js\esm\utils\within.min.js" />
+    <None Include="wwwroot\js\popper.js\umd\enums.js" />
+    <None Include="wwwroot\js\popper.js\umd\enums.js.map" />
+    <None Include="wwwroot\js\popper.js\umd\enums.min.js" />
+    <None Include="wwwroot\js\popper.js\umd\enums.min.js.map" />
+    <None Include="wwwroot\js\popper.js\umd\popper-base.js" />
+    <None Include="wwwroot\js\popper.js\umd\popper-base.js.map" />
+    <None Include="wwwroot\js\popper.js\umd\popper-base.min.js" />
+    <None Include="wwwroot\js\popper.js\umd\popper-base.min.js.map" />
+    <None Include="wwwroot\js\popper.js\umd\popper-lite.js" />
+    <None Include="wwwroot\js\popper.js\umd\popper-lite.js.map" />
+    <None Include="wwwroot\js\popper.js\umd\popper-lite.min.js" />
+    <None Include="wwwroot\js\popper.js\umd\popper-lite.min.js.map" />
+    <None Include="wwwroot\js\popper.js\umd\popper.js" />
+    <None Include="wwwroot\js\popper.js\umd\popper.js.map" />
+    <None Include="wwwroot\js\popper.js\umd\popper.min.js" />
+    <None Include="wwwroot\js\popper.js\umd\popper.min.js.map" />
+    <None Include="wwwroot\js\print-js\print.js" />
+    <None Include="wwwroot\js\print-js\print.map" />
+    <None Include="wwwroot\js\print-js\print.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\af.js" />
+    <None Include="wwwroot\js\select2\js\i18n\af.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ar.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ar.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\az.js" />
+    <None Include="wwwroot\js\select2\js\i18n\az.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\bg.js" />
+    <None Include="wwwroot\js\select2\js\i18n\bg.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\bn.js" />
+    <None Include="wwwroot\js\select2\js\i18n\bn.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\bs.js" />
+    <None Include="wwwroot\js\select2\js\i18n\bs.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ca.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ca.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\cs.js" />
+    <None Include="wwwroot\js\select2\js\i18n\cs.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\da.js" />
+    <None Include="wwwroot\js\select2\js\i18n\da.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\de.js" />
+    <None Include="wwwroot\js\select2\js\i18n\de.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\dsb.js" />
+    <None Include="wwwroot\js\select2\js\i18n\dsb.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\el.js" />
+    <None Include="wwwroot\js\select2\js\i18n\el.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\en.js" />
+    <None Include="wwwroot\js\select2\js\i18n\en.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\es.js" />
+    <None Include="wwwroot\js\select2\js\i18n\es.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\et.js" />
+    <None Include="wwwroot\js\select2\js\i18n\et.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\eu.js" />
+    <None Include="wwwroot\js\select2\js\i18n\eu.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\fa.js" />
+    <None Include="wwwroot\js\select2\js\i18n\fa.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\fi.js" />
+    <None Include="wwwroot\js\select2\js\i18n\fi.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\fr.js" />
+    <None Include="wwwroot\js\select2\js\i18n\fr.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\gl.js" />
+    <None Include="wwwroot\js\select2\js\i18n\gl.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\he.js" />
+    <None Include="wwwroot\js\select2\js\i18n\he.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\hi.js" />
+    <None Include="wwwroot\js\select2\js\i18n\hi.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\hr.js" />
+    <None Include="wwwroot\js\select2\js\i18n\hr.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\hsb.js" />
+    <None Include="wwwroot\js\select2\js\i18n\hsb.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\hu.js" />
+    <None Include="wwwroot\js\select2\js\i18n\hu.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\hy.js" />
+    <None Include="wwwroot\js\select2\js\i18n\hy.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\id.js" />
+    <None Include="wwwroot\js\select2\js\i18n\id.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\is.js" />
+    <None Include="wwwroot\js\select2\js\i18n\is.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\it.js" />
+    <None Include="wwwroot\js\select2\js\i18n\it.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ja.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ja.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ka.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ka.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\km.js" />
+    <None Include="wwwroot\js\select2\js\i18n\km.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ko.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ko.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\lt.js" />
+    <None Include="wwwroot\js\select2\js\i18n\lt.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\lv.js" />
+    <None Include="wwwroot\js\select2\js\i18n\lv.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\mk.js" />
+    <None Include="wwwroot\js\select2\js\i18n\mk.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ms.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ms.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\nb.js" />
+    <None Include="wwwroot\js\select2\js\i18n\nb.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ne.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ne.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\nl.js" />
+    <None Include="wwwroot\js\select2\js\i18n\nl.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\pl.js" />
+    <None Include="wwwroot\js\select2\js\i18n\pl.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ps.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ps.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\pt-BR.js" />
+    <None Include="wwwroot\js\select2\js\i18n\pt-BR.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\pt.js" />
+    <None Include="wwwroot\js\select2\js\i18n\pt.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ro.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ro.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ru.js" />
+    <None Include="wwwroot\js\select2\js\i18n\ru.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\sk.js" />
+    <None Include="wwwroot\js\select2\js\i18n\sk.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\sl.js" />
+    <None Include="wwwroot\js\select2\js\i18n\sl.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\sq.js" />
+    <None Include="wwwroot\js\select2\js\i18n\sq.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\sr-Cyrl.js" />
+    <None Include="wwwroot\js\select2\js\i18n\sr-Cyrl.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\sr.js" />
+    <None Include="wwwroot\js\select2\js\i18n\sr.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\sv.js" />
+    <None Include="wwwroot\js\select2\js\i18n\sv.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\th.js" />
+    <None Include="wwwroot\js\select2\js\i18n\th.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\tk.js" />
+    <None Include="wwwroot\js\select2\js\i18n\tk.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\tr.js" />
+    <None Include="wwwroot\js\select2\js\i18n\tr.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\uk.js" />
+    <None Include="wwwroot\js\select2\js\i18n\uk.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\vi.js" />
+    <None Include="wwwroot\js\select2\js\i18n\vi.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\zh-CN.js" />
+    <None Include="wwwroot\js\select2\js\i18n\zh-CN.min.js" />
+    <None Include="wwwroot\js\select2\js\i18n\zh-TW.js" />
+    <None Include="wwwroot\js\select2\js\i18n\zh-TW.min.js" />
+    <None Include="wwwroot\js\select2\js\select2.full.js" />
+    <None Include="wwwroot\js\select2\js\select2.full.min.js" />
+    <None Include="wwwroot\js\select2\js\select2.js" />
+    <None Include="wwwroot\js\select2\js\select2.min.js" />
+    <None Include="wwwroot\js\site.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap.rtl.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.js.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.min.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.min.js.map" />
+    <None Include="wwwroot\lib\bootstrap\LICENSE" />
+    <None Include="wwwroot\lib\datatables.net\jquery.dataTables.js" />
+    <None Include="wwwroot\lib\datatables.net\jquery.dataTables.min.js" />
+    <None Include="wwwroot\lib\datatables\datatables.js" />
+    <None Include="wwwroot\lib\datatables\datatables.min.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.bootstrap.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.bootstrap.min.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.bootstrap4.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.bootstrap4.min.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.bootstrap5.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.bootstrap5.min.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.bulma.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.bulma.min.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.dataTables.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.dataTables.min.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.foundation.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.foundation.min.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.jqueryui.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.jqueryui.min.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.semanticui.js" />
+    <None Include="wwwroot\lib\datatables\js\dataTables.semanticui.min.js" />
+    <None Include="wwwroot\lib\datatables\js\jquery.dataTables.js" />
+    <None Include="wwwroot\lib\datatables\js\jquery.dataTables.min.js" />
+    <None Include="wwwroot\lib\dx-aspnetcore-spreadsheet\dx-aspnetcore-spreadsheet.js" />
+    <None Include="wwwroot\lib\dx-aspnetcore-spreadsheet\icons\dxss-icons.woff2" />
+    <None Include="wwwroot\lib\exceljs\exceljs.bare.js" />
+    <None Include="wwwroot\lib\exceljs\exceljs.bare.js.map" />
+    <None Include="wwwroot\lib\exceljs\exceljs.bare.min.js" />
+    <None Include="wwwroot\lib\exceljs\exceljs.bare.min.js.map" />
+    <None Include="wwwroot\lib\exceljs\exceljs.js" />
+    <None Include="wwwroot\lib\exceljs\exceljs.js.map" />
+    <None Include="wwwroot\lib\exceljs\exceljs.min.js" />
+    <None Include="wwwroot\lib\exceljs\exceljs.min.js.map" />
+    <None Include="wwwroot\lib\FileSaver.js\FileSaver.js" />
+    <None Include="wwwroot\lib\FileSaver.js\FileSaver.min.js" />
+    <None Include="wwwroot\lib\FileSaver.js\FileSaver.min.js.map" />
+    <None Include="wwwroot\lib\gijgo\combined\fonts\gijgo-material.svg" />
+    <None Include="wwwroot\lib\gijgo\combined\js\gijgo.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\gijgo.min.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.bg-bg.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.bg-bg.min.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.de-de.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.de-de.min.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.es-es.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.es-es.min.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.fr-fr.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.fr-fr.min.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.it-it.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.it-it.min.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.ja-jp.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.ja-jp.min.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.pt-br.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.pt-br.min.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.ru-ru.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.ru-ru.min.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.tr-tr.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.tr-tr.min.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.zh-cn.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.zh-cn.min.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.zh-tw.js" />
+    <None Include="wwwroot\lib\gijgo\combined\js\messages\messages.zh-tw.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\fonts\gijgo-material.svg" />
+    <None Include="wwwroot\lib\gijgo\modular\js\checkbox.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\checkbox.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\colorpicker.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\colorpicker.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\core.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\core.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\datepicker.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\datepicker.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\datetimepicker.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\datetimepicker.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\dialog.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\dialog.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\draggable.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\draggable.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\dropdown.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\dropdown.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\droppable.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\droppable.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\editor.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\editor.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\grid.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\grid.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\slider.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\slider.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\timepicker.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\timepicker.min.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\tree.js" />
+    <None Include="wwwroot\lib\gijgo\modular\js\tree.min.js" />
+    <None Include="wwwroot\lib\icons\dxicons.woff2" />
+    <None Include="wwwroot\lib\icons\dxiconsmaterial.woff2" />
+    <None Include="wwwroot\lib\jquery-confirm\jquery-confirm.min.js" />
+    <None Include="wwwroot\lib\jquery-validation-unobtrusive\jquery.validate.unobtrusive.js" />
+    <None Include="wwwroot\lib\jquery-validation-unobtrusive\jquery.validate.unobtrusive.min.js" />
+    <None Include="wwwroot\lib\jquery-validation\dist\additional-methods.js" />
+    <None Include="wwwroot\lib\jquery-validation\dist\additional-methods.min.js" />
+    <None Include="wwwroot\lib\jquery-validation\dist\jquery.validate.js" />
+    <None Include="wwwroot\lib\jquery-validation\dist\jquery.validate.min.js" />
+    <None Include="wwwroot\lib\jquery-validation\LICENSE.md" />
+    <None Include="wwwroot\lib\jquery\dist\jquery.js" />
+    <None Include="wwwroot\lib\jquery\dist\jquery.min.js" />
+    <None Include="wwwroot\lib\jquery\dist\jquery.min.map" />
+    <None Include="wwwroot\modernizr\modernizr.js" />
+    <None Include="wwwroot\modernizr\modernizr.min.js" />
+    <None Include="wwwroot\notify.js\notify.js" />
+    <None Include="wwwroot\notify.js\notify.min.js" />
+    <None Include="wwwroot\notify.js\notify.min.js.map" />
+    <None Include="wwwroot\PdfViewer\build\pdf.js" />
+    <None Include="wwwroot\PdfViewer\build\pdf.js.map" />
+    <None Include="wwwroot\PdfViewer\build\pdf.sandbox.js" />
+    <None Include="wwwroot\PdfViewer\build\pdf.sandbox.js.map" />
+    <None Include="wwwroot\PdfViewer\build\pdf.worker.js" />
+    <None Include="wwwroot\PdfViewer\build\pdf.worker.js.map" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\78-EUC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\78-EUC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\78-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\78-RKSJ-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\78-RKSJ-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\78-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\78ms-RKSJ-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\78ms-RKSJ-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\83pv-RKSJ-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\90ms-RKSJ-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\90ms-RKSJ-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\90msp-RKSJ-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\90msp-RKSJ-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\90pv-RKSJ-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\90pv-RKSJ-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Add-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Add-RKSJ-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Add-RKSJ-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Add-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-CNS1-0.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-CNS1-1.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-CNS1-2.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-CNS1-3.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-CNS1-4.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-CNS1-5.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-CNS1-6.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-CNS1-UCS2.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-GB1-0.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-GB1-1.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-GB1-2.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-GB1-3.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-GB1-4.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-GB1-5.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-GB1-UCS2.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-Japan1-0.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-Japan1-1.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-Japan1-2.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-Japan1-3.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-Japan1-4.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-Japan1-5.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-Japan1-6.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-Japan1-UCS2.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-Korea1-0.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-Korea1-1.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-Korea1-2.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Adobe-Korea1-UCS2.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\B5-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\B5-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\B5pc-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\B5pc-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\CNS-EUC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\CNS-EUC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\CNS1-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\CNS1-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\CNS2-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\CNS2-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\ETen-B5-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\ETen-B5-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\ETenms-B5-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\ETenms-B5-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\ETHK-B5-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\ETHK-B5-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\EUC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\EUC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Ext-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Ext-RKSJ-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Ext-RKSJ-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Ext-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GB-EUC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GB-EUC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GB-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GB-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBK-EUC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBK-EUC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBK2K-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBK2K-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBKp-EUC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBKp-EUC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBpc-EUC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBpc-EUC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBT-EUC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBT-EUC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBT-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBT-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBTpc-EUC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\GBTpc-EUC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Hankaku.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Hiragana.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\HKdla-B5-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\HKdla-B5-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\HKdlb-B5-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\HKdlb-B5-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\HKgccs-B5-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\HKgccs-B5-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\HKm314-B5-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\HKm314-B5-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\HKm471-B5-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\HKm471-B5-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\HKscs-B5-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\HKscs-B5-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Katakana.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\KSC-EUC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\KSC-EUC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\KSC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\KSC-Johab-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\KSC-Johab-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\KSC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\KSCms-UHC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\KSCms-UHC-HW-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\KSCms-UHC-HW-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\KSCms-UHC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\KSCpc-EUC-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\KSCpc-EUC-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\LICENSE" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\NWP-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\NWP-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\RKSJ-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\RKSJ-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\Roman.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniCNS-UCS2-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniCNS-UCS2-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniCNS-UTF16-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniCNS-UTF16-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniCNS-UTF32-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniCNS-UTF32-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniCNS-UTF8-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniCNS-UTF8-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniGB-UCS2-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniGB-UCS2-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniGB-UTF16-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniGB-UTF16-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniGB-UTF32-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniGB-UTF32-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniGB-UTF8-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniGB-UTF8-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS-UCS2-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS-UCS2-HW-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS-UCS2-HW-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS-UCS2-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS-UTF16-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS-UTF16-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS-UTF32-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS-UTF32-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS-UTF8-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS-UTF8-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS2004-UTF16-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS2004-UTF16-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS2004-UTF32-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS2004-UTF32-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS2004-UTF8-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJIS2004-UTF8-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJISPro-UCS2-HW-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJISPro-UCS2-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJISPro-UTF8-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJISX0213-UTF32-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJISX0213-UTF32-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJISX02132004-UTF32-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniJISX02132004-UTF32-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniKS-UCS2-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniKS-UCS2-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniKS-UTF16-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniKS-UTF16-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniKS-UTF32-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniKS-UTF32-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniKS-UTF8-H.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\UniKS-UTF8-V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\V.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\cmaps\WP-Symbol.bcmap" />
+    <None Include="wwwroot\PdfViewer\web\compressed.tracemonkey-pldi-09.pdf" />
+    <None Include="wwwroot\PdfViewer\web\debugger.js" />
+    <None Include="wwwroot\PdfViewer\web\images\annotation-check.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\annotation-comment.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\annotation-help.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\annotation-insert.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\annotation-key.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\annotation-newparagraph.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\annotation-noicon.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\annotation-note.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\annotation-paragraph.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\findbarButton-next.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\findbarButton-previous.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\grab.cur" />
+    <None Include="wwwroot\PdfViewer\web\images\grabbing.cur" />
+    <None Include="wwwroot\PdfViewer\web\images\loading-dark.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\loading.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-documentProperties.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-firstPage.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-handTool.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-lastPage.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-rotateCcw.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-rotateCw.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-scrollHorizontal.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-scrollPage.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-scrollVertical.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-scrollWrapped.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-selectTool.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-spreadEven.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-spreadNone.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\secondaryToolbarButton-spreadOdd.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-bookmark.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-currentOutlineItem.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-download.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-menuArrow.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-openFile.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-pageDown.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-pageUp.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-presentationMode.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-print.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-search.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-secondaryToolbarToggle.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-sidebarToggle.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-viewAttachments.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-viewLayers.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-viewOutline.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-viewThumbnail.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-zoomIn.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\toolbarButton-zoomOut.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\treeitem-collapsed.svg" />
+    <None Include="wwwroot\PdfViewer\web\images\treeitem-expanded.svg" />
+    <None Include="wwwroot\PdfViewer\web\locale\ach\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\af\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\an\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ar\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ast\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\az\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\be\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\bg\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\bn\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\bo\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\brx\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\br\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\bs\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\cak\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ca\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ckb\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\cs\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\cy\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\da\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\de\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\dsb\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\el\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\en-CA\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\en-GB\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\en-US\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\eo\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\es-AR\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\es-CL\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\es-ES\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\es-MX\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\et\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\eu\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\fa\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ff\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\fi\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\fr\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\fy-NL\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ga-IE\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\gd\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\gl\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\gn\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\gu-IN\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\he\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\hi-IN\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\hr\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\hsb\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\hu\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\hy-AM\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\hye\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ia\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\id\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\is\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\it\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ja\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\kab\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ka\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\kk\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\km\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\kn\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ko\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\lij\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\locale.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\lo\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ltg\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\lt\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\lv\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\meh\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\mk\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\mr\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ms\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\my\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\nb-NO\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ne-NP\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\nl\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\nn-NO\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\oc\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\pa-IN\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\pl\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\pt-BR\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\pt-PT\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\rm\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ro\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ru\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\sat\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\scn\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\sco\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\sc\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\si\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\sk\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\sl\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\son\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\sq\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\sr\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\sv-SE\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\szl\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ta\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\te\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\tg\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\th\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\tl\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\trs\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\tr\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\uk\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\ur\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\uz\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\vi\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\wo\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\xh\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\zh-CN\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\locale\zh-TW\viewer.properties" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitDingbats.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitFixed.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitFixedBold.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitFixedBoldItalic.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitFixedItalic.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitSans.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitSansBold.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitSansBoldItalic.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitSansItalic.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitSerif.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitSerifBold.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitSerifBoldItalic.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitSerifItalic.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\FoxitSymbol.pfb" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\LICENSE_FOXIT" />
+    <None Include="wwwroot\PdfViewer\web\standard_fonts\LICENSE_LIBERATION" />
+    <None Include="wwwroot\PdfViewer\web\viewer.js" />
+    <None Include="wwwroot\PdfViewer\web\viewer.js.map" />
+    <None Include="wwwroot\scripts\archive.js" />
+    <None Include="wwwroot\scripts\correspondent.js" />
+    <None Include="wwwroot\scripts\correspondentMain.js" />
+    <None Include="wwwroot\scripts\delospec.js" />
+    <None Include="wwwroot\scripts\mycalendar.js" />
+    <None Include="wwwroot\scripts\mymessages.js" />
+    <None Include="wwwroot\scripts\mymessagesout.js" />
+    <None Include="wwwroot\scripts\myreports.js" />
+    <None Include="wwwroot\scripts\scripts.js" />
+    <None Include="wwwroot\scripts\scriptsmessages.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="Protos\message.proto" GrpcServices="Client" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="Areas\Admin\Views\Home\Index.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\Admin\Views\Shared\_CommonDialogPartial.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\Admin\Views\Shared\_EmptyView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\Admin\Views\Shared\_Layout.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\Admin\Views\Shared\_ModalDialogPartial.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\Admin\Views\Shared\_ValidationScriptsPartial.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\Admin\Views\_ViewImports.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\Admin\Views\_ViewStart.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\CourtUser\Views\MainDataItm\Index.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\CourtUser\Views\MainDataItm\UploadFilePartial.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\CourtUser\Views\MainData\Index.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\CourtUser\Views\MainData\MainDataItem0PartialView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\CourtUser\Views\MainData\MainDataItem1PartialView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\CourtUser\Views\MainData\MainDataItem2PartialView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\CourtUser\Views\MainData\MainDataItem3PartialView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\CourtUser\Views\MainData\MainDataItem4PartialView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Areas\CourtUser\Views\MainData\MainDataItemsPartialView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\Help\Index.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\MainDataPeriod\Index.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\MainDataPeriod\MainDataItem0PartialView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\MainDataPeriod\MainDataItem1PartialView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\MainDataPeriod\MainDataItem2PartialView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\MainDataPeriod\MainDataItem3PartialView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\MainDataPeriod\MainDataItem4PartialView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\MainDataPeriod\MainDataItemsPartialView.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\MainPeriodItm\Index.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\MainPeriodItm\UploadFilePartial.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\Report\Index.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\Video\Admin.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\Video\Delo.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\Video\Index.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\Video\Messages.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\Video\Reports.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="Views\Video\Scann.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Update="wwwroot\images\Bill2-WF.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

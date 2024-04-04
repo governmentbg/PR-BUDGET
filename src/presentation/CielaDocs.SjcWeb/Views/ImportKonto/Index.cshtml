@@ -1,0 +1,370 @@
+﻿@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+   
+}
+<style type="text/css">
+    .fileUpload {
+        position: relative;
+        overflow: hidden;
+        margin: 10px;
+    }
+
+        .fileUpload input.upload {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 0;
+            padding: 0;
+            /* font-size: 20px;*/
+            cursor: pointer;
+            opacity: 0;
+            filter: alpha(opacity=0);
+        }
+</style>
+<div class="spacer_20"></div>
+<h4>Импорт на месечни данни от Конто</h4>
+<form id="anyForm">
+
+
+
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div style="margin-bottom:20px;" id="cbOverwrite"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <label for="container">Избор на файл за импорт(xlsm,xlsx,xsl)</label>
+                    <div id="container">
+
+                        <div id="divUploading">
+                            <p>Моля изчакайте . . . <img src="@Url.Content("~/images/ajax_loader.gif")"></p>
+                        </div>
+                        <div class="fileUpload btn btn-primary btn-sm">
+                            <i class="fa fa-upload" aria-hidden="true"></i> <span>Избери файл</span>
+                            <input id="uploadBtn" type="file" class="upload" />
+                        </div>
+                        <div id="button"></div>
+                        <div id="buttonExcelViewer"></div>
+                        <div id="autoLoad"></div>
+                        <div class="content" id="selected-files">
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="spacer_20"></div>
+ 
+</form>
+
+
+<script>
+   
+    $(() => {
+
+       
+ 
+        $('#divUploading').hide();
+
+        const isOverwrite = $('#cbOverwrite').dxCheckBox({
+            value: false,
+            text: 'Припокрий стойностите с тези от файла',
+        }).dxCheckBox('instance');
+
+        $('#button').dxButton({
+            text: 'Зареди данните',
+            type: 'success',
+            onClick() {
+                uploadFile();
+            },
+        });
+
+        $('#buttonExcelViewer').dxButton({
+            text: 'Преглед(Excel)',
+            type: 'success',
+            onClick() {
+                viewExcelFile();
+            },
+        });
+        $('#autoLoad').dxButton({
+            text: 'Зареди автоматично данните от папка',
+            type: 'success',
+            onClick() {
+                loadFromFolderKontoFile();
+            },
+        });
+
+        function uploadFile() {
+            var files = document.getElementById('uploadBtn').files;
+            if (files.length > 0) {
+                $('#selected-files .selected-item').remove();
+                if (window.FormData !== undefined) {
+                    var data = new FormData();
+
+                    for (var x = 0; x < files.length; x++) {
+                        var file = files[x];
+                        data.append("file" + x, files[x]);
+                        const $selectedItem = $('<div />').addClass('selected-item');
+                        $selectedItem.append(
+                            $('<span />').html(`Файл: ${file.name}<br/>`),
+                            $('<span />').html(`Размер ${file.size} bytes<br/>`),
+                            $('<span />').html(`Тип ${file.type}<br/>`),
+                        );
+                        $selectedItem.appendTo($('#selected-files'));
+                    }
+                    $('#selected-files').show();
+                    $('#divUploading').show();
+                    $.ajax({
+                        type: "POST",
+                        url: "@Url.Action("UploadFile", "BufferedFileUpload")",
+                        contentType: false,
+                        processData: false,
+                        data: data,
+                        success: function (result) {
+                            $('#divUploading').hide();
+                            if (result.success != true) {
+                                DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                            }
+                            else {
+                                loadCustomExcelFile(result.filename, isOverwrite.option('value'));
+                            }
+                        },
+                        error: function (xhr, status, p3, p4) {
+                            $('#divUploading').hide();
+                            DevExpress.ui.dialog.alert('Something is going to wrong please try agan!', 'Грешка');
+                        }
+                    });
+                } else {
+                    $('#divUploading').hide();
+                    alert("Upgrade your browser!");
+                }
+            } else { $('#selected-files').hide(); }
+        };
+        //-------------------
+        function viewExcelFile() {
+            var files = document.getElementById('uploadBtn').files;
+            if (files.length > 0) {
+                $('#selected-files .selected-item').remove();
+                if (window.FormData !== undefined) {
+                    var data = new FormData();
+
+                    for (var x = 0; x < files.length; x++) {
+                        var file = files[x];
+                        data.append("file" + x, files[x]);
+                        const $selectedItem = $('<div />').addClass('selected-item');
+                        $selectedItem.append(
+                            $('<span />').html(`Файл: ${file.name}<br/>`),
+                            $('<span />').html(`Размер ${file.size} bytes<br/>`),
+                            $('<span />').html(`Тип ${file.type}<br/>`),
+                        );
+                        $selectedItem.appendTo($('#selected-files'));
+                    }
+                    $('#selected-files').show();
+                    $('#divUploading').show();
+                    $.ajax({
+                        type: "POST",
+                        url: "@Url.Action("UploadFile", "BufferedFileUpload")",
+                        contentType: false,
+                        processData: false,
+                        data: data,
+                        success: function (result) {
+                            $('#divUploading').hide();
+                            if (result.success != true) {
+                                DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                            }
+                            else {
+                                redirectme1New("@Url.Action("Index", "ExcelViewer")", "id", result.filename); 
+                            }
+                        },
+                        error: function (xhr, status, p3, p4) {
+                            $('#divUploading').hide();
+                            DevExpress.ui.dialog.alert('Something is going to wrong please try agan!', 'Грешка');
+                        }
+                    });
+                } else {
+                    $('#divUploading').hide();
+                    alert("Upgrade your browser!");
+                }
+            } else { $('#selected-files').hide(); }
+        };
+        //-------------------
+
+        var customProvider = new DevExpress.fileManagement.CustomFileSystemProvider({
+            getItems: function (pathInfo) {
+                var url = Ciela.baseUrl + "api/fileman/getitems";
+                var data = { pathInfo: pathInfo.key };
+                return SendAjaxRequest(url, data);
+            },
+            deleteItem: function (item) {
+                var url = Ciela.baseUrl + "api/fileman/DeleteItem";
+                var data = { pathInfo: item.key };
+                return SendAjaxRequest(url, data);
+            },
+            renameItem: function (item, newName) {
+                var url = Ciela.baseUrl + "api/fileman/RenameItem";
+                var data = { pathInfo: item.key, newName: newName };
+                return SendAjaxRequest(url, data);
+            },
+            createDirectory: function (parentDir, name) {
+                var url = Ciela.baseUrl + "api/fileman/CreateDirectory";
+                var data = { pathInfo: parentDir.key, name: name };
+                return SendAjaxRequest(url, data);
+            },
+            moveItem: function (item, destinationDirectory) {
+                var url = Ciela.baseUrl + "api/fileman/MoveItem";
+                var data = { pathInfo: item.key, destinationDirectory: destinationDirectory.key };
+                return SendAjaxRequest(url, data);
+            },
+            copyItem: function (item, destinationDirectory) {
+                var url = Ciela.baseUrl + "api/fileman/CopyItem";
+                var data = { pathInfo: item.key, destinationDirectory: destinationDirectory.key };
+                return SendAjaxRequest(url, data);
+            },
+
+            downloadItems: function (items) {
+                var myitems = [];
+                items.forEach(item => {
+                    myitems.push(item.key);
+                });
+                var json = encodeURIComponent(JSON.stringify(myitems));
+                var a = document.createElement("a");
+                document.body.appendChild(a);
+                a.href = Ciela.baseUrl + "api/fileman/DownloadItems/" + json;
+                a.download = items.length == 1 ? items[0].name : "archive.zip";
+                a.click();
+            },
+
+            uploadFileChunk: function (file, uploadInfo, destinationDirectory) {
+                const formData = new FormData();
+                if (uploadInfo.chunkIndex === 0) {
+                    uploadInfo.customData.uploadId = new DevExpress.data.Guid().toString();
+                }
+                formData.append('chunkMetadata', JSON.stringify({
+                    uploadId: uploadInfo.customData.uploadId,
+                    fileName: file.name,
+                    index: uploadInfo.chunkIndex,
+                    totalCount: uploadInfo.chunkCount,
+                    fileSize: file.size
+                }));
+                formData.append('fileChunk', uploadInfo.chunkBlob);
+                formData.append('destinationDirectory', JSON.stringify(destinationDirectory));
+                var url = Ciela.baseUrl + "api/fileman/UploadFileChunk";
+                return SendAjaxRequest(url, formData, "post");
+            }
+        });
+
+
+        function SendAjaxRequest(url, data, requestType = "get") {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: url,
+                    data: data,
+                    type: requestType,
+                    dataType: 'json',
+                     contentType: requestType == "get" ? "application/json; charset=utf-8" : false,
+                     processData: requestType == "get",
+                    async: false,
+                    success: function (response) {
+                        if (response.success == false) {
+                            reject(new DevExpress.fileManagement.FileSystemError(response.errorCode, null, response.errorText));
+                        }
+                        else {
+                            resolve(response.result)
+                        }
+                    }
+                });
+            });
+        }
+        $('#file-manager').dxFileManager({
+            name: 'fileManager',
+            permissions: {
+                create: true,
+                download: true,
+                copy: true,
+                move: true,
+                delete: true,
+                rename: true,
+                upload: true
+            },
+            fileSystemProvider: customProvider,
+            rootFolderName: 'uploads'
+        })
+    });
+    function loadCustomExcelFile(id, isOverwrite) {
+
+        $('#divUploading').show();
+
+        $.ajax({
+            beforeSend: function (request) {
+                request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+            },
+            url: "@Url.Action("LoadCustomExcelFile", "ImportKonto")", method: 'POST', data: { id: id, isOverwrite: isOverwrite }
+
+        })
+            .done(function (result) {
+                if (result.success === true) {
+
+                    $('#divUploading').hide();
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+                else {
+                    $('#divUploading').hide();
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+
+            })
+            .fail(function (e) {
+
+                $('#divUploading').hide();
+                DevExpress.ui.dialog.alert('Failed to load! ' + e);
+            });
+
+    };
+    
+    function loadFromFolderKontoFile() {
+
+
+
+        $('#divUploading').show();
+
+        $.ajax({
+            beforeSend: function (request) {
+                request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+            },
+            url: "@Url.Action("LoadFromFolderKontoFile", "ImportKonto")", method: 'POST'
+
+        })
+            .done(function (result) {
+                if (result.success === true) {
+
+                    $('#divUploading').hide();
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+                else {
+                    $('#divUploading').hide();
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+
+            })
+            .fail(function (e) {
+
+                $('#divUploading').hide();
+                DevExpress.ui.dialog.alert('Failed to load! ' + e);
+            });
+
+    };
+    function getRootUrl(url) {
+        return url.toString().replace(/^(.*\/\/[^\/?#]*).*$/, "$1");
+    }
+</script>
+<form>
+    <div id="file-manager"></div>
+</form>

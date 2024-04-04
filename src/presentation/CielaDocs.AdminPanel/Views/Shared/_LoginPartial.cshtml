@@ -1,0 +1,42 @@
+﻿@using System.Security.Principal
+@using CielaDocs.AdminPanel.Extensions
+<ul class="navbar-nav">
+@if (User.Identity.IsAuthenticated)
+{<li class="nav-justified">
+            <div class="d-flex justify-content-center">
+                <div id="main-menu"></div>
+            </div>
+        </li>
+      <li class="nav-item">&nbsp;&nbsp;</li>
+            <img src="~/images/userin_24.png" width="24px" height="24px"  alt="." />
+         <li class="nav-item dropdown">
+               <a class="nav-link dropdown-toggle" href="#" id="dropdownreg" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">@User.Identity.Name!</a>
+              <div class="dropdown-menu" aria-labelledby="dropdownreg">
+                <a class="dropdown-item"  asp-area="" asp-controller="Home" asp-action="Profile">Профил</a>
+                <a class="dropdown-item" href="#" id="emplactionid" >Извършени действия</a>
+                <a class="dropdown-item" href="~/help/CielaDocsUserGuide.pdf" target="_blank">Ръководство на потребителя</a>
+              </div>
+            </li>
+        <li class="nav-item">
+            @if (User?.GetUserAccountTypeValue() == 2)
+            {
+
+                <a class="nav-link text-dark" asp-area="MicrosoftIdentity" asp-controller="Account" asp-action="SignOut">Изход</a>
+            }
+            else
+            {
+                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Logout">Изход</a>
+            }
+        </li>
+
+}
+else
+{
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="dropdownin" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Вход</a>
+            <div class="dropdown-menu" aria-labelledby="dropdownin">
+                     <a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Login">Вход</a>
+                </div>
+            </li>
+}
+</ul>

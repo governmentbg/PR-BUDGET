@@ -1,0 +1,87 @@
+﻿@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+}
+@Html.Hidden("EmplIds",(string)ViewBag.EmplIds)
+<div id="popup"></div>
+<script>
+    const popupContentTemplate = function () {
+
+        const scrollView = $('<div />');
+        let testurl = "@Url.Action("SelectUser", "Account")";
+        $.ajax({ url: testurl, method: 'Get', async: true, dataType: "html" })
+            .done(function (result) {
+
+                scrollView.append($('<div id="emplr" />').html(result));
+                scrollView.dxScrollView({
+                    width: '100%',
+                    height: '100%',
+                });
+            })
+            .fail(function (xhr) {
+                alert('Грешка при зареждане на данни.' + xhr.status + ' -' + xhr.statusText + ' -' + xhr.responseText);
+            });
+        return scrollView;
+    };
+    $(() => {
+        popup.option({
+            contentTemplate: () => popupContentTemplate()
+        });
+        popup.show();
+    });
+    const popup = $('#popup').dxPopup({
+        contentTemplate: popupContentTemplate,
+        width: 440,
+        height: 'auto',
+        container: '.dx-viewport',
+        showTitle: true,
+        title: 'Избери администрация',
+        visible: false,
+        dragEnabled: true,
+        hideOnOutsideClick: true,
+        showCloseButton: true,
+        position: {
+            at: 'center',
+            my: 'center',
+            of: window,
+            collision: {
+                x: 'none',
+                y: 'flip'
+            },
+            offset: '0 0'
+        }
+    }).dxPopup('instance');
+    function OnClosePopupEventHandlerEx(arg, e) {
+        switch (arg) {
+            case 'popUpOk':
+                popup.hide();
+                setCurrentProfile(e);
+                break;
+            case 'popUpClose':
+                popup.hide();
+                break;
+
+        }
+    }
+    function setCurrentProfile(s) {
+            $.ajax({
+                beforeSend: function (request) {
+                    request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                },
+                url: "@Url.Action("SetCurrentProfile", "Account", new {area=""})", method: 'POST', data: { id:s }
+
+            })
+                .done(function (result) {
+                    if (result.success === true) {
+                     }
+                    else {
+                        DevExpress.ui.notify(result.responseText);
+                    }
+
+                })
+                .fail(function (e) {
+                    DevExpress.ui.notify('Failed to redirect user! ' + e);
+                });
+        }
+</script>

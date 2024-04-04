@@ -1,0 +1,57 @@
+﻿@using System.Collections.Generic
+@using System.Linq
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@model LoginViewModel
+@inject SignInManager<IdentityUser> SignInManager
+
+@{
+    ViewData["Title"] = "Влез";
+}
+
+<div class="spacer_40"></div>
+<div class="row" >
+
+    <div class="col-md-4">
+        <section>
+                <h5>Идентификация</h5>
+            <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" >
+              
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <div class="form-group">
+                    <label for="Email">Имейл</label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label for="Password">Парола</label>
+                    <input asp-for="Password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox">
+                        <label for="RememberMe">
+                            <input asp-for="RememberMe" />
+                            @Html.DisplayNameFor(m => m.RememberMe)
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-light">Вход</button>
+                </div>
+              
+                <div class="form-group">
+                    <p>
+                        <a asp-action="ForgotPassword">Забравена парола?</a>
+                    </p>
+                </div>
+            </form>
+        </section>
+    </div>
+
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

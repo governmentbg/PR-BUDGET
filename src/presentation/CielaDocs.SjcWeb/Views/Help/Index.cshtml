@@ -1,0 +1,75 @@
+﻿
+<div class="container">
+    <div class="spacer_20"></div>
+    <div class="col-md-12">
+        <h5 class="section-titlepara-at">Ръководства на потребителя (pdf)</h5>
+    </div>
+    <div class="border-at"></div>
+    <div class="row">
+
+        <div class="col-md-3" id="helpPdf">
+            <div class="capsule-at">
+                
+                <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/pdf.png")" alt="." />
+                <p class="button_text-at">Ръководство на потребителя</p>
+                <p>Ръководство на крайния потребител</p>
+            </div>
+        </div>
+      
+    </div>
+    <div class="spacer_20"></div>
+       <div class="col-md-12">
+        <h5 class="section-titlepara-at">Обучаващи видео клипове</h5>
+    </div>
+    <div class="border-at"></div>
+ <div class="row">
+
+        <div class="col-md-3" id="admin">
+            <div class="capsule-at">
+                <span id="cntMyMsg" class="badge badge-pill badge-success"></span>
+                <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/movie.png")" alt="." />
+                <p class="button_text-at">Администриране на системата</p>
+                <p>Преглед на процедурите по администриране на системата...</p>
+            </div>
+        </div>
+         <div class="col-md-3" id="delo">
+            <div class="capsule-at">
+                <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/movie.png")" alt="." />
+                <p class="button_text-at">Програмно бюджетиране</p>
+                <p>Преглед на функционалностите на системата за програмно бюджетиране</p>
+            </div>
+        </div>
+     
+         <div class="col-md-3" id="myreports">
+            <div class="capsule-at">
+                <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/movie.png")" alt="." />
+                <p class="button_text-at">Справки и отчети</p>
+                <p>Преглед на функционалностите на системата за изготвяне на справки и отчети</p>
+            </div>
+
+        </div>
+    </div>
+ </div>
+ @section scripts {
+ <script>
+    
+    $(function () {
+    
+         $("#admin").on("click", function (e) {
+           // redirectme("@Url.Action("Admin", "Video")");
+        });
+        
+            $("#helpPdf").on("click", function (e) {
+                var element = document.createElement('a');
+                element.setAttribute('href', "@Url.Content("~/help/UserGuide.pdf")");
+                element.style.display = 'none';
+                document.body.appendChild(element);
+                element.click();
+                document.body.removeChild(element);
+            });
+           
+            
+    });
+   
+</script>
+}

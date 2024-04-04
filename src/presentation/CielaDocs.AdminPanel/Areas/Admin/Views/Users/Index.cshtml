@@ -1,0 +1,350 @@
+﻿@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    ViewData["Title"] = "Index";
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+
+}
+@Html.Hidden("UserId",(int)ViewBag.UserId)
+<h4>Потребители на системата</h4>
+<div style="display:inline-block">Към</div>
+<select class="form-control" id="selectCourtType" style="width:280px;display:inline-block;padding-left:5px;">
+    <option>Избери... </option>
+</select>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="image-indicator"></div>
+<div id="grid"></div>
+
+@await Html.PartialAsync("_ModalDialogPartial")
+@await Html.PartialAsync("_CommonDialogPartial")
+@section scripts {
+
+    <script>
+        let loadIndicator;
+        $('#image-indicator').dxLoadIndicator({
+            indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
+        });
+        const anyModal = $('#anyModal');
+        const anyContent = $('#anyContent');
+        const anyTitle = $('#anyTitle');
+        const commonModal = $('#commonModal');
+        const commonContent = $('#commonContent');
+        const commonTitle = $('#commonTitle');
+        let selectedCourtTypeId=0 ;
+
+        $('#btnAnySave').on('click', saveUser);
+        $('#btnAnyCancel').on('click', function () {
+            anyModal.modal('hide');
+            $("#grid").dxDataGrid("instance").refresh();
+        });
+
+        function addUser() {
+            let spurl = EduDl.baseUrl + "Users/AddUserPartial";
+            commonContent.empty();
+            commonTitle.text('Добавяне');
+            commonContent.html('<p>Зареждам данни…</p>')
+            $.ajax({
+                type: 'Get',
+                url: spurl,
+                data: { },
+                success: function (data) {
+                    commonContent.html(data);
+                }
+            });
+
+            commonModal.modal('show');
+        }
+        function editUser(id) {
+            let url = EduDl.baseUrl + "Users/EditUserPartial";
+            commonContent.empty();
+            commonTitle.text('Редакция');
+            commonContent.html('<p>Зареждам данни…</p>')
+            $.ajax({
+                type: 'Get',
+                url: url,
+                data: { id: id },
+                success: function (data) {
+                    commonContent.html(data);
+                }
+            });
+            commonModal.modal('show');
+        }
+        function addOnlyAspNetUsers() {
+            loadIndicator.option('visible', true);
+            $.ajax({
+                beforeSend: function (request) {
+                    request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                },
+                url: "@Url.Action("CreateOnlyAspneUsers", "Users",new {area="Admin"})", method: 'POST'
+
+            })
+                .done(function (result) {
+                    loadIndicator.option('visible', false);
+                    if (result.success === true) {
+                        $("#grid").dxDataGrid("instance").refresh();
+                        commonModal.modal('hide');
+
+                    }
+                    else {
+                        DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                    }
+
+                })
+                .fail(function (e) {
+                    loadIndicator.option('visible', false);
+                    DevExpress.ui.notify('Failed to save! ' + e);
+
+                });
+        }
+
+        function saveUser() {
+
+                var userData = $("#userForm").serialize();
+
+                $.ajax({
+                    beforeSend: function (request) {
+                        request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                    },
+                    url: "@Url.Action("SaveUser", "Users",new {area="Admin"})", method: 'POST', data: userData
+
+                })
+                    .done(function (result) {
+                        if (result.success === true) {
+                            $("#grid").dxDataGrid("instance").refresh();
+                            commonModal.modal('hide');
+
+                        }
+                        else {
+                               DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                        }
+
+                    })
+                    .fail(function (e) {
+                        DevExpress.ui.notify('Failed to save! ' + e);
+
+                    });
+
+        };
+        function deleteUser(id) {
+            if (confirmDlg('Потвърдете изтриването на потребителя', function (ret) {
+                if (ret) {
+                    $.ajax({
+                        url: "@Url.Action("DeleteUser", "Users", new { area = "Admin" })", data: { id: id }, method: 'POST'
+                    })
+                        .done(function (result) {
+                            $("#grid").dxDataGrid("instance").refresh();
+                            DevExpress.ui.notify(result.msg);
+                        })
+                        .fail(function () {
+                            DevExpress.ui.notify('Грешка при изтриване на записа.');
+                        });
+                }
+            }));
+        }
+        $(() => {
+            loadIndicator = $('#image-indicator').dxLoadIndicator({
+                visible: false,
+            }).dxLoadIndicator('instance');
+            loadIndicator.option('visible', false);
+
+            $("#selectCourtType").select2({
+                placeholder: "Избери...",
+                allowClear: true,
+                ajax: {
+                    url: "@Url.Action("GetCourtTypes", "Noms" )",
+                    contentType: "application/json; charset=utf-8",
+                    data: function (params) {
+                        var query =
+                        {
+                            term: params.term,
+                        };
+                        return query;
+                    },
+                    processResults: function (result) {
+                        return {
+                            results: $.map(result, function (item) {
+                                return {
+                                    id: item.Id,
+                                    text: item.Name
+                                };
+                            }),
+                        };
+                    }
+                }
+            }).on('change', function (e) {
+                selectedCourtTypeId = $(e.currentTarget).val();
+                $("#grid").dxDataGrid("instance").refresh();
+            });
+
+
+            $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(EduDl.baseUrl + "Users/GetAllUsersByCourtTypeId", 'Get', { courtTypeId: selectedCourtTypeId });
+                        }
+                    }),
+                }),
+                paging: {
+                    pageSize: 10,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                    width: 240,
+                    placeholder: 'Търси...',
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                columns: [
+                    { dataField: 'UserFullName', caption: 'Трите имена', width: "20%" },
+                    { dataField: 'UserName', caption: 'Имейл', width: "20%" },
+                    { dataField: 'UserTypeName', caption: 'Вид', width: "20%" },
+                    { dataField: 'CourtName', caption: 'Към', width: "20%" },
+                    {
+                        dataField: "LoginEnabled", caption: "[A]", width: "4%",
+                        cellTemplate: function (element, info) {
+                            if (info.text == 'Да') {
+                                element.append("<div><img alt='.' src='../images/green-flag.png'></img></div>");
+                            }
+                            else {
+                                element.append("<div><img alt='.' src='../images/red-flag.png'></img></div>");
+                            }
+
+                        },
+                    },
+                    {
+                        type: 'buttons',
+                        width: 114,
+                        buttons: [
+                            {
+                                hint: 'Редакция',
+                                icon: 'edit',
+
+                                onClick(e) {
+                                    editUser(e.row.data.Id)
+                                    e.component.refresh(true);
+                                    e.event.preventDefault();
+                                },
+                            },
+                            {
+                                hint: 'Лог',
+                                icon: 'event',
+
+                                onClick(e) {
+                                    logEmpl(e.row.data.Id)
+                                    e.component.refresh(true);
+                                    e.event.preventDefault();
+                                },
+                            },
+                            {
+                                hint: 'Изтриване',
+                                icon: 'trash',
+
+                                onClick(e) {
+                                    deleteUser(e.row.data.Id)
+                                    e.component.refresh(true);
+                                    e.event.preventDefault();
+                                },
+                            }
+                        ],
+                    }
+                ],
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                onSelectionChanged: function (items) {
+                    if (items.selectedRowsData[0]) {
+                        selectedOnrlId = items.selectedRowsData[0].Id;
+                    }
+                },
+                focusedRowEnabled: true
+            });
+
+
+        });
+
+        const menuData = [{
+            id: '1',
+            name: 'Нов',
+            icon: '../images/add.png',
+
+        },
+        {
+            id: '6_1',
+            name: 'Експорт',
+            icon: '../images/exporter.svg',
+
+        }, {
+            id: '4',
+            name: 'Обнови',
+            icon: '../images/refresh.png',
+
+        },{
+            id: '7',
+            name: 'Служебни функции',
+            items: [
+                {
+                    id: '7_1',
+                    name: 'Създай ASPNetUserId за потребители от съдебната система',
+                },
+            ],
+
+        }];
+        var dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+                        case '1': addUser();
+                            break;
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("Empl");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "Users.xlsx");
+                                });
+                            });
+                            break;
+                        case '7_1': addOnlyAspNetUsers();
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+    </script>
+
+}

@@ -1,0 +1,253 @@
+﻿@{
+    ViewData["Title"] = "Index";
+
+}
+<style>
+    .select2-container--open {
+        z-index: 9999999
+    }
+</style>
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="cbFunctionalArea">Функционална област</label>
+                        <select class="form-control" style="width:100%" id="cbFunctionalArea">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="cbFunctionalSubArea">Бюджетна програма</label>
+                        <select class="form-control" style="width:100%" id="cbFunctionalSubArea">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cbCourtType">Вид</label>
+                        <select class="form-control" style="width:100%" id="cbCourtType">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                        <label for="cbCourt">Отчетна единица</label>
+                        <select class="form-control" style="width:100%" id="cbCourt">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="nmonth">За месец</label>
+                        <div id="selectBoxMonth"></div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="nyear">За година</label>
+                        <div id="selectBoxYear"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="spacer_10"></div>
+        <div style="float:right;margin-right:10px;margin-bottom:10px;">
+        <div id="okFilterBtn"></div>
+        <div id="closeFilterBtn"></div>
+        </div>
+    </div>
+</form>
+<script>
+    $(() => {
+        let functionalAreaId = 0;
+        let functionalSubAreaId = 0;
+        let courtTypeId = 0;
+        let courtId = 0;
+        let nm = 0;
+        let ny = 0;
+
+        $("#selectBoxMonth").dxSelectBox({
+            dataSource: selectBoxMonthData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+                nm=e.value;
+            }
+           
+        });
+        $("#selectBoxYear").dxSelectBox({
+            dataSource: selectBoxYearData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+               ny=e.value;
+            }
+
+        });
+
+        $("#cbCourtType").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetCourtTypes", "Noms" )",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            courtTypeId=$(e.currentTarget).val();
+        });
+        $("#cbCourt").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetCourtsByCourtTypeIdSelect2", "Noms" )",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        courtTypeId: courtTypeId,
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            courtId=$(e.currentTarget).val();
+        });
+        $("#cbFunctionalArea").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetFunctionalAreas", "Noms" )",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            functionalAreaId = $(e.currentTarget).val();
+        });
+        $("#cbFunctionalSubArea").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetFunctionalSubAreaByAreaId", "Noms" )",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        id: functionalAreaId,
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            functionalSubAreaId = $(e.currentTarget).val();
+        });
+        //-------------buttons--------------
+        $('#okFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                if ((functionalSubAreaId == 0)||(courtId==0)||(nm==0)||(ny==0)) { 
+                    DevExpress.ui.dialog.alert('Изберете задължително отчетна единица, месец и година','Внимание');
+                    return;
+                }
+                window.parent.OnClosePopupEventHandlerEx('mainDataFilterOk', ''.concat(functionalAreaId,"|",courtId, "|", nm, "|", ny));
+            },
+        });
+        $('#closeFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                popup.hide();
+            },
+        });
+    });
+   
+</script>

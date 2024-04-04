@@ -1,0 +1,121 @@
+﻿@model CielaDocs.Application.Dtos.CourtDto
+
+@{
+    ViewData["Title"] = "Index";
+
+}
+<form id="anyForm">
+    @Html.HiddenFor(x=>x.Id)
+    @Html.HiddenFor(x=>x.CourtGuid)
+    @Html.HiddenFor(x=>x.IsActive)
+    @Html.HiddenFor(x=>x.Num)
+    @Html.HiddenFor(x=>x.CourtTypeId)
+
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+          
+            <div class="row">
+                <div class="col-9">
+                    <div class="form-group">
+                        <label for="Name">Наименование</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="Num">№</label>
+                        <input asp-for="Num" class="form-control" type="number" />
+                        <span asp-validation-for="Num" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-9">
+                    <div class="form-group">
+                        <label for="cbCourtType">Вид</label>
+                        <select class="form-control" style="width:100%" id="cbCourtType">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="cbIsActive">
+                            <label class="custom-control-label" for="cbIsActive">Активен</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="KontoCode">Конто №</label>
+                        <input asp-for="KontoCode" class="form-control" type="text" />
+                        <span asp-validation-for="KontoCode" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+    $(() => {
+      
+        $('#cbIsActive').prop('checked', ($('#IsActive').val().toLowerCase() == 'true') ? true : false);
+        $("#cbIsActive").change(function () {
+            $('#IsActive').val($(this).prop("checked"));
+        });
+      
+        let courtTypeId = $('#CourtTypeId').val();
+
+        $.ajax({
+            url: "@Url.Action("GetCourtTypeById", "Noms",new {area="Admin"})",
+            dataType: 'json',
+            type: "Get",
+            data: { id: courtTypeId },
+            success: function (data) {
+                $("#cbCourtType").empty();
+                $("#cbCourtType").append("<option value='0'>--Избери--</option>");
+                $("#cbCourtType").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
+                $('#cbCourtType').val(courtTypeId);
+            }
+        });
+
+        $("#cbCourtType").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetCourtTypes", "Noms",new {area="Admin"} )",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            $('#CourtTypeId').val($(e.currentTarget).val());
+        });
+        //---------------------------------
+
+    });
+</script>

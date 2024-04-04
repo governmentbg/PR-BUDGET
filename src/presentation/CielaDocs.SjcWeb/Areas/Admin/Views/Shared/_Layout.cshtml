@@ -1,0 +1,309 @@
+﻿@using DevExtreme.AspNet.Mvc;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Администриране</title>
+     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/jqueryui/jquery-ui.min.css" />
+     <link rel="stylesheet" href="~/lib/jquery-confirm/jquery-confirm.min.css" />
+       <link rel="stylesheet" href="~/js/select2/css/select2.min.css" />
+    <link rel="stylesheet" href="~/css/devexbundle.css" />
+    <link href="~/css/dx.generic.custom-scheme-dx.css" rel="stylesheet" />
+    <link href="~/css/devextreme/theme.additional.css" rel="stylesheet" />
+    
+
+     <link rel="stylesheet" href="~/css/admindx.css" />
+      <link rel="stylesheet" href="~/css/common.css" />
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+           <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/jqueryui/jquery-ui.min.js"></script>
+      <script src="~/lib/gijgo/modular/js/core.js"></script>
+    <script src="~/lib/gijgo/modular/js/grid.js"></script>
+    <script src="~/gijgo/modular/js/dialog.min.js"></script>
+    <link rel="stylesheet" href="~/lib/gijgo/modular/css/core.css" />
+    <link rel="stylesheet" href="~/lib/gijgo/modular/css/grid.css" />
+    <link href="~/gijgo/modular/css/dialog.min.css" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" type="text/css" />
+         <script src="~/js/jquery-confirm/jquery-confirm.min.js" asp-append-version="true"></script>
+           <script src="~/js/select2/js/select2.min.js"></script>
+         <script src="~/js/moment.js/moment.min.js"></script>
+         <script src="~/js/print-js/print.min.js" asp-append-version="true"></script>
+        <script src="~/js/notify.js" asp-append-version="true"></script>
+          <link href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.5.2/flatpickr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.5.2/flatpickr.min.js"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/bg.js"></script>
+    <script src="~/js/devexbundle.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script src="~/js/devextreme/aspnet/dx.aspnet.mvc.js"></script>
+    <script src="~/js/devextreme/aspnet/dx.aspnet.data.js"></script>
+    <style type="text/css">
+        .menu-container .dx-treeview .dx-treeview-node[aria-level="1"] {
+            font-weight: normal;
+            font-size:13px;
+        }
+    </style>
+    <script>
+        EduDl = window.EduDl || {};
+        EduDl.baseUrl = "@Url.Content("~/Admin/")";
+    </script>
+
+</head>
+<body class="dx-viewport">
+
+    <script>
+        EduDl = window.EduDl || {};
+        EduDl.OnrId = window.localStorage.getItem('OnrId');
+        EduDl.EmplId = window.localStorage.getItem('EmplId');
+
+    </script>
+      
+    <div id="app-side-nav-outer-toolbar">
+        <div class="layout-header">
+            @(Html.DevExtreme().Toolbar()
+                .Items(items =>
+                {
+                    items.Add()
+                    .Widget(w => w
+                    .Button()
+                    .Icon("menu")
+                    .OnClick("Admin.onMenuButtonClick")
+                    )
+                    .Location(ToolbarItemLocation.Before)
+                    .CssClass("menu-button");
+                    items.Add()
+                    .Html("<div>Администратор</div>")
+                    .Location(ToolbarItemLocation.Before)
+                    .CssClass("header-title");
+                })
+                )
+        </div>
+        <div class="layout-body layout-body-hidden">
+            @(Html.DevExtreme().Drawer()
+                .ID("layout-drawer")
+                .Position(DrawerPosition.Left)
+                .Opened(new JS("Admin.restoreDrawerOpened()"))
+                .Content(@<text>
+                    <div id="layout-drawer-scrollview" class="with-footer">
+                        <div class="content" style="margin:10px;">
+                            @RenderBody()
+                        </div>
+                        <div class="content-block">
+                            <div class="content-footer">
+                                <div id="footer">
+                                    2023 Сиела Норма Inc.  Всички права запазени.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </text>)
+                .Template(new TemplateName("navigation-menu"))
+                )
+        </div>
+    </div>
+
+    @using (Html.DevExtreme().NamedTemplate("navigation-menu"))
+    {
+        <div class="menu-container dx-swatch-additional" style="background-color:aliceblue;">
+
+            @functions {
+            string GetUrl(string action) => Url.Action(action);
+            string GetCurrentUrl() => Url.Action(ViewContext.RouteData.Values["action"].ToString());
+            bool IsCurrentUrl(string pageName) => GetUrl(pageName) == GetCurrentUrl();
+        }
+
+        @(
+                Html.DevExtreme().TreeView()
+                            
+.Items(items =>
+          {
+             items.Add()
+             .Id("home")
+             .Text("Администрации")
+             .Icon("home");
+              items.Add()
+             .Id("departs")
+             .Text("Административна структура")
+             .Icon("hierarchy");
+             items.Add()
+              .Id("empl")
+              .Text("Потребители")
+              .Icon("group");
+              items.Add()
+              .Id("sig")
+              .Text("Сигнатури на документи")
+              .Icon("detailslayout");
+              items.Add()
+              .Id("position")
+              .Text("Длъжности")
+              .Icon("fields");
+                          
+              items.Add()
+              .Id("close")
+              .Text("Затвори")
+              .Icon("back");
+
+                })
+                .ExpandEvent(TreeViewExpandEvent.Click)
+                .SelectionMode(NavSelectionMode.Single)
+                .FocusStateEnabled(false)
+                .Width(250)
+                .OnItemClick("Admin.onTreeViewItemClick")
+                )
+
+        </div>
+    }
+
+    <script>
+
+        var Admin = (function () {
+
+            var DRAWER_OPENED_KEY = "Admin-drawer-opened";
+
+            var breakpoints = {
+                xSmallMedia: window.matchMedia("(max-width: 599.99px)"),
+                smallMedia: window.matchMedia("(min-width: 600px) and (max-width: 959.99px)"),
+                mediumMedia: window.matchMedia("(min-width: 960px) and (max-width: 1279.99px)"),
+                largeMedia: window.matchMedia("(min-width: 1280px)")
+            };
+
+            function getDrawer() {
+                return $("#layout-drawer").dxDrawer("instance");
+            }
+
+            function restoreDrawerOpened() {
+                var isLarge = breakpoints.largeMedia.matches;
+                if (!isLarge)
+                    return false;
+
+                var state = sessionStorage.getItem(DRAWER_OPENED_KEY);
+                if (state === null)
+                    return isLarge;
+
+                return state === "true";
+            }
+
+            function saveDrawerOpened() {
+                sessionStorage.setItem(DRAWER_OPENED_KEY, getDrawer().option("opened"));
+            }
+
+            function updateDrawer() {
+                var isXSmall = breakpoints.xSmallMedia.matches,
+                    isLarge = breakpoints.largeMedia.matches;
+
+                getDrawer().option({
+                    openedStateMode: isLarge ? "shrink" : "overlap",
+                    revealMode: isXSmall ? "slide" : "expand",
+                    minSize: isXSmall ? 0 : 60,
+                    shading: !isLarge,
+                });
+            }
+
+            function init() {
+                $("#layout-drawer-scrollview").dxScrollView({ direction: "vertical" });
+
+                $.each(breakpoints, function (_, size) {
+                    size.addListener(function (e) {
+                        if (e.matches)
+                            updateDrawer();
+                    });
+                });
+
+                updateDrawer();
+
+                $('.layout-body').removeClass('layout-body-hidden');
+            }
+
+            function navigate(url, delay) {
+                console.log(url);
+                if (url)
+             
+                    setTimeout(function () { location.href = url }, delay);
+            }
+
+            function onMenuButtonClick() {
+                getDrawer().toggle();
+                saveDrawerOpened();
+            }
+
+            function onTreeViewItemClick(e) {
+
+                const onrUrl="@Url.Action("Index","Home", new {area="Admin"})";
+                const emplUrl="@Url.Action("Index","Empl", new {area="Admin"})";
+                const backUrl = "@Url.Action("Index","Home", new {area=""})";
+                const sigUrl = "@Url.Action("Index","Reg", new {area="Admin"})";
+                const typesOfDocumentUrl = "@Url.Action("Index","TypesOfDocument", new {area="Admin"})";
+                const edeliveryUrl = "@Url.Action("Index","EdeliveryCert", new {area="Admin"})";
+                const positionUrl = "@Url.Action("Index","Position", new {area="Admin"})";
+                const directtypesUrl = "@Url.Action("Index","DirectType", new {area="Admin"})";
+                const departUrl = "@Url.Action("Index","Depart", new {area="Admin"})";
+                const endofyearUrl = "@Url.Action("Index","EndOfYear", new {area="Admin"})";
+                const contracttypeUrl = "@Url.Action("Index","ContractType", new {area="Admin"})";
+                const cardrouteUrl = "@Url.Action("Index","CardRoute", new {area="Admin"})";
+
+                // console.log(e.itemData.id);
+             
+                var drawer = getDrawer();
+                var savedOpened = restoreDrawerOpened();
+                var actualOpened = drawer.option("opened");
+
+                if (!actualOpened) {
+                    drawer.show();
+                } else {
+                    var willHide = !savedOpened || !breakpoints.largeMedia.matches;
+                    //var willNavigate = !e.itemData.selected;
+
+                    if (willHide)
+                        drawer.hide();
+                        switch(e.itemData.id){
+                            case 'home': navigate(onrUrl, willHide ? 400 : 0);
+                                break;
+                             case 'departs': navigate(departUrl, willHide ? 400 : 0);
+                                break;
+                            case 'empl': navigate(emplUrl, willHide ? 400 : 0);
+                                break;
+                            case 'sig': navigate(sigUrl, willHide ? 400 : 0);
+                                break;
+                            case 'directtypes': navigate(directtypesUrl, willHide ? 400 : 0);
+                                break;
+                            case 'typesofdocument': navigate(typesOfDocumentUrl, willHide ? 400 : 0);
+                                break;
+                            case 'edelivery': navigate(edeliveryUrl, willHide ? 400 : 0);
+                                break;
+                            case 'position': navigate(positionUrl, willHide ? 400 : 0);
+                                break;
+                            case 'endofyear': navigate(endofyearUrl, willHide ? 400 : 0);
+                                break;
+                            case 'contracttype': navigate(contracttypeUrl, willHide ? 400 : 0);
+                                break;
+                            case 'cardroute': navigate(cardrouteUrl, willHide ? 400 : 0);
+                                break;
+                            case 'close': navigate(backUrl, willHide ? 400 : 0);
+                                break;
+                        }
+                    //if (willNavigate)
+                       // navigate(e.itemData.path, willHide ? 400 : 0);
+                }
+            }
+
+            return {
+                init: init,
+                restoreDrawerOpened: restoreDrawerOpened,
+                onMenuButtonClick: onMenuButtonClick,
+                onTreeViewItemClick: onTreeViewItemClick
+            };
+        })();
+
+        document.addEventListener("DOMContentLoaded", function documentReady() {
+            this.removeEventListener("DOMContentLoaded", documentReady);
+            Admin.init();
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

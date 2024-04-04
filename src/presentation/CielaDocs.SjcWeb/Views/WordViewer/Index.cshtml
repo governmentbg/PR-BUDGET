@@ -1,0 +1,35 @@
+﻿@inject IWebHostEnvironment env
+@using CielaDocs.SjcWeb.ViewModels
+@using DevExpress.AspNetCore
+@using DevExpress.RichEdit
+@model DocumentViewModel
+@{
+    Layout = "~/Views/Shared/_LayoutWordViewer.cshtml";
+    var documentName = Model.FileName;
+}
+@* <script type="text/javascript">
+
+    var docLoaded = false;
+
+    var richEdit = $("#documentRichEdit").dxRichEdit("instance");
+    function onInitRichEditor(s, e) {
+        richEdit.documentName = @documentName;
+    }
+
+    function onDocumentFormatted(s, e) {
+        //Flag as loaded so that any changes will now trigger the "file-modified" asterisk in the header
+        docLoaded = true;
+    }
+
+</script> *@
+@(
+Html.DevExpress().RichEdit("documentRichEdit")
+                // .OnInit("onInitRichEditor")
+                //.OnDocumentFormatted("onDocumentFormatted")
+                .ExportUrl(Url.Action("Export"))
+                .Ribbon(r => r.ActiveTabIndex(0))
+                .Height("800px")
+                .Width("100%")
+                .ConfirmOnLosingChanges(c => c.Enabled(false))
+                .Open(() => { return Model.DocumentBytes; }, DevExpress.AspNetCore.RichEdit.DocumentFormat.OpenXml)
+)

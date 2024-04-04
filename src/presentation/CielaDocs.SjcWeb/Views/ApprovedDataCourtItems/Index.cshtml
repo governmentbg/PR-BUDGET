@@ -1,0 +1,264 @@
+﻿@using CielaDocs.Application.Dtos
+@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    Layout = "~/Views/Shared/_LayoutClear.cshtml";
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    var title = $" година: {ViewBag.Year}";
+}
+<style>
+    .select2-dropdown {
+        z-index: 10001;
+    }
+
+    .disabledRow {
+        color: silver;
+        font-weight: 600;
+    }
+
+        .disabledRow.dx-state-hover td {
+            color: silver !important;
+            font-weight: 600;
+        }
+</style>
+<div class="spacer_5"></div>
+<h4>Бюджетна прогноза по ведомствени и администрирани разходни параграфи на програмата за @title</h4>
+<h4>@ViewBag.ProgramName</h4>
+<h5>Валута:@ViewBag.CurrencyName, Мярка:@ViewBag.CurrencyMeasureName</h5>
+<h5>Отчетна единица:@ViewBag.CourtName</h5>
+<div class="spacer_5"></div>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="grid"></div>
+@Html.Hidden("ProgramNum", (int)ViewBag.ProgramNum)
+@Html.Hidden("CourtId", (int)ViewBag.CourtId)
+@Html.Hidden("FunctionalSubAreaId", (int)ViewBag.FunctionalSubAreaId)
+@await Html.PartialAsync("_ModalDialogPartial")
+
+@section scripts {
+    <script>
+        const anyModal = $('#anyModal');
+        const anyContent = $('#anyContent');
+        const anyTitle = $('#anyTitle');
+
+        var selectedId = 0;
+
+        $('#btnAnyCancel').on('click', function () {
+            anyModal.modal('hide');
+            $("#grid").dxDataGrid("instance").refresh();
+        });
+        $('#btnAnySave').on('click', Save);
+
+        function Save() {
+        };
+
+
+
+        $(() => {
+
+            $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(Ciela.baseUrl + "ApprovedDataCourtItems/GetDataGrid", 'Get', { programNum: $("#ProgramNum").val(), courtId: $("#CourtId").val() })
+                        },
+                        update(key, values) {
+                            return sendRequest(Ciela.baseUrl + "ApprovedDataCourtItems/UpdateDataItem", 'Post', {
+                                key: key,
+                                values: JSON.stringify(values),
+                            });
+                        },
+                    }),
+                }),
+                paging: {
+                    pageSize: 10,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                decimalSeparator: '.',
+                columns: [
+                    {
+                        dataField: "PrnCode",
+                        width: "10%",
+                        caption: "№"
+                    },
+                    {
+                        dataField: "Name",
+                        width: "60%",
+                        caption: "Наименование"
+                    },
+                    {
+                        dataField: "Nvalue",
+                        width: "10%",
+                        caption: "Прогнозна С-ст",
+                        alllowEditing: true,
+                        valueFormat: '#0.00',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                    {
+                        dataField: "ApprovedValue",
+                        width: "10%",
+                        caption: "Утвърден бюджет",
+                        alllowEditing: true,
+                        valueFormat: '#0.00',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                    {
+                        dataField: "CalculatedValue",
+                        width: "10%",
+                        caption: "Конто С-ст",
+                        alllowEditing: false,
+                        valueFormat: '#0.00',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                ],
+                editing: {
+                    mode: 'cell',
+                    allowUpdating: true,
+                    allowDeleting: false,
+                    allowAdding: false,
+                },
+                onEditorPreparing: function (e) {
+                    if (e.dataField === "PrnCode" || e.dataField === "CalculatedValue" || e.dataField === "Name") e.editorOptions.disabled = true
+                    if (e.dataField === "Nvalue" && e.parentType === "dataRow") {
+                        const defaultValueChangeHandler = e.editorOptions.onValueChanged;
+                        e.editorOptions.onValueChanged = function (args) {
+                            defaultValueChangeHandler(args);
+                        }
+                    }
+                    if (e.dataField === "ApprovedValue" && e.parentType === "dataRow") {
+                        const defaultValueChangeHandler = e.editorOptions.onValueChanged;
+                        e.editorOptions.onValueChanged = function (args) {
+                            defaultValueChangeHandler(args);
+                        }
+                    }
+                },
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                onSelectionChanged: function (items) {
+                    if (items.selectedRowsData[0]) {
+                        selectedId = items.selectedRowsData[0].Id;
+                    }
+                },
+                focusedRowEnabled: true,
+                onFocusedRowChanged(e) {
+                    if (e) {
+                        getExtraDataItem(e.row);
+                    }
+                },
+                onRowPrepared: function (info) {
+                    if (info.rowType === "data" && info.data.ValueAllowed === false) {
+                        info.rowElement.css('background', '#ffcc99');
+                    }
+                }
+
+            });
+
+
+        });
+        async function getExtraDataItem(row) {
+
+
+            return false;
+        }
+
+        const menuData = [{
+            id: '1',
+            name: 'Затвори',
+            icon: './images/close.png',
+
+
+        },
+        {
+            id: '6_1',
+            name: 'Експорт',
+            icon: './images/exporter.svg',
+
+
+        }, {
+            id: '4',
+            name: 'Обнови',
+            icon: './images/refresh.png',
+
+        }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+                        case '1':
+                            window.close();
+                            break;
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("Owners");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "ApprovedBudgetData.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+
+
+    </script>
+}

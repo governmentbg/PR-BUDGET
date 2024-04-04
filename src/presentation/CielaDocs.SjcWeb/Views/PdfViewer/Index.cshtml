@@ -1,0 +1,24 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+
+}
+
+
+
+<script>
+     $(() => {
+        var a = document.createElement("a");
+        document.body.appendChild(a);
+        a.href = decodeURIComponent(atob('@ViewBag.url'));
+        //a.setAttribute('target', '_blank');
+        a.click();
+     });
+    function b64DecodeUnicode(str) {
+        // Going backwards: from bytestream, to percent-encoding, to original string.
+        return decodeURIComponent(atob(str).split('').map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+    }
+</script>

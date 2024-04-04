@@ -1,0 +1,280 @@
+﻿@using CielaDocs.Application.Dtos
+@model CourtDto
+@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .select2-dropdown {
+        z-index: 10001;
+    }
+</style>
+<div class="spacer_20"></div>
+<h3>Органи на съдебната власт</h3>
+<div style="display:inline-block">Избор</div>
+<select class="form-control" id="selectInstitution" style="width:280px;display:inline-block;padding-left:5px;">
+    <option> </option>
+</select>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="programTitle" style="color:red;"></div>
+<div id="grid"></div>
+@await Html.PartialAsync("_ModalDialogPartial")
+@section scripts {
+    <script>
+        const anyModal = $('#anyModal');
+        const anyContent = $('#anyContent');
+        const anyTitle = $('#anyTitle');
+        var selectedId = 0;
+        let selectedInstitutionTypeId = 0;
+        $('#btnAnySave').on('click', saveRow);
+        $('#btnAnyCancel').on('click', function () {
+            anyModal.modal('hide');
+            $("#grid").dxDataGrid("instance").refresh();
+        });
+
+        function addCourtType() {
+            let spurl = EduDl.baseUrl + "Institution/AddCourtTypePartial";
+            anyContent.empty();
+            anyTitle.text('Добавяне');
+            anyContent.html('<p>Зареждам данни…</p>')
+            $.ajax({
+                type: 'Get',
+                url: spurl,
+                data: { institutionTypeId: selectedInstitutionTypeId },
+                success: function (data) {
+                    anyContent.html(data);
+                }
+            });
+
+            anyModal.modal('show');
+        }
+        function saveRow() {
+
+            var postData = $("#anyForm").serialize();
+
+
+            $.ajax({
+                beforeSend: function (request) {
+                    request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                },
+                url: "@Url.Action("Save", "Institution", new { area = "Admin" })", method: 'POST', data: postData
+
+            })
+                .done(function (result) {
+                    if (result.success === true) {
+                        $("#grid").dxDataGrid("instance").refresh();
+                        anyModal.modal('hide');
+                        DevExpress.ui.notify(result.msg);
+
+                    }
+                    else {
+                        DevExpress.ui.notify(result.msg);
+                    }
+
+                })
+                .fail(function (e) {
+                    DevExpress.ui.notify('Failed to save! ' + e);
+                    anyModal.modal('hide');
+                });
+        };
+
+
+
+        $(() => {
+
+
+            $("#selectInstitution").select2({
+                placeholder: "",
+                allowClear: true,
+                ajax: {
+                    url: "@Url.Action("GetInstitutions", "Noms", new { area = "Admin" })",
+                    contentType: "application/json; charset=utf-8",
+                    data: function (params) {
+                        var query =
+                        {
+                            term: params.term,
+                        };
+                        return query;
+                    },
+                    processResults: function (result) {
+                        return {
+                            results: $.map(result, function (item) {
+                                return {
+                                    id: item.Id,
+                                    text: item.Name
+                                };
+                            }),
+                        };
+                    }
+                }
+            }).on('change', function (e) {
+                selectedInstitutionTypeId = $(e.currentTarget).val();
+                $('#programTitle').empty();
+                $('#programTitle').text($('#selectInstitution :selected').text());
+                $("#grid").dxDataGrid("instance").refresh();
+            });
+            //end of ------
+
+            $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(EduDl.baseUrl + "Noms/GetCourtTypeByInstitutionTypeId", 'Get', { institutionTypeId: selectedInstitutionTypeId });
+                        }
+                    }),
+                }),
+                paging: {
+                    pageSize: 10,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                columns: [{
+                    dataField: "Id",
+                    width: "2%",
+                    caption: "№"
+                },
+
+                {
+                    dataField: "Name",
+                    width: "90%",
+                    caption: "Наименование"
+                },
+                {
+                    type: 'buttons',
+                    width: 96,
+                    buttons: [{
+                        hint: 'Редакция',
+                        icon: 'edit',
+
+                        onClick(e) {
+                            editCourtType(e.row.data.Id)
+                            e.component.refresh(true);
+                            e.event.preventDefault();
+                        },
+                    }
+                    ],
+                }
+                ],
+
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                onSelectionChanged: function (items) {
+                    if (items.selectedRowsData[0]) {
+                        selectedId = items.selectedRowsData[0].Id;
+                    }
+                },
+                focusedRowEnabled: true,
+                onFocusedRowChanged(e) {
+                    if (e) {
+                        getExtraDataItem(e.row);
+                    }
+                },
+            });
+
+
+        });
+        async function getExtraDataItem(row) {
+
+
+            $('#elem-info').empty();
+            return false;
+        }
+        function editCourtType(id) {
+            let url = EduDl.baseUrl + "Institution/EditCourtTypePartial";
+            anyContent.empty();
+            anyTitle.text('Редакция');
+            anyContent.html('<p>Зареждам данни…</p>')
+            $.ajax({
+                type: 'Get',
+                url: url,
+                data: { id: id },
+                success: function (data) {
+                    anyContent.html(data);
+                }
+            });
+            anyModal.modal('show');
+        }
+        const menuData = [
+            {
+                id: '1',
+                name: 'Нов',
+                icon: '../images/add.png',
+
+            },
+            {
+                id: '6_1',
+                name: 'Експорт',
+                icon: '../images/exporter.svg',
+
+
+            }, {
+                id: '4',
+                name: 'Обнови',
+                icon: '../images/refresh.png',
+
+            }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+                        case '1': addCourtType();
+                            break;
+
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("Owners");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "CourtTypes.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+
+
+    </script>
+}

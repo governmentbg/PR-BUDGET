@@ -1,0 +1,253 @@
+﻿@using CielaDocs.Application.Dtos
+@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    string[] reportType = new[] { "За месец", "Към месец","За всички месеци" };
+    Layout = "~/Views/Shared/_LayoutMax.cshtml";
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    var title = $"Импортирани данни от Конто за година: {ViewBag.Nyear} {reportType[ViewBag.ReportTypeId]}  ";
+    if ((int)ViewBag.ReporttypeId < 2)
+    {
+        title += $" {ViewBag.Nmonth}";
+    }
+}
+<div class="spacer_5"></div>
+<h4>@title</h4>
+<div class="spacer_5"></div>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="grid"></div>
+@Html.Hidden("InstitutionTypeId", (int)ViewBag.InstitutionTypeId)
+@Html.Hidden("CourtTypeId", (int)ViewBag.CourtTypeId)
+@Html.Hidden("CourtId",(int)ViewBag.CourtId)
+@Html.Hidden("Nyear",(int)ViewBag.Nyear)
+@Html.Hidden("Nmonth", (int)ViewBag.Nmonth)
+@Html.Hidden("ReportTypeId", (int)ViewBag.ReportTypeId)
+@await Html.PartialAsync("_ModalDialogPartial")
+@await Html.PartialAsync("_CommonDialogPartial")
+@section scripts {
+    <script>
+        const anyModal = $('#anyModal');
+        const anyContent = $('#anyContent');
+        const anyTitle = $('#anyTitle');
+        const commonModal = $('#commonModal');
+        const commonContent = $('#commonContent');
+        const commonTitle = $('#titleLabel');
+        var selectedId = 0;
+
+      
+        
+
+        $(() => {
+
+            $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(Ciela.baseUrl + "Reports/GetKontoData", 'Get', { institutionTypeId: $("#InstitutionTypeId").val(), courtTypeId: $("#CourtTypeId").val(), courtId: $("#CourtId").val(), nyear: $("#Nyear").val(), nmonth: $("#Nmonth").val(), reportTypeId: $("#ReportTypeId").val() });
+                        },
+                    }),
+                }),
+                allowColumnReordering: true,
+                grouping: {
+                    autoExpandAll: true,
+                },
+                paging: {
+                    pageSize: 10,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                decimalSeparator: '.',
+                groupPanel: {
+                  visible: true,
+                },
+                columnChooser: {
+                    enabled: true,
+                },
+                columnFixing: {
+                    enabled: true,
+                },
+                allowColumnReordering: true,
+                allowColumnResizing: true,
+                columnAutoWidth: true,
+                columns: [
+                    {
+                        dataField: "CourtName",
+                        width: "25%",
+                        caption: "Отчетна единица"
+                    },
+                    {
+                        dataField: "ProgramName",
+                        width: "25%",
+                        caption: "Програма"
+                    },
+                    
+                    {
+                        dataField: "RowName",
+                        width: "30%",
+                        caption: "Ред"
+                    },
+                    {
+                        dataField: "NValue",
+                        width: "10%",
+                        caption: "Стойност",
+                        valueFormat: '#0.00',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                    {
+                        dataField: "NMonth",
+                        width: "5%",
+                        caption: "Месец",
+                        valueFormat: '#0',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                    {
+                        dataField: "NYear",
+                        width: "5%",
+                        caption: "Год.",
+                        valueFormat: '#0',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                ],
+                sortByGroupSummaryInfo: [{
+                    summaryItem: 'count',
+                }],
+                summary: {
+                    groupItems: [{
+                        column: 'NMonth',
+                        summaryType: 'count',
+                        displayFormat: '{0} записи',
+                    }, {
+                        column: 'NValue',
+                        summaryType: 'sum',
+                        dataType: 'number',
+                        displayFormat: 'Общо: {0}',
+                        showInGroupFooter: true,
+                    }],
+                },
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                onSelectionChanged: function (items) {
+                    if (items.selectedRowsData[0]) {
+                        selectedId = items.selectedRowsData[0].Id;
+                    }
+                },
+                focusedRowEnabled: true,
+                onFocusedRowChanged(e) {
+                    if (e) {
+                        getExtraDataItem(e.row);
+                    }
+                },
+            });
+
+
+        });
+        async function getExtraDataItem(row) {
+
+
+            return false;
+        }
+
+        const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: '../images/back.png',
+
+
+        },
+        {
+            id: '6_1',
+            name: 'Експорт',
+            icon: '../images/exporter.svg',
+
+
+        }, {
+            id: '4',
+            name: 'Обнови',
+            icon: '../images/refresh.png',
+
+        }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+                        case '1':
+                            redirectme("@Url.Action("Index", "Reports")");
+                            break;
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+
+                        case '3': addUploadFile();
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("KontoImports");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "KontoImports.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+
+
+    </script>
+}

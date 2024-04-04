@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>Документен регистър</title>
+     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+     <link rel="stylesheet" href="~/jqueryui/jquery-ui.min.css" />
+     <link rel="stylesheet" href="~/lib/jquery-confirm/jquery-confirm.min.css" />
+     <link rel="stylesheet" href="~/js/select2/css/select2.min.css" />
+       <link rel="stylesheet" href="~/css/devexbundle.css" />
+     <link rel="stylesheet" href="~/css/empl.css" />
+      <link rel="stylesheet" href="~/css/common.css" />
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      <link rel="stylesheet" href="//cdn.materialdesignicons.com/3.7.95/css/materialdesignicons.min.css">
+      <script src="~/lib/jquery/dist/jquery.min.js"></script>
+   <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+   <script src="~/jqueryui/jquery-ui.min.js"></script>
+   <script src="~/lib/gijgo/modular/js/core.js"></script>
+     <script src="~/lib/gijgo/modular/js/grid.js"></script>
+    <link rel="stylesheet" href="~/lib/gijgo/modular/css/core.css" />
+      <link rel="stylesheet" href="~/lib/gijgo/modular/css/grid.css" />
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" type="text/css" />
+      <script src="~/js/jquery-confirm/jquery-confirm.min.js" asp-append-version="true"></script>
+         <script src="~/js/select2/js/select2.min.js"></script>
+         <script src="~/js/moment.js/moment.min.js"></script>
+        <script src="~/js/notify.js"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.5.2/flatpickr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.5.2/flatpickr.min.js"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/bg.js"></script>
+    <script src="https://cdn3.devexpress.com/jslib/22.2.4/js/dx-quill.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+</head>
+<body>
+<div class="container-fluid">
+<div class="content-wrapper">
+          <div class="email-wrapper wrapper">
+            <div class="row align-items-stretch">
+              <div class="mail-sidebar d-none d-sm-block col-sm-2 pt-3 bg-white">
+                <div class="menu-bar">
+                    <div class="wrapper">
+                        <span><strong>Моите съобщения</strong></span>
+                    </div>
+                  <ul class="menu-items">
+                    <li class="active"><a asp-controller="MyMessages" asp-action="index" ><i class="mdi mdi-email-outline"></i> Всички</a></li>
+                    <li><a href="#" id="receivedFilter"><i class="mdi mdi-share"></i> Получени</a><span id="cntMyReceived" class="badge badge-pill badge-warning"></span></li>
+                    <li><a href="#" id="sentFilter"><i class="mdi mdi-file-outline"></i>Изпратени</a></li>
+                  </ul>
+                  <div class="spacer_10"></div>
+                  <label for="cbDirectTypeFilter">Предмет</label>
+                     <select id="cbDirectTypeFilter">
+                              <option value="0" >Всички</option>
+                              <option value="1" >Съобщение</option>
+                              <option value="2">Задача</option>
+                              <option value="3">За резолюция</option>
+                              <option value="4">За съгласуване</option>
+                              <option value="5">За одобрение</option>
+                              <option value="6">За корекция</option>
+                              <option value="7">За подпис</option>
+                              <option value="9">За последващи действия</option>
+                              <option value="10">За сведение</option>
+                              <option value="11">За становище</option>
+                        </select>
+                </div>
+              </div>
+                 <div class="mail-list-container col-md-9 col-lg-7  border-right bg-white">
+                <div >
+                   
+                        <nav class="navbar navbar-expand-md navbar-toggleable-md navbar-light bg-white border-bottom  mb-3">
+                        <div class="container">
+                             
+                            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                                <ul class="navbar-nav mr-auto">
+                                     <li class="nav-item active">
+                                        <a class="nav-link" asp-area="" asp-controller="Empl" asp-action="Index">Затвори</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+                  @RenderBody()
+              </div>
+              <div class="mail-view d-none d-md-block col-md-3 pt-4 pb-4 bg-white">
+                <div id="messageContainer"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+   
+    <script>
+       $(function(){
+           $('#messageContainer').empty();
+                 $('.menu-items li').click(function(e) {
+
+                $('.menu-items li').removeClass('active');
+
+                var $this = $(this);
+                if (!$this.hasClass('active')) {
+                    $this.addClass('active');
+                }
+             });
+    });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

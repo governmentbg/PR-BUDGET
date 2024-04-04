@@ -1,0 +1,97 @@
+syntax = "proto3";
+option csharp_namespace = "gRpcFileTransfer";
+package file;
+import "google/protobuf/empty.proto"; 
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+
+service FileService {
+    rpc FileDownLoad (FileDownloadRequest) returns (stream BytesContent);
+    rpc FileUpLoad (stream FileUploadRequest) returns (FileUploadResponse); 
+    rpc CheckDocumentExists (CheckDocumentRequest) returns (CheckDocumentResponse);
+    rpc GetDocumentIDbyTmpGuid (GetDocumentIDbyTmpGuidRequest) returns (GetDocumentIDbyTmpGuidResponse);
+    rpc GetDocumentsbyTmpGuid (GetDocumentsbyTmpGuidRequest) returns (GetDocumentsbyTmpGuidResponse);
+    rpc DeleteDocumentById (DeleteDocumentByIdRequest) returns (DeleteDocumentByIdResponse);
+    rpc GetFilteredDocuments (FilteredDocumentsRequest) returns (FilteredDocumentsResponse);
+}
+
+message FileUploadRequest {
+  MessageMetadata metadata = 1;
+  bytes data = 2;
+}
+
+message MessageMetadata {
+  string file_name = 1;
+  int32 created_by = 2;
+  int32 parent_id = 3;
+  int64 fk_id = 4;
+  int32 group_table_id = 5;
+  string tmp_guid = 6;
+  int32 document_type_id = 7;
+}
+
+message FileUploadResponse {
+  int64  document_id = 1;
+}
+message FileDownloadRequest{
+    int64 document_id = 1;
+}
+message FileInfo{
+    string fileName = 1;
+    string fileExtension = 2;
+}
+message BytesContent{
+    int64 fileSize = 1;
+    bytes buffer = 2;
+    int32 readedByte = 3;
+    FileInfo info = 4;
+}
+message CheckDocumentRequest{
+    int64 Id = 1;
+}
+message CheckDocumentResponse{
+     google.protobuf.BoolValue doc_exists=1;
+}
+message GetDocumentIDbyTmpGuidRequest{
+    string tmpguid = 1;
+}
+message GetDocumentIDbyTmpGuidResponse{
+    int64 Id = 1;
+}
+message GetDocumentsbyTmpGuidRequest{
+    string tmpguid = 1;
+}
+message GetDocumentsbyTmpGuidResponse{
+    message Idarray{
+        int64 Id = 1;
+    }
+     repeated Idarray ids = 1;
+}
+message DeleteDocumentByIdResponse{
+    google.protobuf.BoolValue doc_deleted=1;
+}
+message DeleteDocumentByIdRequest{
+    int64 id = 1;
+}
+message Document{
+    int64 id = 1;
+    string doc_name=2;
+    string description=3;
+    google.protobuf.Timestamp last_modified_on = 4;
+    int32 last_modified_by = 5;
+    int64 parent_id = 6;
+    int64 fk_id = 7;
+    int32 group_table_id = 8;
+    string tmp_guid = 9;
+    int32 document_type_id = 10;
+    int32 status_id = 11;
+    string document_type_name = 12;
+    string document_status_name = 13;
+}
+message FilteredDocumentsResponse{
+    repeated Document result = 1;
+}
+message FilteredDocumentsRequest{
+    int64 fk_id = 1;
+    int32 table_id = 2;
+}

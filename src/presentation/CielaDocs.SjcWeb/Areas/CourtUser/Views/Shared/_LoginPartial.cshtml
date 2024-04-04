@@ -1,0 +1,30 @@
+﻿@using System.Security.Principal
+@using CielaDocs.SjcWeb.Extensions
+<ul class="navbar-nav">
+@if (User?.Identity?.IsAuthenticated??false)
+{<li class="nav-justified">
+            <div class="d-flex justify-content-center">
+                <div id="main-menu"></div>
+            </div>
+        </li>
+      <li class="nav-item">&nbsp;&nbsp;</li>
+            <img src="~/images/userin_24.png" width="24px" height="24px"  alt="." />
+         <li class="nav-item dropdown">
+               <a class="nav-link dropdown-toggle" href="#" id="dropdownreg" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">@User.Identity.Name!</a>
+            </li>
+        <li class="nav-item">
+           
+                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Logout">Изход</a>
+        </li>
+
+}
+else
+{
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="dropdownin" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Вход</a>
+            <div class="dropdown-menu" aria-labelledby="dropdownin">
+                     <a class="dropdown-item" asp-area="" asp-controller="Account" asp-action="Login">Вход</a>
+                </div>
+            </li>
+}
+</ul>

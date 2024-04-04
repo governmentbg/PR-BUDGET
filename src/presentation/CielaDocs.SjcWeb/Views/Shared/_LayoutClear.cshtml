@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ВСС Програмно бюджетиране</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/jqueryui/jquery-ui.min.css" />
+    <link rel="stylesheet" href="~/lib/jquery-confirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="~/js/select2/css/select2.min.css" />
+    <link rel="stylesheet" href="~/css/devexbundle.css" />
+    <link rel="stylesheet" href="~/css/common.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/jqueryui/jquery-ui.min.js"></script>
+    <script src="~/lib/gijgo/modular/js/core.js"></script>
+    <script src="~/lib/gijgo/modular/js/grid.js"></script>
+    <link rel="stylesheet" href="~/lib/gijgo/modular/css/core.css" />
+    <link rel="stylesheet" href="~/lib/gijgo/modular/css/grid.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" type="text/css" />
+    <script src="~/js/jquery-confirm/jquery-confirm.min.js" asp-append-version="true"></script>
+    <script src="~/js/select2/js/select2.min.js"></script>
+    <script src="~/js/print-js/print.min.js" asp-append-version="true"></script>
+    <script src="~/js/notify.js" asp-append-version="true"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.5.2/flatpickr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.5.2/flatpickr.min.js"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/bg.js"></script>
+    <script src="https://cdn3.devexpress.com/jslib/22.2.4/js/dx-quill.min.js"></script>
+    <script src="~/js/devexbundle.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        Ciela = window.Ciela || {};
+        Ciela.baseUrl = "@Url.Content("~/")";
+    </script>
+    @RenderSection("DevEx",false)
+</head>
+<body class="dx-viewport">
+    <header>
+    </header>
+    <div class="container-fluid">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; @DateTime.Now.Year - ВСС Програмно бюджетиране
+        </div>
+    </footer>
+   
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

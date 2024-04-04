@@ -1,0 +1,81 @@
+﻿@model CielaDocs.Application.Models.CourtTypeVm
+
+@{
+    ViewData["Title"] = "Index";
+
+}
+<form id="anyForm">
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.InstitutionTypeId)
+
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+
+            <div class="row">
+
+                <div class="col-6">
+                    <div class="form-group">
+                        <label for="Name">Наименование</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+              
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="ddlInstitutionType">Към</label>
+                        <select class="form-control" style="width:100%" id="ddlInstitutionType">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+    $(() => {
+
+        let institutionTypeId = $('#InstitutionTypeId').val();
+        $.ajax({
+            url: "@Url.Action("GetInstitutionTypeById", "Noms", new { area = "Admin" })",
+            dataType: 'json',
+            type: "Get",
+            data: { typeId: institutionTypeId },
+            success: function (data) {
+                $("#ddlInstitutionType").empty();
+                $("#ddlInstitutionType").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
+                $('#ddlInstitutionType').val(institutionTypeId);
+            }
+        });
+        $("#ddlInstitutionType").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetInstitutionTypes", "Noms", new { area = "Admin" })",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+            $('#InstitutionTypeId').val($(e.currentTarget).val());
+        });
+    });
+</script>

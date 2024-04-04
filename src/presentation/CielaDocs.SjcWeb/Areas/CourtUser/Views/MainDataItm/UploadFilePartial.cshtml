@@ -1,0 +1,158 @@
+﻿@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+}
+<style type="text/css">
+    .fileUpload {
+        position: relative;
+        overflow: hidden;
+        margin: 10px;
+    }
+
+        .fileUpload input.upload {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 0;
+            padding: 0;
+            /* font-size: 20px;*/
+            cursor: pointer;
+            opacity: 0;
+            filter: alpha(opacity=0);
+        }
+</style>
+<form id="anyForm">
+
+
+
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div style="margin-bottom:20px;" id="cbOverwrite"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <label for="container">Избор на файл за импорт(xlsx,xsl)</label>
+                    <div id="container">
+
+                        <div id="divUploading">
+                            <p>Моля изчакайте . . . <img src="@Url.Content("~/images/ajax_loader.gif")"></p>
+                        </div>
+                        <div class="fileUpload btn btn-primary btn-sm">
+                            <i class="fa fa-upload" aria-hidden="true"></i> <span>Избери файл</span>
+                            <input id="uploadBtn" type="file" class="upload" />
+                        </div>
+                        <div id="button"></div>
+                        <div class="content" id="selected-files">
+                        </div>
+                      
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</form>
+
+<script>
+    $(() => {
+
+        $('#divUploading').hide();
+ 
+       const isOverwrite= $('#cbOverwrite').dxCheckBox({
+            value: false,
+            text: 'Припокрий стойностите с тези от файла',
+        }).dxCheckBox('instance');
+
+        $('#button').dxButton({
+            text: 'Зареди данните',
+            type: 'success',
+            onClick() {
+                uploadFile();
+            },
+        });
+        function uploadFile() {
+            var files = document.getElementById('uploadBtn').files;
+            if (files.length > 0) {
+                $('#selected-files .selected-item').remove();
+                if (window.FormData !== undefined) {
+                    var data = new FormData();
+                 
+                    for (var x = 0; x < files.length; x++) {
+                        var file = files[x];
+                        data.append("file" + x, files[x]);
+                        const $selectedItem = $('<div />').addClass('selected-item');
+                        $selectedItem.append(
+                            $('<span />').html(`Файл: ${file.name}<br/>`),
+                            $('<span />').html(`Размер ${file.size} bytes<br/>`),
+                            $('<span />').html(`Тип ${file.type}<br/>`),
+                        );
+                        $selectedItem.appendTo($('#selected-files'));
+                    }
+                    $('#selected-files').show();
+                    $('#divUploading').show();
+                    $.ajax({
+                        type: "POST",
+                        url: "@Url.Action("UploadFile", "BufferedFileUpload")",
+                        contentType: false,
+                        processData: false,
+                        data: data,
+                        success: function (result) {
+                            $('#divUploading').hide();
+                            if (result.success != true) {
+                                DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                            }
+                            else {
+                                loadCustomExcelFile(result.filename,  isOverwrite.option('value'));
+                            }
+                        },
+                        error: function (xhr, status, p3, p4) {
+                            $('#divUploading').hide();
+                            DevExpress.ui.dialog.alert('Something is going to wrong please try agan!', 'Грешка');
+                        }
+                    });
+                } else {
+                    $('#divUploading').hide();
+                    alert("Upgrade your browser!");
+                }
+            } else { $('#selected-files').hide(); }
+        };
+    });
+    function loadCustomExcelFile(id,isOverwrite) {
+
+
+
+        $('#divUploading').show();
+
+        $.ajax({
+             beforeSend: function (request) {
+                 request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+             },
+            url: "@Url.Action("LoadCustomExcelFile", "MainDataItm")", method: 'POST', data: { id: id, isOverwrite: isOverwrite }
+
+        })
+            .done(function (result) {
+                if (result.success === true) {
+
+                    $('#divUploading').hide();
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+                else {
+                    $('#divUploading').hide();
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+
+            })
+            .fail(function (e) {
+
+                $('#divUploading').hide();
+                DevExpress.ui.dialog.alert('Failed to load! ' + e);
+            });
+
+    };
+</script>

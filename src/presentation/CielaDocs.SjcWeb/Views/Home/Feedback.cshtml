@@ -1,0 +1,115 @@
+﻿@using CielaDocs.Application.Dtos
+@model FeedbackDto
+@{
+    ViewData["Title"] = "Home Page";
+}
+<div class="container-fluid">
+    <div id="map" class="map row"></div>
+</div>
+<link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css">
+<script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+<script type="text/javascript">
+
+    $(function () {
+        var location = ol.proj.fromLonLat([23.35148, 42.70292]);
+
+        var map = new ol.Map({
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                }),
+                getMarkerLayer()
+            ],
+            target: 'map',
+            controls: ol.control.defaults({
+                attributionOptions: {
+                    collapsible: false
+                }
+            }),
+            interactions: ol.interaction.defaults({
+                mouseWheelZoom: false
+            }),
+            view: new ol.View({
+                center: location,
+                zoom: 18
+            })
+        });
+
+        function getMarkerLayer() {
+            var iconFeature = new ol.Feature({
+                geometry: new ol.geom.Point(location),
+            });
+
+            var iconStyle = new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: 5,
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255,51,0,0.9)'
+                    })
+                })
+            });
+            iconFeature.setStyle(iconStyle);
+
+            var vectorSource = new ol.source.Vector({
+                features: [iconFeature]
+            });
+
+            return new ol.layer.Vector({
+                source: vectorSource
+            });
+        }
+
+
+    });
+</script>
+<div class="container-fluid">
+    <div class="row">
+        <section class="col-md-8 marginTop40">
+            <h3>Форма за контакти</h3>
+            <p>За връзка с нас</p>
+            <p style="color:red;">@ViewBag.Comment</p>
+            @using (Html.BeginForm("AddFeedback", "Home", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                
+            <div class="form-row">
+                    <div class="form-group col-md-9">
+                        <label asp-for="Name" class="required"></label>
+                          <input asp-for="Name" class="form-control"   >
+                          <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+             </div>
+                <div class="form-row">
+                    <div class="form-group col-md-9">
+                        <label asp-for="Email" class="required"></label>
+                        <input asp-for="Email" class="form-control">
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-9">
+                        <label asp-for="Notes" class="required"></label>
+                        <textarea asp-for="Notes" class="form-control"></textarea>
+                        <span asp-validation-for="Notes" class="text-danger"></span>
+                    </div>
+                </div>
+                <button type="submit" class="gj-button-md">Изпрати</button>
+            }
+
+            <hr class="marginTop40 visible-sm visible-xs" />
+        </section>
+        <aside class="col-md-4 marginTop40">
+            <h3>Адрес</h3>
+            <p>София 1510, Бул. Владимир Вазов №9</p>
+            <p>
+                За телефонни обаждания моля използвайте времето между 9:00 и 17:00 часа в работни дни.
+            </p>
+            <h3>Помощен център</h3>
+            <ul class="list-unstyled">
+                <li><i class="glyphicon glyphicon-phone-alt"></i>тел.02 90 300 00</li>
+                <li><i class="glyphicon glyphicon-envelope"></i>емайл: ciela@ciela.com</li>
+            </ul>
+        </aside>
+    </div>
+
+</div>

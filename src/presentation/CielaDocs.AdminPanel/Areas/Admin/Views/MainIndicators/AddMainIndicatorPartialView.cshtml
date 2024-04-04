@@ -1,0 +1,183 @@
+﻿@model CielaDocs.Application.Dtos.MainIndicatorsDto
+
+@{
+    ViewData["Title"] = "Index";
+
+}
+
+<form id="anyForm">
+
+    @Html.HiddenFor(x=>x.Id)
+    @Html.HiddenFor(x=>x.FunctionalSubAreaId)
+    @Html.HiddenFor(x=>x.MeasureId)
+    @Html.HiddenFor(x=>x.IsActive)
+    @Html.HiddenFor(x=>x.TypeOfIndicatorId)
+    @Html.HiddenFor(x=>x.Gkey)
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+            
+            <div class="row">
+                <span style="color:red;">@ViewBag.FnSubName</span>
+                <div class="col-12">
+                    <div class="form-group">
+                        <label asp-for="Name" class="required">Показател</label>
+                        <textarea asp-for="Name" class="form-control" ></textarea>
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <label asp-for="Code" class="required">Код</label>
+                        <input asp-for="Code" class="form-control" type="text" maxlength="50" style="width:120px;" />
+                        <span asp-validation-for="Code" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="cbIsActive">
+                            <label class="custom-control-label" for="cbIsActive">Активна</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="ddlTypeOfIndicator">Тип</label>
+                        <select class="form-control" style="width:100%" id="ddlTypeOfIndicator">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="ddlMeasure">Мярка</label>
+                        <select class="form-control" style="width:100%" id="ddlMeasure">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+  
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label for="Calculation">Изчисление</label>
+                            <textarea asp-for="Calculation" class="form-control"  ></textarea>
+                            <span asp-validation-for="Calculation" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+       
+        </div>
+    </div>
+
+</form>
+<script>
+
+
+    $(() => {
+
+        $('#cbIsActive').prop('checked', ($('#IsActive').val().toLowerCase() == 'true') ? true : false);
+
+        $("#cbIsActive").change(function () {
+            $('#IsActive').val($(this).prop("checked"));
+            if ($(this).prop("checked") == true) {
+                $('#txtInactiveSince').val('');
+                $('#InactiveSince').val('');
+                $('#InactiveDescription').val('');
+            }
+        });
+
+
+        let typeOfIndicatorId = $('#TypeOfIndicatorId').val();
+        let measureId = $('#MeasureId').val();
+
+        $.ajax({
+            url: "@Url.Action("GetTypeOfIndicatorById", "Noms",new {area="Admin"})",
+            dataType: 'json',
+            type: "Get",
+            data: { id: typeOfIndicatorId },
+            success: function (data) {
+                $("#ddlTypeOfIndicator").empty();
+                 $("#ddlTypeOfIndicator").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
+                $('#ddlTypeOfIndicator').val(typeOfIndicatorId);
+            }
+        });
+        $.ajax({
+            url: "@Url.Action("GetMeasureById", "Noms",new {area="Admin"})",
+            dataType: 'json',
+            type: "Get",
+            data: { id: measureId },
+            success: function (data) {
+                $("#ddlMeasure").empty();
+                $("#ddlMeasure").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
+                $('#ddlMeasure').val(measureId);
+            }
+        });
+
+    $("#ddlTypeOfIndicator").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetTypeOfIndicator", "Noms",new {area="Admin"} )",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                      
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+         $('#TypeOfIndicatorId').val($(e.currentTarget).val());
+        });
+
+
+
+    $("#ddlMeasure").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetMeasure", "Noms",new {area="Admin"} )",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+         $('#MeasureId').val($(e.currentTarget).val());
+        });
+
+    });
+   
+</script>

@@ -1,0 +1,111 @@
+﻿@model CielaDocs.Application.Dtos.MetricsFieldDto
+
+@{
+    ViewData["Title"] = "Index";
+
+}
+<form id="anyForm">
+    @Html.HiddenFor(x=>x.Id)
+    @Html.HiddenFor(x=>x.IsActive)
+    @Html.HiddenFor(x=>x.TypeOfIndicatorId)
+
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+
+            <div class="row">
+               
+                <div class="col-9">
+                    <div class="form-group">
+                        <label for="Name">Наименование</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="Code">Код</label>
+                        <input asp-for="Code" class="form-control" type="text" />
+                        <span asp-validation-for="Code" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-9">
+                    <div class="form-group">
+                        <label for="NeededFor">Използвасе за</label>
+                        <input asp-for="NeededFor" class="form-control" type="text" />
+                        <span asp-validation-for="NeededFor" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="cbIsActive">
+                            <label class="custom-control-label" for="cbIsActive">Активен</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="ddlTypeOfIndicator">Тип</label>
+                        <select class="form-control" style="width:100%" id="ddlTypeOfIndicator">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+<script>
+    $(() => {
+
+        $('#cbIsActive').prop('checked', ($('#IsActive').val().toLowerCase() == 'true') ? true : false);
+        $("#cbIsActive").change(function () {
+            $('#IsActive').val($(this).prop("checked"));
+        });
+        let typeOfIndicatorId = $('#TypeOfIndicatorId').val();
+        $.ajax({
+            url: "@Url.Action("GetTypeOfIndicatorById", "Noms",new {area="Admin"})",
+            dataType: 'json',
+            type: "Get",
+            data: { id: typeOfIndicatorId },
+            success: function (data) {
+                $("#ddlTypeOfIndicator").empty();
+                $("#ddlTypeOfIndicator").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
+                $('#ddlTypeOfIndicator').val(typeOfIndicatorId);
+            }
+        });
+        $("#ddlTypeOfIndicator").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetTypeOfIndicator", "Noms",new {area="Admin"} )",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+            $('#TypeOfIndicatorId').val($(e.currentTarget).val());
+        });
+    });
+</script>

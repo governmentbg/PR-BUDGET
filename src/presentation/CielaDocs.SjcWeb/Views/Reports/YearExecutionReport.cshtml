@@ -1,0 +1,139 @@
+﻿@using CielaDocs.Application.Dtos
+@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    Layout = "~/Views/Shared/_LayoutMax.cshtml";
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+
+}
+<style>
+    .select2-dropdown {
+        z-index: 10001;
+    }
+
+    .disabledRow {
+        color: silver;
+        font-weight: 600;
+    }
+
+        .disabledRow.dx-state-hover td {
+            color: silver !important;
+            font-weight: 600;
+        }
+</style>
+<div class="spacer_5"></div>
+<h4>От месец: @ViewBag.M1 до месец: @ViewBag.M2 год.:@ViewBag.Year</h4>
+<div class="spacer_5"></div>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+@Html.Hidden("m1", (int)ViewBag.M1)
+@Html.Hidden("m2", (int)ViewBag.M2)
+@Html.Hidden("ny", (int)ViewBag.Year)
+@await Html.PartialAsync("_ModalDialogPartial")
+@await Html.PartialAsync("_CommonDialogPartial")
+<section id="tabs" class="project-tab">
+
+    <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+            <a class="nav-item nav-link active" id="nav-1-tab" data-toggle="tab" href="#nav-1" role="tab" aria-controls="nav-1" aria-selected="true">Програма 1</a>
+            <a class="nav-item nav-link" id="nav-2-tab" data-toggle="tab" href="#nav-2" role="tab" aria-controls="nav-2" aria-selected="false">Програма 2</a>
+            <a class="nav-item nav-link" id="nav-3-tab" data-toggle="tab" href="#nav-3" role="tab" aria-controls="nav-3" aria-selected="false">Програма 3</a>
+            <a class="nav-item nav-link" id="nav-4-tab" data-toggle="tab" href="#nav-4" role="tab" aria-controls="nav-4" aria-selected="false">Програма 4</a>
+            <a class="nav-item nav-link" id="nav-5-tab" data-toggle="tab" href="#nav-5" role="tab" aria-controls="nav-5" aria-selected="false">Програма 5</a>
+            <a class="nav-item nav-link" id="nav-6-tab" data-toggle="tab" href="#nav-6" role="tab" aria-controls="nav-6" aria-selected="false">Програма 6</a>
+            <a class="nav-item nav-link" id="nav-7-tab" data-toggle="tab" href="#nav-7" role="tab" aria-controls="nav-7" aria-selected="false">Програма 7</a>
+            <a class="nav-item nav-link" id="nav-8-tab" data-toggle="tab" href="#nav-8" role="tab" aria-controls="nav-8" aria-selected="false">Програма 8</a>
+            <a class="nav-item nav-link" id="nav-9-tab" data-toggle="tab" href="#nav-9" role="tab" aria-controls="nav-9" aria-selected="false">Програма 9</a>
+        </div>
+    </nav>
+    <div class="spacer_15"></div>
+    <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-1" role="tabpanel" aria-labelledby="nav-1-tab">
+        </div>
+        <div class="tab-pane fade" id="nav-2" role="tabpanel" aria-labelledby="nav-2-tab">
+        </div>
+        <div class="tab-pane fade" id="nav-3" role="tabpanel" aria-labelledby="nav-3-tab">
+        </div>
+        <div class="tab-pane fade" id="nav-4" role="tabpanel" aria-labelledby="nav-4-tab">
+        </div>
+        <div class="tab-pane fade" id="nav-5" role="tabpanel" aria-labelledby="nav-5-tab">
+        </div>
+        <div class="tab-pane fade" id="nav-6" role="tabpanel" aria-labelledby="nav-6-tab">
+        </div>
+        <div class="tab-pane fade" id="nav-7" role="tabpanel" aria-labelledby="nav-7-tab">
+        </div>
+        <div class="tab-pane fade" id="nav-8" role="tabpanel" aria-labelledby="nav-8-tab">
+        </div>
+        <div class="tab-pane fade" id="nav-9" role="tabpanel" aria-labelledby="nav-9-tab">
+        </div>
+    </div>
+</section>
+<script>
+    let selectedM1 = parseInt($('#m1').val(), 10);
+    let selectedM2 = parseInt($('#m2').val(), 10);
+    let selectedYear = parseInt($('#ny').val(), 10);
+    let selectedProgramNum = 0;
+    const anyModal = $('#anyModal');
+    const anyContent = $('#anyContent');
+    const anyTitle = $('#anyTitle');
+    const commonModal = $('#commonModal');
+    const commonContent = $('#commonContent');
+    const commonTitle = $('#titleLabel');
+    $(function () {
+        $('a[href="#nav-1"]').click();
+    });
+
+    $('#tabs a').click(function (e) {
+        e.preventDefault()
+        var tabID = $(this).attr("href").substr(1);
+ 
+        selectedProgramNum = tabID.split('-')[1];
+        $(".tab-pane").each(function () {
+            $(this).empty();
+        });
+        let dataUrl = "@Url.Action("YearExecutionPartialView", "Reports")";
+            $.ajax({
+                type: 'Get',
+                url: dataUrl,
+            data: { functionalSubAreaId: selectedProgramNum },
+                success: function (data) {
+                    $("#" + tabID).html(data);
+                }
+            });
+        
+       
+        $(this).tab('show')
+
+    });
+    function getCourtFromGrid() {
+
+        let surl = Ciela.baseUrl + "Reports/CourtsInProgram";
+        commonContent.empty();
+        commonTitle.text('Избери отчетна единица');
+        commonContent.html('<p>Зареждам данни…</p>')
+        $.ajax({
+            type: 'Get',
+            url: surl,
+            data: { functionalSubAreaId: selectedProgramNum },
+            success: function (data) {
+                commonContent.html(data);
+            }
+        });
+
+        commonModal.modal('show');
+    }
+    function OnClosePopupEventHandlerEx(arg, e) {
+        switch (arg) {
+            case 'popUpOk':
+                commonModal.modal('hide');
+                var par = e.split('|');
+                redirectme5New("@Url.Action("Index", "YearExecutionDataCourtItems")", "programNum", par[0], "courtIds", par[1], "nyear", selectedYear, "m1", selectedM1, "m2", selectedM2)
+                break;
+            case 'popUpClose':
+                commonModal.modal('hide');
+                break;
+
+        }
+    }
+</script>

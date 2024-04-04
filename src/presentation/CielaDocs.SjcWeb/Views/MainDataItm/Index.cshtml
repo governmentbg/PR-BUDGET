@@ -1,0 +1,283 @@
+﻿@using CielaDocs.Application.Dtos
+@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    var court = ViewData["court"] as CielaDocs.Application.Dtos.CourtDto;
+    var title = $" Отчетна единица: {@court?.Name}, година: {ViewBag.Year} месец: {Toolbox.MonthStr[(int)ViewBag.Month]}";
+}
+<h3></h3>
+<div class="spacer_20"></div>
+<div class="spacer_5"></div>
+<h4>@title</h4>
+<div class="spacer_5"></div>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="grid"></div>
+@await Html.PartialAsync("_ModalDialogPartial")
+@Html.Hidden("CourtId",@court?.Id)
+@Html.Hidden("month",(int)ViewBag.Month)
+@Html.Hidden("year",(int)ViewBag.Year);
+@section scripts {
+    <script>
+        const anyModal = $('#anyModal');
+        const anyContent = $('#anyContent');
+        const anyTitle = $('#anyTitle');
+        var selectedId = 0;
+
+        $('#btnAnyCancel').on('click', function () {
+            anyModal.modal('hide');
+            $("#grid").dxDataGrid("instance").refresh();
+        });
+        $('#btnAnySave').on('click', Save);
+
+        function Save() {
+        };
+
+
+        function addUploadFile() {
+            let s_purl = Ciela.baseUrl + "MainDataItm/UploadFilePartial";
+            anyContent.empty();
+            anyTitle.text('Избор на файл');
+            anyContent.html('<p>Зареждам данни…</p>')
+            $.ajax({
+                type: 'Get',
+                url: s_purl,
+                data: {},
+                success: function (data) {
+                    anyContent.html(data);
+                }
+            });
+            anyModal.modal('show');
+        }
+
+        $(() => {
+
+            $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(Ciela.baseUrl + "MainDataItm/GetMainDataGrid", 'Get');
+                        },
+                        update(key, values) {
+                            return sendRequest(Ciela.baseUrl + "MainDataItm/UpdateMainDataItem", 'Post', {
+                                key: key,
+                                values: JSON.stringify(values),
+                            });
+                        },
+                    }),
+                }),
+                paging: {
+                    pageSize: 10,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                decimalSeparator: '.',
+                columns: [
+                    {
+                        dataField: "Code",
+                        width: "15%",
+                        caption: "Код"
+                    },
+
+                    {
+                        dataField: "Name",
+                        width: "65%",
+                        caption: "Наименование"
+                    },
+                    {
+                        dataField: "Nvalue",
+                        width: "10%",
+                        caption: "Стойност",
+                        alllowEditing: true,
+                        valueFormat: '#0.00',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                    {
+                        dataField: "EnteredOn",
+                        width: "10%",
+                        caption: "Въведено на",
+                        alllowEditing: true,
+                        valueFormat: 'dd.MM.yyyy',
+                        dataType: 'date',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+                    },
+
+
+                ],
+                editing: {
+                    mode: 'cell',
+                    allowUpdating: true,
+                    allowDeleting: false,
+                    allowAdding: false,
+                },
+                onEditorPreparing: function (e) {
+                    if (e.dataField != "Nvalue" && e.dataField != "EnteredOn") e.editorOptions.disabled = true
+                    if (e.dataField === "Nvalue" && e.parentType === "dataRow") {
+                        const defaultValueChangeHandler = e.editorOptions.onValueChanged;
+                        e.editorOptions.onValueChanged = function (args) { // Override the default handler
+                            defaultValueChangeHandler(args);
+                        }
+                    }
+                    if (e.dataField === "EnteredOn" && e.parentType === "dataRow") {
+                        const defaultValueChangeHandler = e.editorOptions.onValueChanged;
+                        e.editorOptions.onValueChanged = function (args) { // Override the default handler
+                            defaultValueChangeHandler(args);
+                        }
+                    }
+                },
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                onSelectionChanged: function (items) {
+                    if (items.selectedRowsData[0]) {
+                        selectedId = items.selectedRowsData[0].Id;
+                    }
+                },
+                focusedRowEnabled: true,
+                onFocusedRowChanged(e) {
+                    if (e) {
+                        getExtraDataItem(e.row);
+                    }
+                },
+                hoverStateEnabled: true,
+                onRowPrepared: function (info) {
+                    if (info.rowType != 'header' && info.data.Disabled == true) {
+                        info.rowElement.addClass('disabledRow');
+                        info.rowElement.css('background', 'yellow');
+                    }
+                    if (info.rowType != 'header' && (info.data.Code == 'NMagReal' || info.data.Code == 'NEmplReal' || info.data.Code == 'NMagTo' || info.data.Code == 'NEmplTo')) {
+                        info.rowElement.css('color', 'red');
+                    }
+                }
+
+            });
+
+
+        });
+        async function getExtraDataItem(row) {
+
+
+            return false;
+        }
+
+        const menuData = [
+            {
+                id: '6_1',
+                name: 'Експорт',
+                icon: './images/exporter.svg',
+
+
+            }, {
+                id: '3',
+                name: 'Зареди от файл',
+                icon: './images/upload.png',
+
+            }, {
+                id: '4',
+                name: 'Обнови',
+                icon: './images/refresh.png',
+
+            }, {
+                id: '5',
+                name: 'Зареди от предходен месец',
+                icon: './images/calendar-prev.png',
+
+            }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+
+                        case '3': addUploadFile();
+                             break;
+                        case '5': {
+                            var result = DevExpress.ui.dialog.confirm("<i>Потвърдете зареждането на входни данни от предходен месец?</i>", "Потвърждение");
+                            result.done(function (dialogResult) {
+                                if(dialogResult) loadFromPrevMonth();
+                            });
+                        }
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("Owners");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "MainData.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+        function loadFromPrevMonth() { 
+            let nm = parseInt($('#month').val(), 10);
+            let ny = parseInt($('#year').val(), 10);
+            $.ajax({
+                beforeSend: function (request) {
+                    request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                },
+                url: "@Url.Action("LoadFromPrevMonth", "MainDataItm")", method: 'POST', data: {nm:nm,ny:ny}
+
+            }).done(function (result) {
+                $("#grid").dxDataGrid("instance").refresh();
+                   DevExpress.ui.dialog.alert(result.msg);
+            })
+            .fail(function (e) {
+
+                 DevExpress.ui.notify('Failed to load data! ' + e);
+            });
+        }
+
+    </script>
+}

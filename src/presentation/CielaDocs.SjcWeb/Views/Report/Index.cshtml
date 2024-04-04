@@ -1,0 +1,139 @@
+﻿<div class="container">
+    <div class="spacer_60"></div>
+@Html.Hidden("OnrId",(int)ViewBag.OnrId)
+
+<div id="reportProcessing">
+    <p>Моля изчакайте . . . <img src="@Url.Content("~/images/ajax_loader.gif")"></p>
+</div>
+  @await Html.PartialAsync("_CommonDialogPartial")
+<div id="deloContainer"></div>
+ <div class="row">
+        <div class="col-md-4" id="cardReport">
+            <div class="capsule-at">
+                <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Calendar-WF.png")" alt="." />
+                <p class="button_text-at">Справки по регистрирани документи</p>
+                <p>Справка за регистирани документи по избрани от потребителя критерии...</p>
+            </div>
+        </div>
+        <div class="col-md-4" id="cardResponses">
+            <div class="capsule-at">
+                <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/DateTime_01.png")" alt="." />
+                <p class="button_text-at">Преписки с изтичащи срокове за отговор</p>
+                <p>Превантивен контрол на преписки по които се очакват отговори...</p>
+            </div>
+
+        </div>
+        <div class="col-md-4" id="statCard">
+            <div class="capsule-at">
+                <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Graph-01.png")" alt="." />
+                <p class="button_text-at">Статистика по документи</p>
+                <p>Статистически справки за регистрирани документи по дефинирани от потребител критерии...</p>
+            </div>
+
+        </div>
+    </div>
+    <div class="spacer_20"></div>
+ </div>
+ @section scripts {
+ <script>
+     var commonModal = $("#commonModal");
+     var commonContent = $('#commonContent');
+     var commonTitle=$("#titleLabel");
+    $(function () {
+        $('#reportProcessing').hide();
+        $("#cardReport").on("click", function (e) {
+            let cardReportUrl = "@Url.Action("GetCardReportFilter", "Report" ,new {area=""})";
+                commonContent.empty();
+                commonContent.html('<p>Зареждам данни…</p>')
+                $.ajax({
+                    type: 'Get',
+                    url: cardReportUrl,
+                    data: { onrId: $('#OnrId').val() },
+                    success: function (data) {
+                        commonContent.html(data);
+                    }
+                });
+                commonTitle.html('Условия за създаване на опис на документи');
+                showModal(commonModal);
+        });
+         $("#tasks").on("click", function (e) {
+             let taskReportUrl = "@Url.Action("GetTaskReportFilter", "Report" ,new {area=""})";
+                commonContent.empty();
+                commonContent.html('<p>Зареждам данни…</p>')
+                $.ajax({
+                    type: 'Get',
+                    url: taskReportUrl,
+                    data: { onrId: $('#OnrId').val() },
+                    success: function (data) {
+                        commonContent.html(data);
+                    }
+                });
+                commonTitle.html('Контрол на изпълнение на поставени задачи');
+                showModal(commonModal);
+        });
+         $("#cardResponses").on("click", function (e) {
+            let cardResponseReportUrl = "@Url.Action("GetAwaitingResponceReportFilter", "Report" ,new {area=""})";
+                commonContent.empty();
+                commonContent.html('<p>Зареждам данни…</p>')
+                $.ajax({
+                    type: 'Get',
+                    url: cardResponseReportUrl,
+                    data: { onrId: $('#OnrId').val() },
+                    success: function (data) {
+                        commonContent.html(data);
+                    }
+                });
+                commonTitle.html('Преписки с изтичащи срокове за отговор');
+                showModal(commonModal);
+        });
+         $("#taskResponses").on("click", function (e) {
+           let taskResponseReportUrl = "@Url.Action("GetAwaitingTaskResponceReportFilter", "Report" ,new {area=""})";
+                commonContent.empty();
+                commonContent.html('<p>Зареждам данни…</p>')
+                $.ajax({
+                    type: 'Get',
+                    url: taskResponseReportUrl,
+                    data: { onrId: $('#OnrId').val() },
+                    success: function (data) {
+                        commonContent.html(data);
+                    }
+                });
+                commonTitle.html('Задачи с изтичащи срокове за отговор');
+                showModal(commonModal);
+        });
+          $("#statCard").on("click", function (e) {
+              let statCardReportUrl = "@Url.Action("GetCardStatReportFilter", "Report" ,new {area=""})";
+                commonContent.empty();
+                commonContent.html('<p>Зареждам данни…</p>')
+                $.ajax({
+                    type: 'Get',
+                    url: statCardReportUrl,
+                    data: { onrId: $('#OnrId').val() },
+                    success: function (data) {
+                        commonContent.html(data);
+                    }
+                });
+                commonTitle.html('Статистика по документи');
+                showModal(commonModal);
+            
+        });
+         $("#statEmplDirect").on("click", function (e) {
+              let statCardReportUrl = "@Url.Action("GetDateTimeReportFilter", "Report" ,new {area=""})";
+                commonContent.empty();
+                commonContent.html('<p>Зареждам данни…</p>')
+                $.ajax({
+                    type: 'Get',
+                    url: statCardReportUrl,
+                    data: { onrId: $('#OnrId').val() },
+                    success: function (data) {
+                        commonContent.html(data);
+                    }
+                });
+                commonTitle.html('Статистика по движения на документи');
+                showModal(commonModal);
+            
+        });
+    });
+
+</script>
+}

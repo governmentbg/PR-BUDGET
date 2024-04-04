@@ -1,0 +1,40 @@
+﻿@model LoginWith2faViewModel
+@{
+    ViewData["Title"] = "Двуфакторна автентификация";
+}
+
+<h2>@ViewData["Title"]</h2>
+<hr />
+<p>Вашето влизане е защитено с приложение за удостоверяване. Въведете вашия код за удостоверяване по-долу.</p>
+<div class="row">
+    <div class="col-md-4">
+        <form method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]">
+            <input asp-for="RememberMe" type="hidden" />
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label for="TwoFactorCode">Код</label>
+                <input asp-for="TwoFactorCode" class="form-control" autocomplete="off" />
+                <span asp-validation-for="TwoFactorCode" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div class="checkbox">
+                    <label asp-for="RememberMachine">
+                        <input asp-for="RememberMachine" />
+                        @Html.DisplayNameFor(m => m.RememberMachine)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-default">Вход</button>
+            </div>
+        </form>
+    </div>
+</div>
+<p>
+    Нямате достъп до устройството си за удостоверяване? Можете 
+    <a asp-action="LoginWithRecoveryCode" asp-route-returnUrl="@ViewData["ReturnUrl"]">да влезете с код за възстановяване</a>.
+</p>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

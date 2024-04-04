@@ -1,0 +1,87 @@
+﻿@{
+    ViewData["Title"] = "Index";
+
+}
+
+<style>
+    .select2-container--open {
+        z-index: 9999999
+    }
+</style>
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="nmonth">За месец</label>
+                        <div id="selectBoxMonth"></div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="nyear">За година</label>
+                        <div id="selectBoxYear"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="spacer_10"></div>
+        <div style="float:right;margin-right:10px;margin-bottom:10px;">
+        <div id="okFilterItemBtn"></div>
+        <div id="closeFilterItemBtn"></div>
+        </div>
+    </div>
+</form>
+<script>
+    $(() => {
+        let nm = 0;
+        let ny = 0;
+
+        $("#selectBoxMonth").dxSelectBox({
+            dataSource: selectBoxMonthData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+                nm=e.value;
+            }
+           
+        });
+        $("#selectBoxYear").dxSelectBox({
+            dataSource: selectBoxYearData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+               ny=e.value;
+            }
+
+        });
+
+              
+        //-------------buttons--------------
+        $('#okFilterItemBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                if ((nm==0)||(ny==0)) { 
+                    DevExpress.ui.dialog.alert('Изберете задължително месец и година','Внимание');
+                    return;
+                }
+                window.parent.OnClosePopupEventHandlerEx('mainDataItemFilterOk', ''.concat(nm, "|", ny));
+            },
+        });
+        $('#closeFilterItemBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                popup.hide();
+            },
+        });
+    });
+   
+</script>

@@ -1,0 +1,28 @@
+﻿@model LoginWithRecoveryCodeViewModel
+@{
+    ViewData["Title"] = "Проверка на кода за възстановяване";
+}
+
+<h2>@ViewData["Title"]</h2>
+<hr />
+<p>
+    Вие поискахте да влезете с код за възстановяване. Това влизане няма да бъде запомнено, докато не го предоставите
+    код на приложението за удостоверяване при влизане или деактивирайте 2FA и влезте отново.
+</p>
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <div class="form-group">
+                <label for="RecoveryCode">Код за възстановяване</label>
+                <input asp-for="RecoveryCode" class="form-control" autocomplete="off" />
+                <span asp-validation-for="RecoveryCode" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-default">Вход</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

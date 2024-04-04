@@ -1,0 +1,265 @@
+﻿@model CielaDocs.Application.Dtos.UserDto
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    ViewData["Title"] = "Index";
+
+}
+
+
+<form id="userForm">
+    @Html.HiddenFor(x=>x.Id)
+    @Html.HiddenFor(x=>x.CourtId)
+    @Html.HiddenFor(x=>x.UserTypeId)
+    @Html.HiddenFor(x=>x.AspNetUserId)
+    @Html.HiddenFor(x=>x.Email)
+    @Html.HiddenFor(x=>x.UserName)
+    @Html.HiddenFor(x=>x.LoginEnabled)
+    @Html.HiddenFor(x=>x.CanAdd)
+    @Html.HiddenFor(x=>x.CanUpdate)
+    @Html.HiddenFor(x=>x.CanDelete)
+
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="FirstName"></label>
+                        <input asp-for="FirstName" class="form-control" type="text" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="MiddleName"></label>
+                        <input asp-for="MiddleName" class="form-control" type="text" />
+                        <span asp-validation-for="MiddleName" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="LastName"></label>
+                        <input asp-for="LastName" class="form-control" type="text" />
+                        <span asp-validation-for="LastName" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="ddlUserType">Вид потребител</label>
+                        <select class="form-control" style="width:100%" id="ddlUserType">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="ddlCourts">Към</label>
+                        <select class="form-control" style="width:100%" id="ddlCourts">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="UserName">Имейл адрес</label>
+                        <input asp-for="UserName" class="form-control" type="text" disabled="disabled" />
+                        <span asp-validation-for="UserName" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="cbLoginEnabled">
+                            <label class="custom-control-label" for="cbLoginEnabled">Разрешен достъп</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="cbCanAdd">
+                            <label class="custom-control-label" for="cbCanAdd">Добавя</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="cbCanUpdate">
+                            <label class="custom-control-label" for="cbCanUpdate">Редактира</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="cbCanDelete">
+                            <label class="custom-control-label" for="cbCanDelete">Изтрива</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="float:right;margin-right:15px;">
+            <button type="button" id="btnEditUserProfileSave" class="gj-button-md">Добре</button>
+            <button type="button" id="btnEditUserProfileCancel" class="gj-button-md">Затвори</button>
+        </div>
+
+    </div>
+</form>
+<script>
+    $(() => {
+
+        $('#cbLoginEnabled').prop('checked', ($('#LoginEnabled').val().toLowerCase() == 'true') ? true : false);
+        $('#cbCanAdd').prop('checked', ($('#CanAdd').val().toLowerCase() == 'true') ? true : false);
+        $('#cbCanUpdate').prop('checked', ($('#CanUpdate').val().toLowerCase() == 'true') ? true : false);
+        $('#cbCanDelete').prop('checked', ($('#CanDelete').val().toLowerCase() == 'true') ? true : false);
+
+        $("#cbLoginEnabled").change(function () {
+            $('#LoginEnabled').val($(this).prop("checked"));
+        });
+        $("#cbCanAdd").change(function () {
+            $('#CanAdd').val($(this).prop("checked"));
+        });
+        $("#cbCanUpdate").change(function () {
+            $('#CanUpdate').val($(this).prop("checked"));
+        });
+        $("#cbCanDelete").change(function () {
+            $('#CanDelete').val($(this).prop("checked"));
+        });
+
+
+        let courtid = $('#CourtId').val();
+        let userTypeId = $('#UserTypeId').val();
+
+        $.ajax({
+            url: "@Url.Action("GetUserTypeById", "Noms", new {area="Admin"} )",
+            dataType: 'json',
+            type: "Get",
+            data: { id: userTypeId },
+            success: function (data) {
+                $("#ddlUserType").empty();
+                $("#ddlUserType").append("<option value='-1'>--Избери--</option>");
+                $("#ddlUserType").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
+                $('#ddlUserType').val(userTypeId);
+            }
+        });
+
+        //---------------------------------
+
+
+        $.ajax({
+            url: "@Url.Action("GetCourtById", "Noms", new {area="Admin"} )",
+            dataType: 'json',
+            type: "Get",
+            data: { id: courtid },
+            success: function (data) {
+                $("#ddlCourts").empty();
+                $("#ddlCourts").append("<option value='-1'>--Избери--</option>");
+                $("#ddlCourts").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
+                $('#dddlCourts').val(courtid);
+            }
+        });
+        $("#ddlUserType").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetUserType", "Noms",new {area="Admin"} )",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+            $('#UserTypeId').val($(e.currentTarget).val());
+        });
+        //---------------------------------
+
+
+
+        $("#ddlCourts").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetCourtsSelect2", "Noms",new {area="Admin"} )",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+            $('#CourtId').val($(e.currentTarget).val());
+        });
+
+        $('#btnEditUserProfileSave').on('click', saveUser);
+        $('#btnEditUserProfileCancel').on('click', function () {
+            commonModal.modal('hide');
+            $("#grid").dxDataGrid("instance").refresh();
+        });
+        function saveUser() {
+            var userData = $("#userForm").serialize();
+
+            $.ajax({
+                beforeSend: function (request) {
+                    request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                },
+                url: "@Url.Action("SaveUser", "Users",new {area="Admin"})", method: 'POST', data: userData
+
+            })
+                .done(function (result) {
+                    if (result.success === true) {
+                        $("#grid").dxDataGrid("instance").refresh();
+                        commonModal.modal('hide');
+
+                    }
+                    else {
+                        DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                    }
+
+                })
+                .fail(function (e) {
+                    DevExpress.ui.notify('Failed to save! ' + e);
+
+                });
+        }
+    });
+
+</script>

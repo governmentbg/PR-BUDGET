@@ -1,0 +1,149 @@
+﻿@{
+    ViewData["Title"] = "Index";
+
+}
+
+<style>
+    .select2-container--open {
+        z-index: 9999999
+    }
+</style>
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cbInstitutionType">Вид</label>
+                        <select class="form-control" style="width:100%" id="cbInstitutionType">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label for="selectProgram">Програма</label>
+                    <select class="form-control" id="selectProgram">
+                        <option> </option>
+                    </select>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="nyear">Начална година</label>
+                        <div id="selectBoxYear"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="spacer_10"></div>
+        <div style="float:right;margin-right:10px;margin-bottom:10px;">
+            <div id="okInstitutionFilterBtn"></div>
+            <div id="closeInstitutionFilterBtn"></div>
+        </div>
+    </div>
+</form>
+<script>
+    $(() => {
+        let institutionTypeId = 0;
+        let selectedFnSubAreaId = 0;
+        let ny = 0;
+
+
+        $("#selectBoxYear").dxSelectBox({
+            dataSource: selectBoxYearData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+                ny = e.value;
+            }
+
+        });
+
+        $("#cbInstitutionType").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetInstitutionTypes", "Noms")",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            institutionTypeId = $(e.currentTarget).val();
+        });
+        $("#selectProgram").select2({
+            placeholder: "",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetFunctionalSubAreaByCourtId", "Noms", new { area = "" })",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        importType: 1,
+                        courtId: 0,
+                        institutionTypeId: institutionTypeId,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+            selectedFnSubAreaId = $(e.currentTarget).val();
+        });
+
+        //-------------buttons--------------
+        $('#okInstitutionFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+
+                window.parent.OnClosePopupEventHandlerEx('institutionTypeYearFilterOk', ''.concat(institutionTypeId, "|", ny, "|", selectedFnSubAreaId));
+            },
+        });
+        $('#closeInstitutionFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                popup.hide();
+            },
+        });
+    });
+
+</script>

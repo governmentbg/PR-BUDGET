@@ -1,0 +1,54 @@
+﻿@using CielaDocs.Application.Models
+@model EmplLogVm
+<form id="EmplLogFilterForm">
+  
+    @Html.HiddenFor(x=>x.EmplId)
+    @Html.HiddenFor(x=>x.StartDate)
+    @Html.HiddenFor(x=>x.EndDate)
+    @Html.HiddenFor(x=>x.ReportGuid)
+
+  <div class="form-row">
+    <div class="form-group col-md-6">
+      <label for="txtStartDate">От дата</label>
+      <input id="txtStartDate" class="form-control" type="text"  >
+    </div>
+    <div class="form-group col-md-6">
+      <label for="txtEndDate">До дата</label>
+       <input id="txtEndDate" class="form-control" type="text"  >
+    </div>
+  </div>
+   
+     <div id="loadingPanelFilter">
+        <p>Моля изчакайте . . . <img src="@Url.Content("~/images/ajax_loader.gif")"></p>
+    </div>
+    <div id="msg" style="color:red;"></div>
+  <div id="success-alert" ></div>
+    
+</form>
+<script>
+ $(document).ready(function () {
+
+         $("#loadingPanelFilter").hide();
+         $("#success-alert").hide();
+     
+          const fpStartTime = flatpickr("#txtStartDate", {
+            locale: "bg", 
+            enableTime: false,
+            dateFormat: "d.m.Y",
+            onChange: function (selectedDates, dateStr, instance) {
+                $('#StartDate').val(dateStr);            
+            }
+         });
+
+        const fpEndTime = flatpickr("#txtEndDate", {
+            locale: "bg" ,
+            enableTime: false,
+            dateFormat: "d.m.Y",
+            onChange: function (selectedDates, dateStr, instance) {
+              $('#EndDate').val(dateStr);            
+            }
+        });
+
+});
+  
+</script>

@@ -1,0 +1,110 @@
+﻿@inject IWebHostEnvironment env
+@model SpreadsheetDocumentContentFromStream //DocumentModel
+@using DevExpress.AspNetCore
+@using DevExpress.Spreadsheet;
+@{
+    Layout = "~/Views/Shared/_LayoutViewer.cshtml";
+    var importto = @ViewBag.Import;
+}
+<div class="button-container">
+    <div id="divUploading">
+        <p>Моля изчакайте . . . <img src="@Url.Content("~/images/ajax_loader.gif")"></p>
+    </div>
+    <form id="formExport" method="post">
+        <input name="SpreadsheetWorkSessionId" type="hidden" value="" />
+        @Html.Hidden("ImportType",(int)@ViewBag.ImportType)
+        @Html.Hidden("FileName", (string)@ViewBag.FileName)
+        <div id="button-download-xlsx"></div>
+        <div id="button-download-html"></div>
+        <div id="button-print"></div>
+        <div id="button-import"></div>
+    </form>
+</div>
+<script type="text/javascript">
+   
+    $(function () {
+
+        $('#divUploading').hide();
+        $("#button-download-xlsx").dxButton({
+            icon: "download",
+            type: "normal",
+            text: "Изтегли (Xlsx)",
+            onClick: function (e) {
+                var spreadsheetState = spreadsheet.getSpreadsheetState();
+                $("#formExport").attr('action', '@Url.Action("DownloadXlsx", "ExcelViewer")');
+                $("input[name='SpreadsheetWorkSessionId']").val(spreadsheetState.SpreadsheetWorkSessionId);
+
+            },
+            useSubmitBehavior: true
+        });
+        $("#button-download-html").dxButton({
+            icon: "download",
+            type: "normal",
+            text: "Изтегли (Html)",
+            onClick: function (e) {
+                var spreadsheetState = spreadsheet.getSpreadsheetState();
+                $("#formExport").attr('action', '@Url.Action("DownloadHtml","ExcelViewer")');
+                $("input[name='SpreadsheetWorkSessionId']").val(spreadsheetState.SpreadsheetWorkSessionId);
+            },
+            useSubmitBehavior: true
+        });
+        $("#button-print").dxButton({
+            icon: "print",
+            type: "normal",
+            text: "Печат",
+            onClick: function (e) {
+                spreadsheet.print("_blank");
+            }
+        });
+        $("#button-import").dxButton({
+            icon: "import",
+            type: "normal",
+            text: "Импорт",
+            onClick: function (e) {
+                var spreadsheetState = spreadsheet.getSpreadsheetState();
+                $('#divUploading').show();
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("LoadExcelFileToTable","ExcelViewer")',
+                    data: { spreadsheetState: spreadsheetState, importType: $('#ImportType').val(),fileName:$('#FileName').val() },
+                    success: function (result) {
+                        $('#divUploading').hide();
+                        if (result.success != true) {
+                            DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                        }
+                        else {
+                            DevExpress.ui.dialog.alert('Данните бяха заредени', 'Информация');
+                        }
+                    },
+                    error: function (xhr, status, p3, p4) {
+                        $('#divUploading').hide();
+                        DevExpress.ui.dialog.alert('Something is going to wrong please try agan!', 'Грешка');
+                    }
+                });
+            }
+        });
+    });
+</script>
+
+@{
+   
+    if (Model != null)
+    {
+        @(Html.DevExpress()
+          .Spreadsheet("spreadsheet")
+            .Height("800px")
+            .Width("100%")
+                    // .FullscreenMode(true)
+            .ConfirmOnLosingChanges(confirm => confirm.Enabled(false))
+            .DocumentRequestHandlerUrl(Url.Action("DxDocRequest", "ExcelViewer"))
+            .Open(Model.DocumentId, DocumentFormat.Xlsx, @Model.ContentAccessorByStream)
+
+          )
+    }
+    else
+    {
+        @(Html.DevExpress()
+          .Spreadsheet("spreadsheet")
+          .DocumentRequestHandlerUrl(Url.Action("DxDocRequest")))
+    }
+} 

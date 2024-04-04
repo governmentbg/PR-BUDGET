@@ -1,0 +1,109 @@
+﻿@model CielaDocs.Application.Dtos.MetricsDto
+
+@{
+    ViewData["Title"] = "Index";
+
+}
+<form id="anyForm">
+    @Html.HiddenFor(x=>x.Id)
+    @Html.HiddenFor(x=>x.GKey)
+    @Html.HiddenFor(x=>x.FunctionalSubAreaId)
+
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+
+            <div class="row">
+                <div class="col-9">
+                    <div class="form-group">
+                        <label for="Name">Наименование</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="Code">Код</label>
+                        <input asp-for="Code" class="form-control" type="text" />
+                        <span asp-validation-for="Code" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="selectProgram">Програма</label>
+                        <select class="form-control" style="width:100%" id="selectProgram">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="Calculation">Изчисление</label>
+                        <input asp-for="Calculation" class="form-control" type="text" />
+                        <span asp-validation-for="Calculation" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</form>
+<script>
+    $(() => {
+
+       
+
+        let functionalSubAreaId = $('#FunctionalSubAreaId').val();
+
+        $.ajax({
+            url: "@Url.Action("GetFnSubAreaByIdQuery", "Noms",new {area="Admin"})",
+            dataType: 'json',
+            type: "Get",
+            data: { id: functionalSubAreaId },
+            success: function (data) {
+                $("#selectProgram").empty();
+                $("#selectProgram").append("<option value='0'>--Избери--</option>");
+                $("#selectProgram").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
+                $('#selectProgram').val(functionalSubAreaId);
+            }
+        });
+
+        $("#selectProgram").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetFunctionalSubArea", "Noms",new {area="Admin"} )",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            $('#FunctionalSubAreaId').val($(e.currentTarget).val());
+        });
+        //---------------------------------
+
+    });
+</script>

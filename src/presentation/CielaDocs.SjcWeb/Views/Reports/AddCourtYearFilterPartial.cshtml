@@ -1,0 +1,238 @@
+﻿@{
+    ViewData["Title"] = "Index";
+
+}
+
+<style>
+    .select2-container--open {
+        z-index: 9999999
+    }
+</style>
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+            <div class="row">
+                <p><img src="~/images/Info_16x16.png" />&nbsp;<i>Може да посочите само година за обобщен отчет</i></p>
+            </div>
+          <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cbInstitutionType">Орган на съдебна власт</label>
+                        <select class="form-control" style="width:100%" id="cbInstitutionType">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+          </div>
+           <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cbCourtType">Вид</label>
+                        <select class="form-control" style="width:100%" id="cbCourtType">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                        <label for="cbCourt">Отчетна единица</label>
+                        <select class="form-control" style="width:100%" id="cbCourt">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+              
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="radio-group-change-layout"><strong>Период</strong></label>
+                    <div id="radio-group-change-layout"></div>
+                </div>
+            </div>
+          <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="nmonth">Месец</label>
+                        <div id="selectBoxMonth"></div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="nyear">За година</label>
+                        <div id="selectBoxYear"></div>
+                    </div>
+                </div>
+          </div>
+        </div>
+        <div class="spacer_10"></div>
+        <div style="float:right;margin-right:10px;margin-bottom:10px;">
+        <div id="okFilterItemBtn"></div>
+        <div id="closeFilterItemBtn"></div>
+        </div>
+    </div>
+</form>
+<script>
+    $(() => {
+        let institutionTypeId = 0;
+        let courtTypeId = 0;
+        let courtId = 0;
+        let nm = 0;
+        let ny = 0;
+        let reportTypeId = 0;
+        const optionEntities = [
+            { id: 0, text: 'За месец' },
+            { id: 1, text: 'Към месец' },
+            { id: 2, text: 'Без значение' },
+
+        ];
+        const radioGroup = $('#radio-group-change-layout').dxRadioGroup({
+            items: optionEntities,
+            valueExpr: 'id',
+            displayExpr: 'text',
+            layout: 'horizontal',
+            onValueChanged: function (e) {
+                reportTypeId = e.value;
+            }
+
+        }).dxRadioGroup('instance');
+        radioGroup.option('value', 0);
+        $("#selectBoxMonth").dxSelectBox({
+            dataSource: selectBoxMonthData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+                nm = e.value;
+            }
+
+        });
+
+       
+        $("#selectBoxYear").dxSelectBox({
+            dataSource: selectBoxYearData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+               ny=e.value;
+            }
+
+        });
+        $("#cbInstitutionType").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetInstitutionTypes", "Noms")",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            institutionTypeId = $(e.currentTarget).val();
+        });
+        $("#cbCourtType").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetCourtTypesbyInstitutionTypeId", "Noms")",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        institutionTypeId: institutionTypeId,
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            courtTypeId=$(e.currentTarget).val();
+        });
+        $("#cbCourt").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetCourtsByCourtTypeIdSelect2", "Noms" )",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        courtTypeId: courtTypeId,
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            courtId=$(e.currentTarget).val();
+        });
+       
+        //-------------buttons--------------
+        $('#okFilterItemBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                
+                window.parent.OnClosePopupEventHandlerEx('courtYearFilterOk', ''.concat(institutionTypeId, "|", courtTypeId,"|", courtId, "|", ny, "|", nm, "|", reportTypeId));
+            },
+        });
+        $('#closeFilterItemBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                popup.hide();
+            },
+        });
+    });
+   
+</script>

@@ -1,0 +1,99 @@
+﻿@{
+    ViewData["Title"] = "Index";
+
+}
+<style>
+    .select2-container--open {
+        z-index: 99999999
+    }
+</style>
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="m1">От месец</label>
+                        <div id="m1"></div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="m2">До месец</label>
+                        <div id="m2"></div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="nyear">За година</label>
+                        <div id="selectBoxYear"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="spacer_10"></div>
+        <div style="float:right;margin-right:10px;margin-bottom:10px;">
+            <div id="okFilterBtn"></div>
+            <div id="closeFilterBtn"></div>
+        </div>
+    </div>
+</form>
+<script>
+    $(() => {
+        let ny = 0;
+        let nm1 = 0;
+        let nm2 = 0;
+        $("#m1").dxSelectBox({
+            dataSource: selectBoxMonthData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+                nm1 = e.value;
+            }
+
+        });
+        $("#m2").dxSelectBox({
+            dataSource: selectBoxMonthData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+                nm2 = e.value;
+            }
+
+        });
+        $("#selectBoxYear").dxSelectBox({
+            dataSource: selectBoxYearData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+                ny = e.value;
+            }
+
+        });
+       
+        //-------------buttons--------------
+        $('#okFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                if ((nm1 == 0) || (nm2 == 0) || (ny == 0)) {
+                    DevExpress.ui.dialog.alert('Изберете задължително начален, краен месец и година', 'Внимание');
+                    return;
+                }
+                window.parent.OnClosePopupEventHandlerEx('yearExecutionFilterOk', ''.concat(nm1, "|", nm2, "|", ny));
+            },
+        });
+        $('#closeFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                popup.hide();
+            },
+        });
+    });
+
+</script>

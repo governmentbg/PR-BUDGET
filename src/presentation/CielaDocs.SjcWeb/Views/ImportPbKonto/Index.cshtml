@@ -1,0 +1,206 @@
+﻿@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+}
+
+<div class="spacer_20"></div>
+<h4>Импорт на данни за проектобюджет</h4>
+
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+
+        <div class="row">
+
+            <label>
+                &nbsp; <input type="radio" name="ImportType" value="0">
+                &nbsp;За отчетна единица
+            </label>
+            <label>
+                &nbsp; <input type="radio" name="ImportType" value="1">
+                &nbsp;Експертен бюджет
+            </label>
+        </div>
+      
+            <div id="UserContainer"></div>
+     
+           
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="nyear">Начална година</label>
+                        <div id="selectBoxYear"></div>
+                    </div>
+                </div>
+              
+               @*  <div class="col-3">
+                    <div style="margin-bottom:20px;" id="cbAddToProgramData"></div>
+                </div> *@
+            <div class="col-9">
+                <label for="selectProgram">Програма</label>
+                <select class="form-control" id="selectProgram">
+                    <option> </option>
+                </select>
+            </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                 
+
+                        <div id="divUploading">
+                            <p>Моля изчакайте . . . <img src="@Url.Content("~/images/ajax_loader.gif")"></p>
+                        </div>
+                       
+                        <div id="buttonExcelViewer"></div>
+                        <div id="buttonGridCourtViewer"></div>
+
+                
+
+                    
+                </div>
+            </div>
+        </div>
+     </div>
+   <div class="spacer_20"></div>
+
+<div id="divProcessing">
+    <p>Моля изчакайте . . . <img src="@Url.Content("~/Images/ajax_loader.gif")"></p>
+</div>
+
+<script>
+    let importType = 0;
+    let institutionTypeId = 0;
+    let courtTypeId = 0;
+    let courtId = 0;
+    $(() => {
+      
+       
+        let ny = 0;
+        let selectedFnSubAreaId = 0;
+        $("#divProcessing").hide();
+        $("input[name=ImportType][value=" + importType + "]").prop('checked', true);
+        ImportTypeChanged(importType);
+        $('[name=ImportType]').click(function () { ImportTypeChanged(this.value); });
+        $('#divUploading').hide();
+
+        // const addToProgramData = $('#cbAddToProgramData').dxCheckBox({
+        //     value: false,
+        //     text: 'Добави към общите данни',
+        // }).dxCheckBox('instance');
+        
+
+        $("#selectBoxYear").dxSelectBox({
+            dataSource: selectBoxYearData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+                ny = e.value;
+            }
+
+        });
+      
+        $("#selectProgram").select2({
+            placeholder: "",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetFunctionalSubAreaByCourtId", "Noms", new { area = "" })",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        importType: importType,
+                        courtId: courtId,
+                        institutionTypeId: institutionTypeId,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+            selectedFnSubAreaId = $(e.currentTarget).val();
+        });
+       
+
+        $('#buttonExcelViewer').dxButton({
+            text: 'Въвеждане на данни',
+            type: 'success',
+            onClick() {
+                if (importType == 0) {
+                    if ((courtId == 0) || (ny == 0)) {
+                        DevExpress.ui.dialog.alert('Изберете задължително отчетна единица, и начална година', 'Внимание');
+                        return;
+                    }
+                }
+                if (importType == 1) {
+                    if ((institutionTypeId == 0) || (ny == 0)) {
+                        DevExpress.ui.dialog.alert('Изберете задължително институция и начална година', 'Внимание');
+                        return;
+                    }
+                }
+  
+                viewExcelFile(courtId, ny, importType, institutionTypeId);
+            },
+        });
+        $('#buttonGridCourtViewer').dxButton({
+            text: 'Преглед на данни',
+            type: 'default',
+            onClick() {
+                if (importType == 0) {
+                    if ((courtId == 0) || (ny == 0)||(selectedFnSubAreaId==0)) {
+                        DevExpress.ui.dialog.alert('Изберете задължително отчетна единица, и начална година', 'Внимание');
+                        return;
+                    }
+                    redirectme3New("@Url.Action("Index", "ProgramDataCourtItems")", "programNum", selectedFnSubAreaId, "courtId", courtId, "nyear", ny)
+                }
+                if (importType == 1) {
+                    if ((institutionTypeId == 0) || (ny == 0) || (selectedFnSubAreaId == 0)) {
+                        DevExpress.ui.dialog.alert('Изберете задължително институция и начална година', 'Внимание');
+                        return;
+                    }
+                    redirectme3New("@Url.Action("Index", "ProgramDataInstitutionItems")", "programNum", selectedFnSubAreaId, "institutionTypeId", institutionTypeId, "nyear", ny)
+                }
+
+               
+            },
+        });
+        function viewExcelFile(courtId, ny, importType, institutionTypeId) {
+                redirectme1New("@Url.Action("Index", "ExcelViewer")", "id", ''.concat("", "|", courtId, "|", ny, "|", 0,"|",importType,"|",institutionTypeId));
+           
+        }
+
+    });
+    function ImportTypeChanged(uTypeId) {
+        var url = "@Url.Action("ImportTypePartial", "ImportPbKonto", new { area = "" })";
+        importType = uTypeId;
+        $("#divProcessing").show();
+        $("#UserContainer").empty();
+        $.ajax({
+            type: 'Get',
+            url: url,
+            contenType: 'application/html;charset=utf-8',
+            dataType: 'html',
+            data: { importTypeId: importType },
+            success: function (result) {
+                $("#divProcessing").hide();
+                $("#UserContainer").html(result);
+            },
+            error: function (ex) {
+                $("#divProcessing").hide();
+                alert('Грешка! ' + ex);
+            }
+        });
+        return false;
+    }
+
+</script>

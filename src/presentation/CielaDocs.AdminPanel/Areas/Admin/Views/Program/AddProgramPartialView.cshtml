@@ -1,0 +1,131 @@
+﻿@model CielaDocs.Application.Models.ProgramDefVm 
+
+@{
+    ViewData["Title"] = "Index";
+
+}
+
+<form id="anyForm">
+
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.FunctionalAreaId)
+    @Html.HiddenFor(x => x.FunctionalSubAreaId)
+    @Html.HiddenFor(x => x.FunctionalActionId)
+    @Html.HiddenFor(x => x.CurrencyId)
+    @Html.HiddenFor(x => x.IsActive)
+    @Html.HiddenFor(x => x.CurrencyMeasureId)
+    @Html.HiddenFor(x => x.ValueAllowed)
+    @Html.HiddenFor(x => x.IsCalculated)
+    @Html.HiddenFor(x => x.RowNum)
+    @Html.HiddenFor(x => x.ParentRowNum)
+    @Html.HiddenFor(x => x.Num)
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+            <span style="color:red;">@ViewBag.FnSubName</span>
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="PrnCode" class="required">№</label>
+                        <input asp-for="PrnCode" class="form-control" type="text" maxlength="50" style="width:120px;" />
+                        <span asp-validation-for="PrnCode" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-9">
+                    <div class="form-group">
+                        <label for="ProgCode">Код за ред от програма</label>
+                        <input asp-for="ProgCode" class="form-control" />
+                        <span asp-validation-for="ProgCode" class="text-danger"></span>
+                    </div>
+                </div>
+             </div>
+             <div class="row">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label for="Name" class="required">Наименование</label>
+                            <input asp-for="Name" class="form-control" type="text" maxlength="1024" />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                    </div>
+
+            </div>
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="RowNum" class="required">Ред</label>
+                        <input asp-for="RowNum" class="form-control" type="number" disabled="disabled" />
+                        <span asp-validation-for="RowNum" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="ParentRowNum" class="required">Към ред</label>
+                        <input asp-for="ParentRowNum" class="form-control" type="number" disabled="disabled" />
+                        <span asp-validation-for="ParentRowNum" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="OrderNum" class="required">Индекс</label>
+                        <input asp-for="OrderNum" class="form-control" type="number" />
+                        <span asp-validation-for="OrderNum" class="text-danger"></span>
+                    </div>
+                </div>
+  
+            </div>
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="cbIsActive">
+                            <label class="custom-control-label" for="cbIsActive">Активен ред</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="cbValueAllowed">
+                            <label class="custom-control-label" for="cbValueAllowed">Въвежда се стойност</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="form-group">
+                        <div class="custom-control custom-switch">
+                            <input type="checkbox" class="custom-control-input" id="cbIsCalculated">
+                            <label class="custom-control-label" for="cbIsCalculated">Изчисляем ред</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="form-group">
+                        <label for="KontoCodes">Кодове за сумиране от Конто</label>
+                        <textarea asp-for="KontoCodes" class="form-control"></textarea>
+                        <span asp-validation-for="KontoCodes" class="text-danger"></span>
+                    </div>
+                </div>
+              
+            </div>
+        </div>
+    </div>
+
+</form>
+<script>
+
+
+    $(() => {
+
+        $('#cbIsActive').prop('checked', ($('#IsActive').val().toLowerCase() == 'true') ? true : false);
+        $('#cbValueAllowed').prop('checked', ($('#ValueAllowed').val().toLowerCase() == 'true') ? true : false);
+        $('#cbIsCalculated').prop('checked', ($('#IsCalculated').val().toLowerCase() == 'true') ? true : false);
+
+        $("#cbIsActive").change(function () {$('#IsActive').val($(this).prop("checked")); });
+        $("#cbValueAllowed").change(function () { $('#ValueAllowed').val($(this).prop("checked")); });
+        $("#cbIsCalculated").change(function () { $('#IsCalculated').val($(this).prop("checked")); });
+
+    });
+
+</script>

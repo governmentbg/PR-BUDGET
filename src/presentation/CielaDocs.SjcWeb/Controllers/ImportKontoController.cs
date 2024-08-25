@@ -51,9 +51,13 @@ namespace CielaDocs.SjcWeb.Controllers
             _sjcRepo = sjcRepo;
             _env = env;
         }
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-           
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+            string logmsg = $"Достъп до импорт на данни от Конто от {User?.Identity?.Name}";
+            await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
+
             return View();
         }
 
@@ -70,6 +74,11 @@ namespace CielaDocs.SjcWeb.Controllers
 
                 if (string.IsNullOrWhiteSpace(id))
                     return Json(new { msg = "Невалиден файл за зареждане на данни", success = false });
+
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                string logmsg = $"Зареждане на файл {id} от Конто от {User?.Identity?.Name}";
+                await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
 
                 string file = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", id);
                 var supportedTypes = new[] {"xlsm","xls", "xlsx" };

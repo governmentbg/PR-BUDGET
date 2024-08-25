@@ -1,0 +1,36 @@
+﻿<div id="anyLogModal" class="modal modal fade" role="dialog" aria-labelledby="anyLogTitle" aria-hidden="true" data-backdrop="false">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+
+                <h6 class="modal-title" id="anyLogTitle">
+                </h6>
+                <button type="button" class="close"
+                        data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                    <span class="sr-only">Close</span>
+                </button>
+            </div>
+            <!-- Modal Body -->
+            <div class="modal-body" id="anyLogContent">
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnAnyLogSave" class="gj-button-md">Добре</button>
+                <button type="button" id="btnAnyLogCancel" class="gj-button-md">Затвори</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    $('.modal-content').resizable({
+        minHeight: 300,
+        minWidth: 300
+    });
+    $('.modal-dialog').draggable();
+    $('#anyLogModal').on('show.bs.modal', function () {
+        $(this).find('.modal-body').css({
+            'max-height': '100%'
+        });
+    });
+</script>

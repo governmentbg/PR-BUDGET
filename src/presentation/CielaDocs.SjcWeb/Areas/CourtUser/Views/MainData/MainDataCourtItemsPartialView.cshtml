@@ -1,0 +1,35 @@
+﻿@model CielaDocs.Application.Models.MainDataItemsVm[]
+@{
+}
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+        @Html.Hidden("MainDataId", (int)ViewBag.MainDataId)
+        @Html.Hidden("MainIndicatorsId", (int)ViewBag.MainIndicatorsId)
+        <div class="container-fluid">
+            @for (var i = 0; i < Model.Count(); i++)
+            {
+
+                <input asp-for="Id_@Model[i].Id" value="@Model[i].Id" class="form-control" type="hidden" />
+                <input asp-for="Code_@Model[i].Id" value="@Model[i].Code" class="form-control" type="hidden" />
+                
+                <div class="row">
+                    <div class="col-md-9">
+                        <div class="form-group">
+                            <label asp-for="MetricsFieldName_@Model[i].Id">Наименование</label>
+                            <input asp-for="MetricsFieldName_@Model[i].Id" value="@Model[i].MetricsFieldName" class="form-control" />
+                            <span asp-validation-for="MetricsFieldName_@Model[i].Id" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label asp-for="Nvalue_@Model[i].Id">Стойност</label>
+                            <input asp-for="Nvalue_@Model[i].Id" value="@Model[i].Nvalue" class="form-control" type="number" />
+                            <span asp-validation-for="Nvalue_@Model[i].Id" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>
+</form>

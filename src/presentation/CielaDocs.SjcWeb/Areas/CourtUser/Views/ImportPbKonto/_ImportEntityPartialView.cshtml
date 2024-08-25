@@ -1,0 +1,104 @@
+﻿@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+}
+
+ <div class="row">
+
+    <div class="col-md-6">
+        <div class="form-group">
+            <label for="cbCourtType">Вид</label>
+            <select class="form-control" style="width:100%" id="cbCourtType">
+                <option>Избери... </option>
+            </select>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="form-group">
+            <label for="cbCourt">Отчетна единица</label>
+            <select class="form-control" style="width:100%" id="cbCourt">
+                <option>Избери... </option>
+            </select>
+        </div>
+    </div>
+
+</div>
+<script>
+   
+    $(() => {
+
+      
+       
+        $("#cbCourtType").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetCourtTypes", "Noms", new { area = "CourtUser" })",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            courtTypeId = $(e.currentTarget).val();
+        });
+        $("#cbCourt").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetCourtsByCourtTypeIdSelect2", "Noms", new { area = "CourtUser" })",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        courtTypeId: courtTypeId,
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            courtId = $(e.currentTarget).val();
+        });
+
+      
+      
+
+    });
+    
+
+</script>

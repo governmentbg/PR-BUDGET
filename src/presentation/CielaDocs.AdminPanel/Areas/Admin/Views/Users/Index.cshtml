@@ -17,6 +17,7 @@
 <div id="grid"></div>
 
 @await Html.PartialAsync("_ModalDialogPartial")
+@await Html.PartialAsync("_ModalDialogLogPartial")
 @await Html.PartialAsync("_CommonDialogPartial")
 @section scripts {
 
@@ -28,6 +29,11 @@
         const anyModal = $('#anyModal');
         const anyContent = $('#anyContent');
         const anyTitle = $('#anyTitle');
+
+        const anyLogModal = $('#anyLogModal');
+        const anyLogContent = $('#anyLogContent');
+        const anyLogTitle = $('#anyLogTitle');
+
         const commonModal = $('#commonModal');
         const commonContent = $('#commonContent');
         const commonTitle = $('#commonTitle');
@@ -142,6 +148,22 @@
                 }
             }));
         }
+        function logEmpl(id) {
+            let any_url = "@Url.Action("GetEmplLogReportFilter", "LogReports", new { area = "Admin" })";
+            anyLogContent.empty();
+            anyLogTitle.text('Условия за справка');
+            anyLogContent.html('<p>Зареждам данни…</p>')
+            $.ajax({
+                type: 'POST',
+                url: any_url,
+                data: { emplId: id },
+                success: function (data) {
+                    anyLogContent.html(data);
+                }
+            });
+
+            anyLogModal.modal('show');
+        };
         $(() => {
             loadIndicator = $('#image-indicator').dxLoadIndicator({
                 visible: false,
@@ -345,6 +367,14 @@
             name: 'onClick',
             delay: { show: 0, hide: 300 },
         }];
+        $('#btnAnyLogSave').on('click', function () {
+            var replyData = $("#EmplLogFilterForm").serialize();
+            redirectme1New("@Url.Action("EmplLogGrid", "LogReports", new { area = "Admin" })", "par", ''.concat(document.getElementById("EmplId").value, "|", document.getElementById("StartDate").value, "|", document.getElementById("EndDate").value));
+        });
+        $('#btnAnyLogCancel').on('click', function () {
+            anyLogModal.modal('hide');
+
+        });
     </script>
 
 }

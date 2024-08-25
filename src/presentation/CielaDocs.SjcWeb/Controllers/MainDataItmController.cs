@@ -56,6 +56,12 @@ namespace CielaDocs.SjcWeb.Controllers
             ViewData["court"] = court;
             ViewBag.Month = FilterData?.Nmonth;
             ViewBag.Year = FilterData?.Nyear;
+
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+            string logmsg = $"Достъп до показатели от {User?.Identity?.Name}";
+            await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
+
             return View();
         }
         [HttpGet]

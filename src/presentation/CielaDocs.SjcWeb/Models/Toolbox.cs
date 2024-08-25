@@ -12,6 +12,7 @@ using System.Data;
 using Microsoft.VisualBasic.FileIO;
 using CielaDocs.Shared.ExpressionEngine;
 using Microsoft.AspNetCore.Http;
+using CielaDocs.SjcWeb.Extensions;
 
 namespace CielaDocs.SjcWeb.Models
 {
@@ -293,6 +294,20 @@ namespace CielaDocs.SjcWeb.Models
             }
             return vars;
         }
-        
+      
+        public static string ReplaceCalculationFormula(string Source, Dictionary<string, string> dic)
+        {
+            string[] el = Source.Split(new char[] { '/', '*', '+', '-', ' ', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+            // string result=string.Empty;
+            foreach (var (key, value) in dic)
+            {
+                //int Place = Source.IndexOf(key);
+                int Place = Source.IndexOfWholeWord(key);
+                Source = Source.Remove(Place, key.Length).Insert(Place, !string.IsNullOrWhiteSpace(value) ? value : "0");
+            }
+
+            return Source;
+        }
+
     }
 }

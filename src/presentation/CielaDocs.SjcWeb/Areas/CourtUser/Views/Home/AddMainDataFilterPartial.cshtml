@@ -11,16 +11,7 @@
     <div class="modal-body form-horizontal">
 
         <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label for="cbFunctionalArea">Функционална област</label>
-                        <select class="form-control" style="width:100%" id="cbFunctionalArea">
-                            <option>Избери... </option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+          
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
@@ -55,11 +46,11 @@
 </form>
 <script>
     $(() => {
-        let functionalAreaId = 0;
+
         let functionalSubAreaId = 0;
         let nm = 0;
         let ny = 0;
-
+        let courtId = $('#CourtId').val();
         $("#selectBoxMonth").dxSelectBox({
             dataSource: selectBoxMonthData,
             valueExpr: 'id',
@@ -80,47 +71,17 @@
         });
 
        
-        $("#cbFunctionalArea").select2({
-            placeholder: "Избери...",
-            allowClear: true,
-            ajax: {
-                url: "@Url.Action("GetFunctionalAreas", "Noms" )",
-                contentType: "application/json; charset=utf-8",
-                data: function (params) {
-                    var query =
-                    {
-                        term: params.term,
-                    };
-                    return query;
-                },
-                processResults: function (result) {
-                    return {
-                        results: $.map(result, function (item) {
-                            return {
-                                id: item.Id,
-                                text: item.Name
-
-                            };
-
-                        }),
-
-                    };
-
-                }
-            }
-        }).on('change', function (e) {
-            functionalAreaId = $(e.currentTarget).val();
-        });
+    
         $("#cbFunctionalSubArea").select2({
             placeholder: "Избери...",
             allowClear: true,
             ajax: {
-                url: "@Url.Action("GetFunctionalSubAreaByAreaId", "Noms" )",
+                url: "@Url.Action("GetFunctionalSubAreaByCourtId", "Noms", new { area = "CourtUser" })",
                 contentType: "application/json; charset=utf-8",
                 data: function (params) {
                     var query =
                     {
-                        id: functionalAreaId,
+                        courtId: $("#CourtId").val(),
                         term: params.term,
                     };
                     return query;
@@ -154,7 +115,7 @@
                     DevExpress.ui.dialog.alert('Изберете задължително отчетна единица, месец и година','Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('mainDataFilterOk', ''.concat(functionalAreaId, "|", nm, "|", ny));
+                window.parent.OnClosePopupEventHandlerEx('mainDataFilterOk', ''.concat(functionalSubAreaId, "|", nm, "|", ny));
             },
         });
         $('#closeFilterBtn').dxButton({

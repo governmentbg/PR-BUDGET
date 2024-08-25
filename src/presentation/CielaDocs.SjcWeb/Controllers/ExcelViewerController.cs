@@ -22,6 +22,9 @@ using CielaDocs.Domain.Entities;
 using CielaDocs.SjcWeb.ViewModels;
 using DevExpress.XtraSpreadsheet.API.Native.Implementation;
 using Microsoft.AspNetCore.Http;
+using MediatR;
+using DevExpress.XtraPrinting.Native;
+using CielaDocs.Application;
 
 namespace CielaDocs.SjcWeb.Controllers
 {
@@ -30,12 +33,18 @@ namespace CielaDocs.SjcWeb.Controllers
     {
         private readonly IWebHostEnvironment _env;
         private readonly ISjcBudgetRepository _sjcRepo;
+        private readonly ILogRepository _logRepo;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IMediator _mediator;
         private Dictionary<string, string> repl_values = new Dictionary<string, string>();
         private static bool addToProgramData = false;
-        public ExcelViewerController(IWebHostEnvironment env, ISjcBudgetRepository sjcRepo)
+        public ExcelViewerController(IWebHostEnvironment env, ISjcBudgetRepository sjcRepo, ILogRepository logRepo,  IHttpContextAccessor httpContextAccessor, IMediator mediator)
         {
             _env = env;
             _sjcRepo= sjcRepo;
+            _logRepo = logRepo;
+            _httpContextAccessor = httpContextAccessor;
+            _mediator=mediator;
         }
         public static Stream GetDocumentContentStream(string file)
         {
@@ -46,7 +55,13 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             if (!string.IsNullOrWhiteSpace(filePath)) {
                 var fileExtension = System.IO.Path.GetExtension(filePath).ToLower();
-               if(fileExtension.EndsWith("xlsx") || fileExtension.EndsWith("xlsm") )
+
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                string logmsg = $"Отваряне на файл {id}  от {User?.Identity?.Name}";
+                await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
+
+                if (fileExtension.EndsWith("xlsx") || fileExtension.EndsWith("xlsm") )
                 {
                     Func<Stream> contentAccessorByStream = () => GetDocumentContentStream(filePath);
                     var viewmodel = new SpreadsheetDocumentContentFromStream(Path.GetFileName(filePath), contentAccessorByStream);

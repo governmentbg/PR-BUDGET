@@ -46,24 +46,25 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            var dbuser = HttpContext.Session.Get<SjcUserSess>("SjcUserSess");
-          
-            _ = int.TryParse(User?.Claims?.FirstOrDefault(c => c.Type == "EmplId")?.Value?.ToString(), out int EmplId);
-            if (EmplId < 1)
-            {
-                return RedirectToAction(nameof(HomeController.ErrorMessage), "Home", new { message = "Невалиден идентификатор на потребител! За да избегнете това съобщение винаги затваряйте  приложението с 'Изход'!", area = "CourtUser" });
-            }
-            var court = await _mediator.Send(new GetCourtByIdQuery { Id = dbuser?.CourtId??0 });
+            int custType = User.GetUserTypeIdValue();
+
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+           
+            var court = await _mediator.Send(new GetCourtByIdQuery { Id = empl?.CourtId??0 });
 
 
              ViewBag.CourtName = court?.Name ?? string.Empty;
              ViewBag.CourtId= court?.Id??0;
-             ViewBag.UserId=dbuser?.UserId??0;
+             ViewBag.UserId=empl?.Id??0;
             return  View() ;
         }
         public IActionResult AddMainDataFilterPartial() => PartialView(nameof(AddMainDataFilterPartial));
 
         public IActionResult AddMainDataItemFilterPartial() => PartialView(nameof(AddMainDataItemFilterPartial));
+        public IActionResult AddProgramDataFilterPartial()
+        {
+            return  PartialView(nameof(AddProgramDataFilterPartial));
+        }
         [HttpPost]
         public async Task<JsonResult> SetMainDataFilter(int? functionalSubAreaId, int? courtId, int? nm, int? ny)
         {
@@ -113,6 +114,34 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                 }
                 HttpContext.Session.Remove("FilterMainDataSess");
                 HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = 0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0 });
+                return Json(new { success = true, msg = "Ok" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, msg = "Грешка: " + ex?.Message });
+            }
+        }
+        [HttpPost]
+        public async Task<JsonResult> SetProgramDataFilter(int? functionalSubAreaId, int? ny, int? currencyId, int? currencyMeasureId)
+        {
+            try
+            {
+                if ((functionalSubAreaId == null) || (functionalSubAreaId < 1) || (ny == null) || (ny < 2022))
+                {
+                    return Json(new { success = false, msg = "Не сте избрали коректни условия! " });
+                }
+                int custType = User.GetUserTypeIdValue();
+
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+
+                var court = await _mediator.Send(new GetCourtByIdQuery { Id = empl?.CourtId ?? 0 });
+
+                HttpContext.Session.Remove("FilterMainDataSess");
+                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0, Nyear = ny ?? 0, CurrencyId = currencyId ?? 0, CurrencyMeasureId = currencyMeasureId ?? 0 });
+                _ = await _sjcRepo.Sp_InitProgramDataCourtByIdAsync(functionalSubAreaId ?? 0,court?.Id??0, ny ?? 0);
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                string logmsg = $"Филтър по програми {User?.Identity?.Name}";
+                await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
                 return Json(new { success = true, msg = "Ok" });
             }
             catch (Exception ex)

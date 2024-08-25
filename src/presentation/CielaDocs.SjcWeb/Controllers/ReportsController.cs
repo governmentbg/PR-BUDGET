@@ -74,7 +74,11 @@ namespace CielaDocs.SjcWeb.Controllers
 
         public async Task<IActionResult> Index()
         {
-            
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+            string logmsg = $"Достъп до справки и отчети от {User?.Identity?.Name}";
+            await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
+
             return View();
 
         }

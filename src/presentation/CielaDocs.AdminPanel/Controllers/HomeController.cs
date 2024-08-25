@@ -13,6 +13,7 @@ using Microsoft.Identity.Web;
 using Newtonsoft.Json;
 using CielaDocs.Shared.Services;
 using CielaDocs.AdminPanel.Extensions;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace CielaDocs.AdminPanel.Controllers;
 [Authorize(Policy = "AdminOnly")]
@@ -51,8 +52,9 @@ public class HomeController : Controller
     }
    
     [AllowAnonymous]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
+       
         if (User?.Identity?.IsAuthenticated??false)
         {
            return RedirectToAction("Index","Home",new {area="Admin" });

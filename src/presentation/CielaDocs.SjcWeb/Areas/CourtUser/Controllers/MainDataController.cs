@@ -8,6 +8,7 @@ using CielaDocs.SjcWeb.Extensions;
 using CielaDocs.SjcWeb.Models;
 
 using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 using MediatR;
 
@@ -20,6 +21,7 @@ using Newtonsoft.Json;
 
 using System.Collections.Generic;
 using System.Drawing.Drawing2D;
+using System.Text.Json.Nodes;
 
 namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
 {
@@ -50,9 +52,11 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            var dbuser = HttpContext.Session.Get<SjcUserSess>("SjcUserSess");
-            FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm() { CourtId=dbuser?.CourtId??0};
-            var court = await _mediator.Send(new GetCourtByIdQuery { Id = dbuser?.CourtId ?? 0 });
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+
+            var court = await _mediator.Send(new GetCourtByIdQuery { Id = empl?.CourtId ?? 0 });
+            FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm() { CourtId=court?.Id??0};
+          
             var fsub = await _mediator.Send(new GetFunctionalSubAreaByIdQuery { Id = FilterData?.FunctionalSubAreaId ?? 0 });
             var farea = await _mediator.Send(new GetFunctionalAreabyIdQuery { Id = fsub?.FunctionalAreaId ?? 0 });
             ViewData["court"] = court;
@@ -109,7 +113,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                 case 4:
                     ViewBag.MainDataId = id ?? 0;
                     ViewBag.MainIndicatorsId = md?.MainIndicatorsId ?? 0;
-                    return PartialView("MainDataItemsPartialView", metricsFields);
+                    return PartialView("MainDataCourtItemsPartialView", metricsFields.ToArray());
 
 
                 default:
@@ -117,21 +121,11 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             }
 
         }
-        private string ReplaceCalculationFormula(string Source, Dictionary<string, string> dic)
-        {
-            // string result=string.Empty;
-            foreach (var (key, value) in dic)
-            {
-                int Place = Source.IndexOf(key);
-                Source = Source.Remove(Place, key.Length).Insert(Place, value);
-            }
-
-            return Source;
-        }
+       
 
         [HttpPost]
         //[ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveMainDataItems(IEnumerable<MainDataItemsResult> record)
+        public async Task<IActionResult> SaveMainDataItems(string jsondata, int? mainDataId, int? mainIndicatorsId)
         {
 
             if (ModelState.IsValid)
@@ -139,30 +133,30 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
 
                 try
                 {
-                    int.TryParse(Request.Form["MainDataId"].ToString(), out int nMainDataId);
-                    int.TryParse(Request.Form["MainIndicatorsId"].ToString(), out int nMainIndicatorsId);
-                    _ = await _sjcRepo.UpdateMainDataItemByIdAsync(record);
+                    var data = JsonConvert.DeserializeObject<MainDataItemsResult[]>(jsondata);
+
+                    _ = await _sjcRepo.UpdateMainDataItemByIdAsync(data);
 
                     //---------------------calc------------------
-                    var mi = await _sjcRepo.GetMainIndicatorsByIdAsync(nMainIndicatorsId);
+                    var mi = await _sjcRepo.GetMainIndicatorsByIdAsync(mainIndicatorsId??0);
 
 
                     var dic = new Dictionary<string, string>();
-                    foreach (var itm in record)
+                    foreach (var itm in data)
                     {
                         if (!dic.ContainsKey(itm.Code))
                         {
                             dic.Add(itm.Code, itm.Nvalue.ToString());
                         }
                     }
-                    string calculationString = ReplaceCalculationFormula(mi.Calculation ?? string.Empty, dic);
+                    string calculationString = Toolbox.ReplaceCalculationFormula(mi.Calculation ?? string.Empty, dic);
 
                     var res = Parser.Parse(calculationString).Eval(null);
                     if (mi?.MeasureId == 1)
                     {
                         res = res * 100;
                     }
-                    var ok = await _sjcRepo.UpdateMainDataValueByIdAsync(nMainDataId, res);
+                    var ok = await _sjcRepo.UpdateMainDataValueByIdAsync(mainDataId??0, res);
 
                     return Json(new { msg = "Данните бяха редактирани", success = true });
                 }
@@ -229,7 +223,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                             }
                             if (!string.IsNullOrWhiteSpace(mi?.Calculation))
                             {
-                                string calculationString = ReplaceCalculationFormula(mi?.Calculation ?? string.Empty, dic);
+                                string calculationString = Toolbox.ReplaceCalculationFormula(mi?.Calculation ?? string.Empty, dic);
                                 try
                                 {
                                     var res = Parser.Parse(calculationString).Eval(null);

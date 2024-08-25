@@ -449,9 +449,9 @@ namespace CielaDocs.Shared.Repository
             var sql = @"UPDATE test SET Nvalue = @Nvalue WHERE Id = @Id";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql,new {Nvalue=val, Id=id });
+            var affectedRows = await connection.ExecuteAsync(sql,new {Nvalue=val, Id=id });
 
-            return affectedRows.Result;
+            return affectedRows;
            
         }
        
@@ -460,9 +460,9 @@ namespace CielaDocs.Shared.Repository
             var sql = @"UPDATE test2 SET Nvalue = @Nvalue WHERE Id = @Id";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql, new { Nvalue = val, Id = id });
+            var affectedRows =await  connection.ExecuteAsync(sql, new { Nvalue = val, Id = id });
 
-            return affectedRows.Result;
+            return affectedRows;
 
         }
         public async Task<int> UpdateUserWithAspNetUserIdAsync(int id, string s)
@@ -470,9 +470,9 @@ namespace CielaDocs.Shared.Repository
             var sql = $@"UPDATE Users SET AspNetUserId = '{s}' WHERE Id = {id}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
+            var affectedRows =await connection.ExecuteAsync(sql);
 
-            return affectedRows.Result;
+            return affectedRows;
         }
         public async Task<IEnumerable<Metrics>> GetMetricsByProgramId(int programId) {
             string sql = $@"select * from Metrics
@@ -564,8 +564,8 @@ namespace CielaDocs.Shared.Repository
             parameters.Add("CourtId", courtId);
             parameters.Add("NMonth", nm);
             parameters.Add("NYear", ny);
-            var ret = connection.ExecuteAsync("sp_LoadMainData", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret =await connection.ExecuteAsync("sp_LoadMainData", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<int?> SpLoadMainDataItemsByCourtIdPeriodAsync(int courtId, int nm, int ny)
         {
@@ -575,8 +575,8 @@ namespace CielaDocs.Shared.Repository
             parameters.Add("CourtId", courtId);
             parameters.Add("NMonth", nm);
             parameters.Add("NYear", ny);
-            var ret = connection.ExecuteAsync("sp_LoadMainDataItems", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret = await connection.ExecuteAsync("sp_LoadMainDataItems", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<int?> SpLoadMainPeriodByCourtIdPeriodAsync(int courtId, int nm, int ny)
         {
@@ -586,8 +586,8 @@ namespace CielaDocs.Shared.Repository
             parameters.Add("CourtId", courtId);
             parameters.Add("NMonth", nm);
             parameters.Add("NYear", ny);
-            var ret = connection.ExecuteAsync("sp_LoadPeriodData", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret =await connection.ExecuteAsync("sp_LoadPeriodData", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<int?> SpLoadMainPeriodItemsByCourtIdPeriodAsync(int courtId, int nm, int ny)
         {
@@ -597,8 +597,8 @@ namespace CielaDocs.Shared.Repository
             parameters.Add("CourtId", courtId);
             parameters.Add("NMonth", nm);
             parameters.Add("NYear", ny);
-            var ret = connection.ExecuteAsync("sp_LoadMainPeriodItems", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret =await connection.ExecuteAsync("sp_LoadMainPeriodItems", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<IEnumerable<MainDataGrid>> GetMainDataGridByFilterAsync(int functionalSubAreaId, int courtId, int nm, int ny) {
             string sql = $@"select m.Id,m.CourtId,m.NMonth,m.NYear,m.MainIndicatorsId,m.Nvalue,m.EnteredValue,m.Datum,m.EnteredOn,i.Name as MainIndicatorName,i.Code,i.MeasureId,i.TypeOfIndicatorId,i.Calculation,c.Name as MeasureName,t.Name as TypeOfIndicatorName
@@ -675,7 +675,7 @@ namespace CielaDocs.Shared.Repository
                   ,a.Code
                   ,a.Name as MetricsFieldName
             from MainDataItems m
-            join MetricsField a on m.MetricsFieldId=a.Id
+           left join MetricsField a on m.MetricsFieldId=a.Id
             where m.CourtId={courtId} and m.NMonth={nm} and m.NYear={ny} and a.code in({st})";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -739,9 +739,26 @@ namespace CielaDocs.Shared.Repository
                 {
                     await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
                     await connection.OpenAsync();
-                    var sql = $@"UPDATE MainDataItems SET Nvalue = {item.Nvalue}, EnteredOn=getDate()  WHERE Id = {item.Id}";
-                    var affectedRows = connection.ExecuteAsync(sql);
+                    var sql = $@"UPDATE MainDataItems SET Nvalue = {item?.Nvalue??0}, EnteredOn=getDate()  WHERE Id = {item?.Id??0}";
+                    var affectedRows = await connection.ExecuteAsync(sql);
                    
+                }
+                return 1;
+            }
+            else { return 0; }
+        }
+        public async Task<int> UpdateMainDataItemByIdAsync(IEnumerable<MainDataItemsVm> data)
+        {
+            if (data.Any())
+            {
+
+                foreach (var item in data)
+                {
+                    await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+                    await connection.OpenAsync();
+                    var sql = $@"UPDATE MainDataItems SET Nvalue = {item.Nvalue}, EnteredOn=getDate()  WHERE Id = {item.Id}";
+                    var affectedRows =await connection.ExecuteAsync(sql);
+
                 }
                 return 1;
             }
@@ -751,8 +768,8 @@ namespace CielaDocs.Shared.Repository
             var sql = $@"UPDATE MainData SET Nvalue ={nValue??0}, EnteredOn=getDate()  WHERE Id = {Id??0}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
-            return affectedRows.Result;
+            var affectedRows = await connection.ExecuteAsync(sql);
+            return affectedRows;
         }
         public async Task<IEnumerable<MainDataItemsGrid>> GetMainDataItemsGridByFilterAsync(int courtId, int nm, int ny) {
             string sql2 = $@"select m.Id
@@ -779,8 +796,8 @@ namespace CielaDocs.Shared.Repository
             var sql = $@"UPDATE MainPeriod SET Nvalue ={nValue ?? 0}, EnteredOn=getDate()  WHERE Id = {Id ?? 0}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
-            return affectedRows.Result;
+            var affectedRows = await connection.ExecuteAsync(sql);
+            return affectedRows;
         }
        
         public async Task<IEnumerable<MainDataItemsGrid>> GetMainPeriodItemsGridByFilterAsync(int courtId, int nm, int ny)
@@ -809,9 +826,9 @@ namespace CielaDocs.Shared.Repository
             var sql = @"UPDATE MainDataItems SET Nvalue = @Nvalue, EnteredOn=getDate() WHERE Id = @Id";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql, new { Nvalue = val, Id = id });
+            var affectedRows =await connection.ExecuteAsync(sql, new { Nvalue = val, Id = id });
 
-            return affectedRows.Result;
+            return affectedRows;
 
         }
         public async Task<int> UpdateMainPeriodItemValueByIdAsync(int? id, decimal? val)
@@ -819,9 +836,9 @@ namespace CielaDocs.Shared.Repository
             var sql = @"UPDATE MainPeriodItems SET Nvalue = @Nvalue, EnteredOn=getDate() WHERE Id = @Id";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql, new { Nvalue = val, Id = id });
+            var affectedRows = await connection.ExecuteAsync(sql, new { Nvalue = val, Id = id });
 
-            return affectedRows.Result;
+            return affectedRows;
 
         }
         public async Task<int> UpdateMainDataEnteredValueByIdAsync(int? id, decimal? val)
@@ -829,9 +846,9 @@ namespace CielaDocs.Shared.Repository
             var sql = @"UPDATE MainData SET EnteredValue = @EnteredValue, EnteredOn=getDate() WHERE Id = @Id";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql, new { EnteredValue = val, Id = id });
+            var affectedRows = await connection.ExecuteAsync(sql, new { EnteredValue = val, Id = id });
 
-            return affectedRows.Result;
+            return affectedRows;
 
         }
         public async Task<int> UpdateMainPeriodEnteredValueByIdAsync(int? id, decimal? val)
@@ -839,9 +856,9 @@ namespace CielaDocs.Shared.Repository
             var sql = @"UPDATE MainPeriod SET EnteredValue = @EnteredValue, EnteredOn=getDate() WHERE Id = @Id";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql, new { EnteredValue = val, Id = id });
+            var affectedRows = await connection.ExecuteAsync(sql, new { EnteredValue = val, Id = id });
 
-            return affectedRows.Result;
+            return affectedRows;
 
         }
         public async Task<int?> Sp_InitFinYearStage1Async(int ny) {
@@ -849,8 +866,8 @@ namespace CielaDocs.Shared.Repository
             await connection.OpenAsync();
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("nYear", ny);
-            var ret = connection.ExecuteAsync("sp_InitFinYear1", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret = await connection.ExecuteAsync("sp_InitFinYear1", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<int?> Sp_InitFinYearStage2Async(int ny)
         {
@@ -858,8 +875,8 @@ namespace CielaDocs.Shared.Repository
             await connection.OpenAsync();
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("nYear", ny);
-            var ret = connection.ExecuteAsync("sp_InitFinYear2", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret = await connection.ExecuteAsync("sp_InitFinYear2", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
 
         public async Task<int?> Sp_InitProgramDataAsync(int? programNum, int? ny)
@@ -869,8 +886,8 @@ namespace CielaDocs.Shared.Repository
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum??0);
             parameters.Add("nYear", ny);
-            var ret = connection.ExecuteAsync("sp_InitProgramData", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret = await connection.ExecuteAsync("sp_InitProgramData", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<int?> Sp_InitProgramDataCourtAsync(int? programNum, int? ny)
         {
@@ -879,8 +896,19 @@ namespace CielaDocs.Shared.Repository
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
-            var ret = connection.ExecuteAsync("sp_InitProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret = await connection.ExecuteAsync("sp_InitProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
+        }
+        public async Task<int?> Sp_InitProgramDataCourtByIdAsync(int? programNum,int? courtId, int? ny)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("ProgramDefNum", programNum ?? 0);
+            parameters.Add("CourtId", courtId ?? 0);
+            parameters.Add("nYear", ny);
+            var ret =await connection.ExecuteAsync("sp_InitProgramDataCourtById", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<int?> Sp_InitProgramDataInstitutionAsync(int? programNum, int? ny)
         {
@@ -889,8 +917,8 @@ namespace CielaDocs.Shared.Repository
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
-            var ret = connection.ExecuteAsync("sp_InitProgramDataInstitution", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret =await connection.ExecuteAsync("sp_InitProgramDataInstitution", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<int?> Sp_UpdateProgramDataAsync(int? programNum, int? ny)
         {
@@ -899,8 +927,8 @@ namespace CielaDocs.Shared.Repository
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
-            var ret = connection.ExecuteAsync("sp_UpdateProgramData", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret = await connection.ExecuteAsync("sp_UpdateProgramData", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<int?> Sp_UpdateProgramDataCourtAsync(int? programNum, int? ny)
         {
@@ -909,8 +937,8 @@ namespace CielaDocs.Shared.Repository
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
-            var ret = connection.ExecuteAsync("sp_UpdateProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret = await connection.ExecuteAsync("sp_UpdateProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<int?> Sp_UpdateProgramDataInstitutionAsync(int? programNum, int? ny)
         {
@@ -919,8 +947,8 @@ namespace CielaDocs.Shared.Repository
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
-            var ret = connection.ExecuteAsync("sp_UpdateProgramDataInstitution", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret = await connection.ExecuteAsync("sp_UpdateProgramDataInstitution", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<IEnumerable<ProgramDataGridVm>> GetProgramDataGridByFilterAsync(int functionalSubAreaId, int ny)
         {
@@ -1435,9 +1463,9 @@ namespace CielaDocs.Shared.Repository
             var sql = $@"UPDATE ProgramData SET {fieldName} = {val}, EnteredDate=getDate() WHERE Id ={id??0}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
+            var affectedRows =await  connection.ExecuteAsync(sql);
 
-            return affectedRows.Result;
+            return affectedRows;
         }
         public async Task<int> UpdateProgramData3YValueByIdAsync(int? id, string fieldName, decimal? val) {
             var rec = await GetProgramDataByIdAsync(id ?? 0);
@@ -1452,9 +1480,9 @@ namespace CielaDocs.Shared.Repository
             var sql = $@"UPDATE ProgramData SET Nvalue = {val}, EnteredDate=getDate() WHERE FunctionalSubAreaId={rec?.FunctionalSubAreaId} and PlannedYear={currentYear} and RowNum={rec?.RowNum??0}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
+            var affectedRows =await connection.ExecuteAsync(sql);
 
-            return affectedRows.Result;
+            return affectedRows;
         }
         public async Task<int> UpdateProgramDataCourt3YValueByIdAsync(int? id, string fieldName, decimal? val) {
             var rec = await GetProgramDataCourtByIdAsync(id ?? 0);
@@ -1470,9 +1498,9 @@ namespace CielaDocs.Shared.Repository
             var sql = $@"UPDATE ProgramDataCourt SET Nvalue = {val}, EnteredDate=getDate() WHERE FunctionalSubAreaId={rec?.FunctionalSubAreaId} and PlannedYear={currentYear} and RowNum={rec?.RowNum ?? 0} and CourtId={rec.CourtId}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
+            var affectedRows =await connection.ExecuteAsync(sql);
 
-            return affectedRows.Result;
+            return affectedRows;
         }
         public async Task<int> UpdateProgramDataInstitution3YValueByIdAsync(int? id, string fieldName, decimal? val)
         {
@@ -1489,18 +1517,18 @@ namespace CielaDocs.Shared.Repository
             var sql = $@"UPDATE ProgramDataInstitution SET Nvalue = {val}, EnteredDate=getDate() WHERE FunctionalSubAreaId={rec?.FunctionalSubAreaId} and PlannedYear={currentYear} and RowNum={rec?.RowNum ?? 0} and InstitutionTypeId={rec.InstitutionTypeId}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
+            var affectedRows =await connection.ExecuteAsync(sql);
 
-            return affectedRows.Result;
+            return affectedRows;
         }
       
         public async Task<int> UpdateProgramDataCourtValueByIdAsync(int? id, string fieldName, decimal? val) {
             var sql = $@"UPDATE ProgramDataCourt SET {fieldName} = {val}, EnteredDate=getDate() WHERE Id ={id ?? 0}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
+            var affectedRows =await connection.ExecuteAsync(sql);
 
-            return affectedRows.Result;
+            return affectedRows;
         }
         public async Task<IEnumerable<IdNames>> GetCurrencies() {
             string sql = $@"select Id,Name from Currency";
@@ -1532,6 +1560,18 @@ namespace CielaDocs.Shared.Repository
                   from CourtInProgram a
                   left join Court c on a.CourtId=c.Id
                   where FunctionalSubAreaId={programNum??0}";
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<IdNames>(sql);
+            return result?.ToList();
+        }
+        public async Task<IEnumerable<IdNames>> GetCourtInProgramData(int? programNum,int? courtId)
+        {
+            string sql = $@"select a.CourtId as Id, c.Name as Name
+                  from CourtInProgram a
+                  left join Court c on a.CourtId=c.Id
+                  where a.FunctionalSubAreaId={programNum ?? 0} and a.CourtId={courtId??0}";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
@@ -1589,17 +1629,17 @@ namespace CielaDocs.Shared.Repository
            ,{data?.CurrencyMeasureId ?? 0})";
                 await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
                 await connection.OpenAsync();
-                var affectedRows = connection.ExecuteAsync(sql);
+                var affectedRows = await connection.ExecuteAsync(sql);
 
-                return affectedRows.Result;
+                return affectedRows;
             }
             else {
                 var sql = $@"UPDATE KontoMonthData SET Nvalue = {data?.Nvalue} WHERE Id = {kmdId}";
                 await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
                 await connection.OpenAsync();
-                var affectedRows = connection.ExecuteAsync(sql);
+                var affectedRows =await connection.ExecuteAsync(sql);
 
-                return affectedRows.Result;
+                return affectedRows;
             }
         }
         private async Task<int> CheckDraftBudgetYearData(int? courtId, int? functionalSubAreaId, int? rowNum,  int? ny)
@@ -1634,70 +1674,70 @@ namespace CielaDocs.Shared.Repository
            ,{data?.CurrencyMeasureId ?? 0})";
                 await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
                 await connection.OpenAsync();
-                var affectedRows = connection.ExecuteAsync(sql);
+                var affectedRows =await connection.ExecuteAsync(sql);
 
-                return affectedRows.Result;
+                return affectedRows;
             }
             else
             {
                 var sql = $@"UPDATE DraftBudgetData SET Nvalue = {data?.Nvalue} WHERE Id = {kmdId}";
                 await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
                 await connection.OpenAsync();
-                var affectedRows = connection.ExecuteAsync(sql);
+                var affectedRows = await connection.ExecuteAsync(sql);
 
-                return affectedRows.Result;
+                return affectedRows;
             }
         }
         private async Task<decimal?> GetSumCalcValuesByCourtIdYearAsync(int? courtId, int? functionalSubAreaId, int? rowNum, int? ny) {
             var sql = $@"Select Sum(Nvalue) from KontoMonthData where courtid={courtId ?? 0} and FunctionalSubAreaId={functionalSubAreaId ?? 0} and rowNum={rowNum ?? 0} and Nyear={ny??0}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var nSum = connection.ExecuteScalarAsync<decimal>(sql);
+            var nSum =await connection.ExecuteScalarAsync<decimal?>(sql);
 
-            return (nSum!=null)?nSum.Result:0;
+            return (nSum!=null)?nSum:0;
         }
         public async Task<int> ProgramDataCourtAsync(int? courtId,  int? functionalSubAreaId, int? rowNum, int? nYear) {
             decimal? calculatedVal = await GetSumCalcValuesByCourtIdYearAsync(courtId,functionalSubAreaId,  rowNum, nYear);
             var sql = $@"Update ProgramDataCourt set CalculatedValue={calculatedVal??0} where courtid={courtId??0} and FunctionalSubAreaId={functionalSubAreaId??0} and rowNum={rowNum??0}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
+            var affectedRows =await connection.ExecuteAsync(sql);
 
-            return affectedRows.Result;
+            return affectedRows;
         }
         public async Task<int> ProgramDataDraftBudgetCourtAsync(int? courtId, int? functionalSubAreaId, int? rowNum, int? nYear, decimal? nValue) {
             var sql = $@"Update ProgramDataCourt set NValue={nValue ?? 0} where courtid={courtId ?? 0} and FunctionalSubAreaId={functionalSubAreaId ?? 0} and PlannedYear={nYear ?? 0} and rowNum={rowNum ?? 0} ";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
+            var affectedRows =await connection.ExecuteAsync(sql);
 
-            return affectedRows.Result;
+            return affectedRows;
         }
         public async Task<int> ProgramDataDraftBudgetInstitutionAsync(int? institutionTypeId, int? functionalSubAreaId, int? rowNum, int? nYear, decimal? nValue)
         {
             var sql = $@"Update ProgramDataInstitution set NValue={nValue ?? 0} where InstitutionTypeId={institutionTypeId ?? 0} and FunctionalSubAreaId={functionalSubAreaId ?? 0} and PlannedYear={nYear ?? 0} and rowNum={rowNum ?? 0} ";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
+            var affectedRows = await connection.ExecuteAsync(sql);
 
-            return affectedRows.Result;
+            return affectedRows;
         }
         public async Task<int> FirstInitProgramDataDraftBudgetCourtAsync(int? courtId, int? functionalSubAreaId, int? nYear) {
             var sql = $@"Update ProgramDataCourt set NValue=0 where courtid={courtId ?? 0} and FunctionalSubAreaId={functionalSubAreaId ?? 0} and PlannedYear={nYear ?? 0} ";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
+            var affectedRows =await connection.ExecuteAsync(sql);
 
-            return affectedRows.Result;
+            return affectedRows;
         }
         public async Task<int> FirstInitProgramDataDraftBudgetInstitutionAsync(int? institutionTypeId, int? functionalSubAreaId, int? nYear)
         {
             var sql = $@"Update ProgramDataInstitution set NValue=0 where InstitutionTypeId={institutionTypeId ?? 0} and FunctionalSubAreaId={functionalSubAreaId ?? 0} and PlannedYear={nYear ?? 0} ";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql);
+            var affectedRows =await connection.ExecuteAsync(sql);
 
-            return affectedRows.Result;
+            return affectedRows;
         }
         public async Task<IEnumerable<KontoCourtsYearVm>> GetKontoCourtsYearAsync(int? institutionTypeId, int? courtTypeId,int? courtId, int? ny, int? nmonth, int? reportTypeId) {
             string sql = string.Empty;
@@ -1763,9 +1803,9 @@ namespace CielaDocs.Shared.Repository
             var sql = @"UPDATE ProgramData SET Nvalue = @Nvalue WHERE functionalSubAreaId = @FunctionalSubAreaId and plannedYear=@PlannedYear and RowNum=@RowNum";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var affectedRows = connection.ExecuteAsync(sql, new { FunctionalSubAreaId=functionalSubAreaId,RowNum=rowNum,PlannedYear=plannedYear, Nvalue = val});
+            var affectedRows = await connection.ExecuteAsync(sql, new { FunctionalSubAreaId=functionalSubAreaId,RowNum=rowNum,PlannedYear=plannedYear, Nvalue = val});
 
-            return affectedRows.Result;
+            return affectedRows;
         }
         public async Task<int?> sp_RecalculateProgramDataAsync(int? functionalSubAreaId, int? ny) {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -1773,8 +1813,8 @@ namespace CielaDocs.Shared.Repository
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("functionalSubAreaId", functionalSubAreaId ?? 0);
             parameters.Add("nYear", ny);
-            var ret = connection.ExecuteAsync("sp_RecalculateProgramData", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret = await connection.ExecuteAsync("sp_RecalculateProgramData", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<int?> sp_RecalculateProgramDataCourtAsync(int? functionalSubAreaId, int? ny, int? courtId) {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -1783,8 +1823,8 @@ namespace CielaDocs.Shared.Repository
             parameters.Add("functionalSubAreaId", functionalSubAreaId ?? 0);
             parameters.Add("nYear", ny);
             parameters.Add("CourtId", courtId??0);
-            var ret = connection.ExecuteAsync("sp_RecalculateProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret = await connection.ExecuteAsync("sp_RecalculateProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<int?> sp_RecalculateProgramDataInstitutionAsync(int? functionalSubAreaId, int? ny, int? institutionTypeId)
         {
@@ -1794,8 +1834,8 @@ namespace CielaDocs.Shared.Repository
             parameters.Add("functionalSubAreaId", functionalSubAreaId ?? 0);
             parameters.Add("nYear", ny);
             parameters.Add("InstitutionTypeId", institutionTypeId ?? 0);
-            var ret = connection.ExecuteAsync("sp_RecalculateProgramDataInstitution", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret = await connection.ExecuteAsync("sp_RecalculateProgramDataInstitution", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<int?> sp_UpdateProgramsByProgramDefAsync(int? Id)
         {
@@ -1803,8 +1843,8 @@ namespace CielaDocs.Shared.Repository
             await connection.OpenAsync();
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("Id", Id ?? 0);
-            var ret = connection.ExecuteAsync("sp_UpdateProgramsByProgramDef", parameters, commandType: CommandType.StoredProcedure);
-            return ret.Result;
+            var ret =await connection.ExecuteAsync("sp_UpdateProgramsByProgramDef", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
         }
         public async Task<IEnumerable<string>> GetCourtNamesByIds(IEnumerable<int> ids) {
             string sql = string.Empty;
@@ -1821,44 +1861,44 @@ namespace CielaDocs.Shared.Repository
             var sql = $@"Select Sum(Nvalue) from MainDataItems where NMonth>={m1} and NMonth<={m2} and NYear={ny} and CourtId={courtId} and  MetricsFieldId={matricsFieldId}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var nSum = connection.ExecuteScalarAsync<decimal>(sql);
+            var nSum =await connection.ExecuteScalarAsync<decimal?>(sql);
 
-            return (nSum != null) ? nSum.Result : 0;
+            return (nSum != null) ? (decimal)nSum : 0;
         }
         private async Task<decimal> GetValueFromMainDataItemsByCourtIds(int m1, int m2, int ny, IEnumerable<int> courtIds, int matricsFieldId)
         {
             var sql = $@"Select Sum(Nvalue) from MainDataItems where NMonth>={m1} and NMonth<={m2} and NYear={ny} and CourtId in({string.Join<int>(",", courtIds)}) and  MetricsFieldId={matricsFieldId}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var nSum = connection.ExecuteScalarAsync<decimal>(sql);
+            var nSum = await connection.ExecuteScalarAsync<decimal?>(sql);
 
-            return (nSum != null) ? nSum.Result : 0;
+            return (nSum != null) ? (decimal)nSum : 0;
         }
         private async Task<decimal> GetValueFromMainDataCommonItems(int m1, int m2, int ny,  int matricsFieldId)
         {
             var sql = $@"Select Sum(Nvalue) from MainDataItems where NMonth>={m1} and NMonth<={m2} and NYear={ny}  and  MetricsFieldId={matricsFieldId}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var nSum = connection.ExecuteScalarAsync<decimal>(sql);
+            var nSum = await connection.ExecuteScalarAsync<decimal?>(sql);
 
-            return (nSum != null) ? nSum.Result : 0;
+            return (nSum != null) ?(decimal)nSum : 0;
         }
         private async Task<decimal> GetKontoMonthDataValue(int functionalSubAreaId, int rowNum, int m1, int m2, int ny) {
             var sql = $@"Select Sum(Nvalue) from KontoMonthData where FunctionalSubAreaId={functionalSubAreaId} and [RowNum]={rowNum} and NMonth>={m1} and NMonth<={m2} and NYear={ny}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var nSum = connection.ExecuteScalarAsync<decimal>(sql);
+            var nSum = await connection.ExecuteScalarAsync<decimal?>(sql);
 
-            return (nSum != null) ? nSum.Result : 0;
+            return (nSum != null) ? (decimal)nSum : 0;
         }
         private async Task<decimal> GetKontoMonthDataByCourtIdsValue(int functionalSubAreaId, int rowNum, int m1, int m2, int ny,IEnumerable<int> courtIds)
         {
             var sql = $@"Select Sum(Nvalue) from KontoMonthData where FunctionalSubAreaId={functionalSubAreaId} and [RowNum]={rowNum} and NMonth>={m1} and NMonth<={m2} and NYear={ny} and CourtId in({string.Join<int>(",", courtIds)})";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var nSum = connection.ExecuteScalarAsync<decimal>(sql);
+            var nSum =await connection.ExecuteScalarAsync<decimal?>(sql);
 
-            return (nSum != null) ? nSum.Result : 0;
+            return (nSum != null) ? (decimal)nSum : 0;
         }
 
         private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram1Async(int m1, int m2, int nyear) { 
@@ -4973,9 +5013,9 @@ namespace CielaDocs.Shared.Repository
             var sql = $@"Select Max(Id) from CourtType";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var nSum = connection.ExecuteScalarAsync<int>(sql);
+            var nSum = await connection.ExecuteScalarAsync<int?>(sql);
 
-            return (nSum != null) ? nSum.Result : 0;
+            return (nSum != null) ? (int)nSum : 0;
         }
         public async Task<int> UpdateCourtTypeAsync(CourtTypeVm model) {
             if (model.Id == 0)
@@ -4991,17 +5031,17 @@ namespace CielaDocs.Shared.Repository
                           ,{model?.InstitutionTypeId ?? 0})";
                 await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
                 await connection.OpenAsync();
-                var affectedRows = connection.ExecuteAsync(sql);
+                var affectedRows = await connection.ExecuteAsync(sql);
 
-                return affectedRows.Result;
+                return affectedRows;
             }
             else {
                 var sql = $@"Update [dbo].[CourtType] set [Name]='{model?.Name ?? string.Empty}' ,[InstitutionTypeId]={model?.InstitutionTypeId ?? 0} where Id={model.Id}";
                 await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
                 await connection.OpenAsync();
-                var affectedRows = connection.ExecuteAsync(sql);
+                var affectedRows = await connection.ExecuteAsync(sql);
 
-                return affectedRows.Result;
+                return affectedRows;
             }
         }
      

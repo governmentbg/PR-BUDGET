@@ -11,6 +11,7 @@ using CielaDocs.SjcWeb.Extensions;
 using System.Web;
 using DocumentFormat.OpenXml.Presentation;
 using System.Text;
+using CielaDocs.Shared.Repository;
 
 namespace CielaDocs.SjcWeb.Controllers
 {
@@ -19,14 +20,16 @@ namespace CielaDocs.SjcWeb.Controllers
     {
         private string rootFolderName;
         private readonly IMediator _mediator;
+        private readonly ILogRepository _logRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public DocArchiveController(IWebHostEnvironment env, IMediator mediator, IHttpContextAccessor httpContextAccessor)
+        public DocArchiveController(IWebHostEnvironment env, IMediator mediator, IHttpContextAccessor httpContextAccessor,ILogRepository logRepo)
         {
             _env = env;
             rootFolderName = System.IO.Path.Combine(_env.WebRootPath + "/localdocarchive/");
             _mediator = mediator;
-            _httpContextAccessor= httpContextAccessor;
+            _logRepo = logRepo;
+            _httpContextAccessor = httpContextAccessor;
         }
         private readonly IWebHostEnvironment _env;
 
@@ -171,6 +174,9 @@ namespace CielaDocs.SjcWeb.Controllers
                 }
                 else
                 {
+                    var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                    string logmsg = $"Изтриване на файл {pathInfo} от {User?.Identity?.Name}";
+                    await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
                     Directory.Delete(pathInfo);
                     response = this.CreateResponse(true, null, null, null);
                 }

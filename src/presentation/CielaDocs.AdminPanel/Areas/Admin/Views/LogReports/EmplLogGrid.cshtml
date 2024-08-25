@@ -1,0 +1,177 @@
+﻿@using CielaDocs.Application.Dtos
+@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    // Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    // var tokenSet = antiforgery.GetAndStoreTokens(Context);
+
+}
+<style>
+    .select2-dropdown {
+        z-index: 10001;
+    }
+
+    .disabledRow {
+        color: silver;
+        font-weight: 600;
+    }
+
+        .disabledRow.dx-state-hover td {
+            color: silver !important;
+            font-weight: 600;
+        }
+</style>
+<div class="spacer_5"></div>
+<h4>@ViewBag.Title</h4>
+<div class="spacer_5"></div>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="grid"></div>
+
+@section scripts {
+    <script>
+       
+        $(() => {
+
+            $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(EduDl.baseUrl + "LogReports/GetEmplActionDataGrid", 'Get', { emplId: '@ViewBag.EmplId', startDate: '@ViewBag.StartDate', endDate: '@ViewBag.EndDate' });
+                        },
+                    }),
+                }),
+                paging: {
+                    pageSize: 10,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                decimalSeparator: '.',
+                columns: [
+                    {
+                        dataField: "CreatedOn",
+                        width: "15%",
+                        caption: "Дата и час",
+                        dataType: 'date',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                    {
+                        dataField: "IP",
+                        width: "10%",
+                        caption: "IP"
+                    },
+                    {
+                        dataField: "Msg",
+                        width: "80%",
+                        caption: "Действие"
+                    },
+                ],
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                focusedRowEnabled: true,
+                onFocusedRowChanged(e) {
+                    if (e) {
+                        //getExtraDataItem(e.row);
+                    }
+                }
+
+            });
+
+
+        });
+        async function getExtraDataItem(row) {
+
+
+            return false;
+        }
+
+        const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: '../../images/back.png',
+
+
+        },
+        {
+            id: '6_1',
+            name: 'Експорт',
+            icon: '../../images/exporter.svg',
+
+
+        }, {
+            id: '4',
+            name: 'Обнови',
+            icon: '../../images/refresh.png',
+
+        }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+                        case '1':
+                            redirectme("@Url.Action("Index", "Users")");
+                            break;
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+
+                        case '3': addUploadFile();
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("EmplLog");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "EmplLogData.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+
+
+    </script>
+}

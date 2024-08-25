@@ -77,6 +77,12 @@ var redirectme1 = function (redirectUrl, arg, value) {
     $('body').append(form);
     $(form).submit();
 };
+var redirectme1New = function (redirectUrl, arg, value) {
+    var form = $('<form action="' + redirectUrl + '" method="post" target="_blank">' +
+        '<input type="hidden" name="' + arg + '" value="' + value + '"></input>' + '</form>');
+    $('body').append(form);
+    $(form).submit();
+};
 var redirectme2 = function (redirectUrl, arg, value, arg2, value2) {
     var form = $('<form action="' + redirectUrl + '" method="post">' +
         '<input type="hidden" name="' + arg + '" value="' + value + '"></input>' +

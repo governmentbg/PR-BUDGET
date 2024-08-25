@@ -4,19 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - ВСС Програмно бюджетиране</title>
-     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-     <link rel="stylesheet" href="~/jqueryui/jquery-ui.min.css" />
-     <link rel="stylesheet" href="~/lib/jquery-confirm/jquery-confirm.min.css" />
-     <link rel="stylesheet" href="~/js/select2/css/select2.min.css" />
-     <link rel="stylesheet" href="~/css/devexbundle.css" />
-      <link rel="stylesheet" href="~/css/common.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/jqueryui/jquery-ui.min.css" />
+    <link rel="stylesheet" href="~/lib/jquery-confirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="~/js/select2/css/select2.min.css" />
+    <link rel="stylesheet" href="~/css/devexbundle.css" />
+    <link rel="stylesheet" href="~/css/common.css" />
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-   <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
-   <script src="~/jqueryui/jquery-ui.min.js"></script>
-      <script src="~/lib/gijgo/modular/js/core.js"></script>
-     <script src="~/lib/gijgo/modular/js/grid.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/jqueryui/jquery-ui.min.js"></script>
+    <script src="~/lib/gijgo/modular/js/core.js"></script>
+    <script src="~/lib/gijgo/modular/js/grid.js"></script>
     <link rel="stylesheet" href="~/lib/gijgo/modular/css/core.css" />
     <link rel="stylesheet" href="~/lib/gijgo/modular/css/grid.css" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" type="text/css" />
@@ -33,8 +33,41 @@
     <script>
         Ciela = window.Ciela || {};
         Ciela.baseUrl = "@Url.Content("~/CourtUser/")";
+        Ciela.rootUrl = "@Url.Content("~/")";
+
     </script>
-      @RenderSection("DevEx",false)
+    @RenderSection("DevEx", false)
+    <style type="text/css">
+
+        .row-me {
+            display: flex;
+            margin-top: 10px;
+        }
+
+        .column-img {
+            width: 20%;
+        }
+
+        .column-text {
+            width: 59%;
+        }
+
+        .column-me {
+            width: 33%;
+        }
+
+        #footer:hover {
+            bottom: 0;
+        }
+
+        .expandableCollapsibleDiv img {
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 5px;
+            padding-left: 10px;
+            float: left;
+        }
+    </style>
 </head>
 <body class="dx-viewport">
     <header>

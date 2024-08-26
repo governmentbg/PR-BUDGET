@@ -9,6 +9,8 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml.Wordprocessing;
+using CielaDocs.Application.Models;
 
 namespace CielaDocs.Shared.Repository
 {
@@ -80,7 +82,13 @@ namespace CielaDocs.Shared.Repository
             return result;
 
         }
-
+        public async Task<IEnumerable<ApplicationLogVm>> GetApplicationLogAsync() {
+            var sql = "SELECT top 10000 u.id,u.EmplId,u.msg,u.ip,u.CreatedOn,concat(e.FirstName,space(1),e.MiddleName,SPACE(1),e.LastName) as Fullname  FROM SjcBudgetLog.dbo.Ulog u left join SjcBudget.Dbo.Users e on u.EmplId=e.Id order by u.createdOn desc";
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<ApplicationLogVm>(sql);
+            return result;
+        }
         public async Task<IEnumerable<Ulog>> GetUserLogByCardAsync(string sql)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();

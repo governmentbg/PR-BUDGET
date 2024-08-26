@@ -119,7 +119,9 @@ namespace CielaDocs.SjcWeb.Controllers
                 int custType = User.GetUserTypeIdValue();
                
                 var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
-              
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                string logmsg = $"Вход в системата на {User?.Identity?.Name}";
+                await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
 
                 var onr = await _mediator.Send(new GetCourtByIdQuery { Id = empl?.CourtId ?? 0 });
                 if (empl?.LoginEnabled == true)
@@ -191,7 +193,7 @@ namespace CielaDocs.SjcWeb.Controllers
         }
        
         [AllowAnonymous]
-        public async  Task<PartialViewResult> GetEmplLogReportFilter(int? emplId)
+        public async  Task<PartialViewResult> GetEmplLogReportFilter()
         {
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
 
@@ -219,6 +221,11 @@ namespace CielaDocs.SjcWeb.Controllers
                 }
                 HttpContext.Session.Remove("FilterMainDataSess");
                 HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId= functionalSubAreaId??0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0 });
+
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                string logmsg = $"Филтър с условие {User?.Identity?.Name}";
+                await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
                 return Json(new { success = true, msg="Ok" });
             }
             catch (Exception ex)
@@ -296,6 +303,10 @@ namespace CielaDocs.SjcWeb.Controllers
                 HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0,  Nyear = ny ?? 0 ,CurrencyId=currencyId??0, CurrencyMeasureId=currencyMeasureId??0});
                 _ = await _sjcRepo.Sp_InitProgramDataAsync(functionalSubAreaId ?? 0, ny ?? 0);
                 _ = await _sjcRepo.Sp_InitProgramDataCourtAsync(functionalSubAreaId ?? 0, ny ?? 0);
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                string logmsg = $"Филтър по програми {User?.Identity?.Name}";
+                await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
                 return Json(new { success = true, msg = "Ok" });
             }
             catch (Exception ex)

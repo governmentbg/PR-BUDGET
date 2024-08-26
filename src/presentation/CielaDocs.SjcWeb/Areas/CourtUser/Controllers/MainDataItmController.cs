@@ -53,9 +53,10 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            var dbuser = HttpContext.Session.Get<SjcUserSess>("SjcUserSess");
-            FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm() {CourtId=dbuser?.CourtId??0 };
-            var court = await _mediator.Send(new GetCourtByIdQuery { Id =dbuser?.CourtId ?? 0 });
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+
+            var court = await _mediator.Send(new GetCourtByIdQuery { Id = empl?.CourtId ?? 0 });
+            FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm() {CourtId=court?.Id??0 };
             ViewData["court"] = court;
             ViewBag.Month = FilterData?.Nmonth;
             ViewBag.Year = FilterData?.Nyear;
@@ -67,8 +68,11 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
         {
             try
             {
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+
+                var court = await _mediator.Send(new GetCourtByIdQuery { Id = empl?.CourtId ?? 0 });
                 FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm();
-                var data = await _sjcRepo.GetMainDataItemsGridByFilterAsync(FilterData?.CourtId ?? 0, FilterData?.Nmonth ?? 0, FilterData?.Nyear ?? 0);
+                var data = await _sjcRepo.GetMainDataItemsGridByFilterAsync(court?.Id ?? 0, FilterData?.Nmonth ?? 0, FilterData?.Nyear ?? 0);
                 return Json(data.ToList());
             }
             catch (Exception ex)
@@ -84,6 +88,9 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             {
                 return PartialView("_ErrorPartialView", "Невалиден указател!");
             }
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+
+            var court = await _mediator.Send(new GetCourtByIdQuery { Id = empl?.CourtId ?? 0 });
             FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm();
             var md = await _sjcRepo.GetMainDataByIdAsync(id ?? 0);
             var mi = await _sjcRepo.GetMainIndicatorsByIdAsync(md?.MainIndicatorsId ?? 0);
@@ -96,7 +103,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
 
                 t.NextToken();
             }
-            var metricsFields = await _sjcRepo.GetMetricsFiledByCode(FilterData?.CourtId ?? 0, FilterData?.Nmonth ?? 0, FilterData?.Nyear ?? 0, string.Join(',', vars.ToArray()));
+            var metricsFields = await _sjcRepo.GetMetricsFiledByCode(court?.Id ?? 0, FilterData?.Nmonth ?? 0, FilterData?.Nyear ?? 0, string.Join(',', vars.ToArray()));
             switch (vars.Count)
             {
                 case 0:
@@ -212,8 +219,11 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                 {
                     return Json(new { msg = "Невалиден файл за зареждане на данни. Задължително изберете файл с разширение .xlsx или .xls", success = false });
                 }
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+
+                var court = await _mediator.Send(new GetCourtByIdQuery { Id = empl?.CourtId ?? 0 });
                 FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm();
-                var dbdata = await _sjcRepo.GetMainDataItemsGridByFilterAsync(FilterData?.CourtId ?? 0, FilterData?.Nmonth ?? 0, FilterData?.Nyear ?? 0);
+                var dbdata = await _sjcRepo.GetMainDataItemsGridByFilterAsync(court?.Id ?? 0, FilterData?.Nmonth ?? 0, FilterData?.Nyear ?? 0);
                 var data = Toolbox.ExcelToDataTable(file);
                 int nCnt = 0;
                 foreach (DataTable thisTable in data.Tables)

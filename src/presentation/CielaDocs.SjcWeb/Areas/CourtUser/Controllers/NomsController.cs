@@ -179,6 +179,16 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
         }
         [HttpGet]
         [AllowAnonymous]
+        public async Task<JsonResult> GetFunctionalSubAreaByCourtId(int? courtId)
+        {
+           
+                var returner = await _sjcRepo.GetProgramByCourtIdAsync(courtId ?? 0);
+                return Json(returner.ToArray());
+           
+
+        }
+        [HttpGet]
+        [AllowAnonymous]
         public async Task<JsonResult> GetFunctionalSubArea(string term = "")
         {
 
@@ -294,7 +304,58 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                 return Json(new List<IdNames>());
             }
         }
-
+        [HttpGet]
+        public async Task<JsonResult> GetCurrencies()
+        {
+            try
+            {
+                var data = await _sjcRepo.GetCurrencies();
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetCurrencYMeasure()
+        {
+            try
+            {
+                var data = await _sjcRepo.GetCurrencyMeasures();
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetCurrencyById(int? id)
+        {
+            try
+            {
+                var data = await _sjcRepo.GetCurrencies();
+                return Json(data.Where(x => x.Id == id).FirstOrDefault());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetCurrencyMeasureById(int? id)
+        {
+            try
+            {
+                var data = await _sjcRepo.GetCurrencyMeasures();
+                return Json(data.Where(x => x.Id == id).FirstOrDefault());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
     }
 }
 

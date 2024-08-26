@@ -38,8 +38,45 @@
 
         function Save() {
 
-            var postData = $("#anyForm").serialize();
+            //var postData = $("#anyForm").serialize();
 
+            var valueArr = [];
+            document.querySelectorAll('.form-control').forEach(function (el) {
+                valueArr.push(el.value);
+            });
+            console.log(valueArr);
+            console.log('length=' + valueArr.length);
+            var obj = [];
+      
+            switch (valueArr.length) { 
+                case 4:
+                    obj.push({ id: valueArr[0], code: valueArr[1], metricsFieldName: valueArr[2], nvalue: valueArr[3] });
+                    break;
+                 case 8:
+                    obj.push({ id: valueArr[0], code: valueArr[1], metricsFieldName: valueArr[2], nvalue: valueArr[3] });
+                    obj.push({ id: valueArr[4], code: valueArr[5], metricsFieldName: valueArr[6], nvalue: valueArr[7] });
+                    break;
+                case 12:
+                    obj.push({ id: valueArr[0], code: valueArr[1], metricsFieldName: valueArr[2], nvalue: valueArr[3] });
+                    obj.push({ id: valueArr[4], code: valueArr[5], metricsFieldName: valueArr[6], nvalue: valueArr[7] });
+                    obj.push({ id: valueArr[8], code: valueArr[9], metricsFieldName: valueArr[10], nvalue: valueArr[11] });
+                    break;
+                case 16:
+                    obj.push({ id: valueArr[0], code: valueArr[1], metricsFieldName: valueArr[2], nvalue: valueArr[3] });
+                    obj.push({ id: valueArr[4], code: valueArr[5], metricsFieldName: valueArr[6], nvalue: valueArr[7] });
+                    obj.push({ id: valueArr[8], code: valueArr[9], metricsFieldName: valueArr[10], nvalue: valueArr[11] });
+                    obj.push({ id: valueArr[12], code: valueArr[13], metricsFieldName: valueArr[14], nvalue: valueArr[15] });
+                    break;
+                case 20:
+                    obj.push({ id: valueArr[0], code: valueArr[1], metricsFieldName: valueArr[2], nvalue: valueArr[3] });
+                    obj.push({ id: valueArr[4], code: valueArr[5], metricsFieldName: valueArr[6], nvalue: valueArr[7] });
+                    obj.push({ id: valueArr[8], code: valueArr[9], metricsFieldName: valueArr[10], nvalue: valueArr[11] });
+                    obj.push({ id: valueArr[12], code: valueArr[13], metricsFieldName: valueArr[14], nvalue: valueArr[15] });
+                    obj.push({ id: valueArr[16], code: valueArr[17], metricsFieldName: valueArr[18], nvalue: valueArr[19] });
+                    break;
+                        
+            }
+            var postData = $("#anyForm").serialize();
             let inputs = document.getElementById("anyForm").elements;
             let mainDataId = inputs["MainDataId"].value;
             let mainIndicatorsId = inputs["MainIndicatorsId"].value;
@@ -48,7 +85,7 @@
                 beforeSend: function (request) {
                     request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
                 },
-                url: "@Url.Action("SaveMainDataItems", "MainData", new { area = "Admin" })", method: 'POST', data: postData
+                url: "@Url.Action("SaveMainDataItems", "MainData", new { area = "CourtUser" })", method: 'POST', data: { jsondata: JSON.stringify(obj),mainDataId:mainDataId,mainIndicatorsId:mainIndicatorsId }
 
             })
                 .done(function (result) {
@@ -342,7 +379,7 @@
                 beforeSend: function (request) {
                     request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
                 },
-                url: "@Url.Action("RecalculateMainData", "MainData", new { area = "Admin" })", method: 'POST'
+                url: "@Url.Action("RecalculateMainData", "MainData", new { area = "CourtUser" })", method: 'POST'
 
             })
                 .done(function (result) {

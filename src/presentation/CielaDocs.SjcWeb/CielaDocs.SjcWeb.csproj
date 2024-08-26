@@ -1537,7 +1537,7 @@
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
-    <Content Update="Areas\CourtUser\Views\MainData\MainDataItemsPartialView.cshtml">
+    <Content Update="Areas\CourtUser\Views\MainData\MainDataCourtItemsPartialView.cshtml">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>

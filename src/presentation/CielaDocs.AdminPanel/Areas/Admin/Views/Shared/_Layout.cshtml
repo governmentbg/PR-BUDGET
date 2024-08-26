@@ -158,7 +158,10 @@
                     .Id("metricsfield")
                     .Text("Входни данни")
                     .Icon("fieldchooser");
-                   
+                    items.Add()
+                    .Id("applog")
+                    .Text("Потребителски действия")
+                    .Icon("event");
               items.Add()
               .Id("close")
               .Text("Затвори")
@@ -260,6 +263,7 @@
                 const metricsUrl = "@Url.Action("Index","Metrics", new {area="Admin"})";
                 const metricsFieldUrl = "@Url.Action("Index","MetricsField", new {area="Admin"})";
                 const institutionsUrl = "@Url.Action("Index", "Institution", new { area = "Admin" })";
+                const appLogUrl = "@Url.Action("Index", "ApplicationLog", new { area = "Admin" })";
              
                 var drawer = getDrawer();
                 var savedOpened = restoreDrawerOpened();
@@ -296,6 +300,8 @@
                         case 'metricsfield': navigate(metricsFieldUrl, willHide ? 400 : 0);
                             break;
                         case 'institutions': navigate(institutionsUrl, willHide ? 400 : 0);
+                            break;
+                        case 'applog': navigate(appLogUrl, willHide ? 400 : 0);
                             break;
                          case 'close': navigate(backUrl, willHide ? 400 : 0);
                                 break;

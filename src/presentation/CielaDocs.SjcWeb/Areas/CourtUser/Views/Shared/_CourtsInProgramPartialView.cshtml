@@ -1,0 +1,83 @@
+﻿@using System.Linq
+@{
+    Layout = null;
+}
+<style type="text/css">
+    .dx-row.dx-data-row .purlecolumn {
+        color: #bf4e6a;
+        /* font-weight: bold;*/
+    }
+</style>
+@Html.Hidden("FunctionalSubAreaId",(int)ViewBag.FunctionalSubAreaId)
+<div class="spacer_20"></div>
+<h3>Отчетнa единицa към програмата</h3>
+
+<div id="grid2"></div>
+
+<div class="modal-footer">
+    <button type="button" id="btnGridSave" class="gj-button-md" onclick="javascript:returnResult()">Добре</button>
+    <button type="button" id="btnGridCancel" class="gj-button-md" onclick="window.parent.OnClosePopupEventHandlerEx('popUpClose','')">Затвори</button>
+</div>
+<script>
+    var functionalSubAreaId = $('#FunctionalSubAreaId').val();
+    var courtId = $('#CourtId').val();
+    var selectedIds = '';
+    $(() => {
+
+        $('#grid2').dxDataGrid({
+            dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "ProgramDataItems/GetCourtsInProgramData", 'Get', { functionalSubAreaId: functionalSubAreaId, courtId:courtId });
+                    }
+                }),
+            }),
+            paging: {
+                pageSize: 10,
+            },
+            pager: {
+                visible: true,
+                showNavigationButtons: true,
+                allowedPageSizes: [10, 25, 50, 100],
+                showPageSizeSelector: true,
+                showInfo: true,
+                showNavigationButtons: true,
+            },
+            searchPanel: {
+                visible: true,
+                highlightCaseSensitive: true,
+            },
+            selection: {
+                mode: 'single',
+            },
+            showBorders: true,
+            showRowLines: true,
+            columns: [
+
+            
+                { dataField: 'Name', caption: 'Отчетна единица', width: "95%" },
+             
+
+            ],
+            focusedRowEnabled: true,
+            onSelectionChanged(selectedItems) {
+                const data = selectedItems.selectedRowsData;
+                if (data.length > 0) {
+                    $('#selected-items-container').text(
+                        data.map((value) => `${value.Name}`)
+                            .join(', '),
+                    );
+                    selectedIds = (data.map((value) => `${value.Id}`).join(','))
+                } else {
+                    $('#selected-items-container').text('Не сте селектирали данни');
+                }
+            },
+
+        });
+
+    });
+    function returnResult() {
+        return window.parent.OnClosePopupEventHandlerEx('popUpOk', `${functionalSubAreaId}|${selectedIds}`);
+    }
+</script>

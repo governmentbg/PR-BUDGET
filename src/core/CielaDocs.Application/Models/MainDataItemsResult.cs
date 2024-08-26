@@ -11,8 +11,8 @@ namespace CielaDocs.Application.Models
         //public int? MainDataId { get; set; }
         //public int? MainIndicatorsId { get; set; }
         public int Id { get; set; }
-        public string Code { get; set; }
-        public string MetricsFieldName { get; set; }
-        public decimal Nvalue { get; set; }
+        public string? Code { get; set; }
+        public string? MetricsFieldName { get; set; }
+        public decimal? Nvalue { get; set; }
     }
 }

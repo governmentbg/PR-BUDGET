@@ -20,7 +20,21 @@
 
 
         <div class="row">
-                      
+
+            <div class="col-md-3">
+
+                <div class="capsule-at">
+                    <span id="cntExpiredCardMsg" class="badge badge-pill badge-info" title="Планиране" style="cursor:pointer;"></span>
+                    <div id="programFilter" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Highlighted-WF.png")" alt="." />
+                        <p class="button_text-at">Планиране по бюджетни програми</p>
+                        <p>Планиране по бюджетни програми</p>
+                    </div>
+                </div>
+            </div>
+
+
+
             <div class="col-md-3">
                 <div class="capsule-at">
                     <div id="mainDataItemCtrl" style="margin-top:10px;">
@@ -39,6 +53,18 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-3" id="importPbKonto">
+                <div class="capsule-at">
+
+                    <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/ExcelOnline.png")" alt="." />
+                    <p class="button_text-at">Импорт на данни проекто бюджет</p>
+                    <p>Импорт на данни проекто бюджет за избран период...</p>
+
+                </div>
+
+            </div>
+        </div>
+        <div class="row">
             <div class="col-md-3" id="admin">
                 <div class="capsule-at">
 
@@ -133,6 +159,16 @@ else
             window.localStorage.setItem('UserId', $('#UserId').val());
             window.localStorage.setItem('CourtName', $('#CourtName').val());
             window.localStorage.removeItem('cardfilter');
+
+              $("#programFilter").on("click", function () {
+                popup.option({
+                    contentTemplate: () => popupContentTemplate(3)
+                });
+                popup.show();
+        });
+            $("#importPbKonto").on("click", function () {
+                redirectme("@Url.Action("Index", "ImportPbKonto")");
+            });
 
 
             $("#admin").on("click", function () {
@@ -234,8 +270,33 @@ else
                     popup.hide();
                     applyMainDataItemFilter(e);
                     break;
+                case 'programDataFilterOk':
+                    popup.hide();
+                    applyProgramDataFilter(e);
+                    break;
 
             }
+        }
+        function applyProgramDataFilter(e) {
+            var itm = e.split('|');
+            $.ajax({
+                beforeSend: function (request) {
+                    request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                },
+
+                url: "@Url.Action("SetProgramDataFilter", "Home", new { area = "CourtUser" })", method: 'POST', data: { functionalSubAreaId: itm[0], ny: itm[1], currencyId: itm[2], currencyMeasureId: itm[3] }
+
+            }).done(function (result) {
+                if (result.success === true) {
+                    redirectme("@Url.Action("Index", "ProgramDataItems", new { area = "CourtUser" })");
+                }
+                else {
+                    DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                }
+            })
+                .fail(function (e) {
+                    DevExpress.ui.notify('Failed to set filter! ' + e);
+                });
         }
         const popupContentTemplate = function (id) {
             let cnturl;
@@ -245,6 +306,9 @@ else
             }
             if (id == 2) {
                 cnturl = "@Url.Action("AddMainDataItemFilterPartial", "Home", new {area="CourtUser"})";
+            }
+            if (id == 3) {
+                cnturl = "@Url.Action("AddProgramDataFilterPartial", "Home", new { area = "CourtUser" })";
             }
             const scrollView = $('<div />');
 

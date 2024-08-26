@@ -51,11 +51,16 @@ namespace CielaDocs.SjcWeb.Controllers
             _sjcRepo = sjcRepo;
             _env = env;
         }
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+            string logmsg = $"Достъп до импорт на данни проектобюджет от {User?.Identity?.Name}";
+            await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
 
             return View();
         }
+
 
 
 
@@ -71,6 +76,10 @@ namespace CielaDocs.SjcWeb.Controllers
                 int nCnt = 0;
                 if (string.IsNullOrWhiteSpace(id))
                     return Json(new { msg = "Невалиден файл за зареждане на данни", success = false });
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                string logmsg = $"Зареждане на файл {id}  от {User?.Identity?.Name}";
+                await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
 
                 string file = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", id);
                 var supportedTypes = new[] { "xlsm", "xlsx" };
@@ -201,6 +210,11 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             try
             {
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                string logmsg = $"Зареждане на файлове от папка  от {User?.Identity?.Name}";
+                await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
+
                 int nCnt = 0; int fileCnt = 0;
                 string[] filePaths = System.IO.Directory.GetFiles(System.IO.Path.Combine(_env.WebRootPath + "/uploads/"));
                 foreach (string filePath in filePaths)

@@ -1,4 +1,5 @@
-﻿using CielaDocs.Domain.Entities;
+﻿using CielaDocs.Application.Models;
+using CielaDocs.Domain.Entities;
 
 using System;
 using System.Collections.Generic;
@@ -22,5 +23,6 @@ namespace CielaDocs.Shared.Repository
         
         Task<IEnumerable<AppUserLog>> GetAppUserLogByAppUserIdAsync(int appUserId);
         Task<IEnumerable<AppUserLog>> GetAppUserLogAsync(DateTime startDate, DateTime endDate);
+        Task<IEnumerable<ApplicationLogVm>> GetApplicationLogAsync();
     }
 }

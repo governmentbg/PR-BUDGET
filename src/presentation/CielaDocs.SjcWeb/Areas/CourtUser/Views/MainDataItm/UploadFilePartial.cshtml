@@ -98,7 +98,7 @@
                     $('#divUploading').show();
                     $.ajax({
                         type: "POST",
-                        url: "@Url.Action("UploadFile", "BufferedFileUpload")",
+                        url: "@Url.Action("UploadFile", "BufferedFileUpload", new { area = "" })",
                         contentType: false,
                         processData: false,
                         data: data,
@@ -133,7 +133,7 @@
              beforeSend: function (request) {
                  request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
              },
-            url: "@Url.Action("LoadCustomExcelFile", "MainDataItm")", method: 'POST', data: { id: id, isOverwrite: isOverwrite }
+            url: "@Url.Action("LoadCustomExcelFile", "MainDataItm", new { area = "CourtUser" })", method: 'POST', data: { id: id, isOverwrite: isOverwrite }
 
         })
             .done(function (result) {

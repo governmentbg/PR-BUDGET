@@ -67,6 +67,7 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<Test>> GetTestTableAsync();
         Task<IEnumerable<Test2>> GetTest2TableAsync();
         Task<int> UpdateMainDataItemByIdAsync(IEnumerable<MainDataItemsResult> data);
+        Task<int> UpdateMainDataItemByIdAsync(IEnumerable<MainDataItemsVm> data);
         Task<int> UpdateMainDataValueByIdAsync(int? Id, double? nValue);
         Task<int> UpdateMainPeriodValueByIdAsync(int? Id, double? nValue);
         Task<int> UpdateTestValue(int id, decimal val);
@@ -139,6 +140,8 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<IdNames>> GetAllProgramsAsync();
         Task<IEnumerable<ProgramDef3Y>> GetProgramDataCourt3YCommonAsync(int? programDefNum, int? ny);
         Task<IEnumerable<ProgramDef3Y>> GetProgramDataInstitution3YCommonAsync(int? programDefNum, int? ny);
+        Task<int?> Sp_InitProgramDataCourtByIdAsync(int? programNum, int? courtId, int? ny);
+        Task<IEnumerable<IdNames>> GetCourtInProgramData(int? programNum, int? courtId);
     }
   
 }

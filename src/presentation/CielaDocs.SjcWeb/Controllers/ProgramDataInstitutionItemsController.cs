@@ -67,6 +67,13 @@ namespace CielaDocs.SjcWeb.Controllers
             ViewBag.CourtName = court ?? string.Empty;
             ViewBag.InstitutionTypeId = InstitutionTypeId;
             ViewBag.ProgramNum = programNum;
+
+
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+            string logmsg = $"Достъп до данни на Органи на съдебна власт от {User?.Identity?.Name}";
+            await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
+
             return View();
         }
         [HttpGet]

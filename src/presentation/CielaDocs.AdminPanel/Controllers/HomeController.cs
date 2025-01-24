@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using CielaDocs.Shared.Services;
 using CielaDocs.AdminPanel.Extensions;
 using DocumentFormat.OpenXml.Spreadsheet;
+using CielaDocs.AdminPanel.Helper;
 
 namespace CielaDocs.AdminPanel.Controllers;
 [Authorize(Policy = "AdminOnly")]
@@ -54,7 +55,8 @@ public class HomeController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> Index()
     {
-       
+        string? appMode = GlobalConfig.GetValue("ApplicationMode:AppMode");
+        ViewBag.AppMode = (appMode?.ToLower() == "demo") ? "ДЕМО версия" : string.Empty;
         if (User?.Identity?.IsAuthenticated??false)
         {
            return RedirectToAction("Index","Home",new {area="Admin" });

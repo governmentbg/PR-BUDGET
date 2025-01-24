@@ -1,4 +1,5 @@
 using CielaDocs.AdminPanel;
+using CielaDocs.AdminPanel.Helper;
 using CielaDocs.Domain.Entities;
 
 using Serilog;
@@ -32,8 +33,13 @@ namespace CielaDocs.WebAdminPanel
         try
         {
             Log.Information("Starting host");
-            CreateHostBuilder(args).Build().Run();
-            return 0;
+                var host = CreateHostBuilder(args).Build();
+
+                // Initialize GlobalConfig with the app's configuration
+                GlobalConfig.Initialize(host.Services.GetRequiredService<IConfiguration>());
+
+                host.Run();
+                return 0;
         }
         catch (Exception ex)
         {
@@ -52,6 +58,13 @@ namespace CielaDocs.WebAdminPanel
             .ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.UseStartup<Startup>();
+            }).ConfigureAppConfiguration((context, config) =>
+            {
+                config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+            })
+            .ConfigureServices((context, services) =>
+            {
+                // Register services here if needed
             });
     }
 }

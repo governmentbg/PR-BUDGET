@@ -13,9 +13,9 @@
     @await Html.PartialAsync("_ModalDialogPartial")
     <div id="popup"></div>
     <div class="container">
-
-
-        <div class="spacer_40"></div>
+        <div class="spacer_20"></div>
+        <h3 style="color:red;">@ViewBag.AppMode</h3>
+        <div class="spacer_20"></div>
         <div class="row">
             <div class="col-md-12">
                 <h4 class="section-titlepara">Въвеждане на данни</h4>
@@ -152,7 +152,7 @@ else{
 
     <section id="intro" class="clearfix">
         <div class="container">
-
+            <h3 style="color:red;">@ViewBag.AppMode</h3>
             <div class="intro-img">
                 <img src=@Url.Content("~/images/intro-img.svg") alt="" class="img-fluid">
             </div>

@@ -10,6 +10,7 @@ using CielaDocs.Domain.Entities;
 using CielaDocs.Shared.Repository;
 using CielaDocs.Shared.Services;
 using CielaDocs.SjcWeb.Extensions;
+using CielaDocs.SjcWeb.Helper;
 using CielaDocs.SjcWeb.Models;
 
 using ClosedXML.Excel;
@@ -60,7 +61,7 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
- 
+        private readonly IConfiguration _config;
 
         public HomeController(ILogger<HomeController> logger, IConfiguration configuration, ISendGridMailer emailSender,
                         IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IWebHostEnvironment env)
@@ -72,6 +73,7 @@ namespace CielaDocs.SjcWeb.Controllers
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _env =env;
+            _config = configuration;
 
         }
 
@@ -113,6 +115,8 @@ namespace CielaDocs.SjcWeb.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
+            string? appMode= GlobalConfig.GetValue("ApplicationMode:AppMode");
+            ViewBag.AppMode = (appMode?.ToLower()=="demo")?"ДЕМО версия":string.Empty;
             if (User?.Identity?.IsAuthenticated ?? false)
             {
                

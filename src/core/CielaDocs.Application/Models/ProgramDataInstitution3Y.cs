@@ -19,6 +19,7 @@ namespace CielaDocs.Application.Models
         public decimal? Nval1 { get; set; }
         public decimal? Nval2 { get; set; }
         public decimal? Nval3 { get; set; }
+        public decimal? Nval4 { get; set; }
         public string? CourtName { get; set; }
     }
 }

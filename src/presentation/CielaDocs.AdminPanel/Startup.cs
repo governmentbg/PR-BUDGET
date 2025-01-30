@@ -40,6 +40,8 @@ using ITfoxtec.Identity.Saml2.Schemas.Metadata;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
+using CielaDocs.AdminPanel.Services;
+using CielaDocs.Application.Common.Interfaces;
 
 namespace CielaDocs.AdminPanel
 {
@@ -58,6 +60,7 @@ namespace CielaDocs.AdminPanel
         {
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
             services.AddApplication(Configuration);
+            services.AddScoped<ICurrentEmpl, CurrentEmplService>();
             services.AddInfrastructureData(Configuration);
             services.AddInfrastructureShared(Configuration);
             services.AddDbContext<ApplicationDbContext>(options =>

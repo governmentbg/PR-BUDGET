@@ -1,7 +1,8 @@
 ﻿const selectBoxMonthData = [{ id: 0, name: "Изберете месец" }, { id: 1, name: "Януари" }, { id: 2, name: "Февруари" }, { id: 3, name: "Март" }, { id: 4, name: "Април" }, { id: 5, name: "Май" }, { id: 6, name: "Юни" }, { id: 7, name: "Юли" }, { id: 8, name: "Август" }, { id: 9, name: "Септември" },
 { id: 10, name: "Октомври" }, { id: 11, name: "Ноември" }, { id: 12, name: "Декември" }];
 const selectBoxYearData = [{ id: 0, name: "Изберете година" }, { id: 2022, name: "2022" }, { id: 2023, name: "2023" }, { id: 2024, name: "2024" }, { id: 2025, name: "2025" }, { id: 2026, name: "2026" }, { id: 2027, name: "2027" },
-{ id: 2028, name: "2028" }, { id: 2029, name: "2029" }, { id: 2030, name: "2030" }, { id: 2031, name: "2031" }, { id: 2032, name: "2032" }];
+    { id: 2028, name: "2028" }, { id: 2029, name: "2029" }, { id: 2030, name: "2030" }, { id: 2031, name: "2031" }, { id: 2032, name: "2032" }, { id: 2033, name: "2033" }, { id: 2034, name: "2034" }, { id: 2035, name: "2035" },
+    { id: 2036, name: "2036" }, { id: 2037, name: "2037" }, { id: 2038, name: "2038" }, { id: 2039, name: "2039" }, { id: 2040, name: "2040" }];
 
 var loadingModal = $("#loadingModal");
 

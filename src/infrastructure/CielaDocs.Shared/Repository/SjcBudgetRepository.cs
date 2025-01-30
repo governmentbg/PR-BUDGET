@@ -990,10 +990,11 @@ namespace CielaDocs.Shared.Repository
             return result?.ToList();
         }
         public async Task<IEnumerable<ProgramData3Y>> GetProgramData3YAsync(int functionalSubAreaId, int ny) {
-            string sql2 = $@"select a.Id,a.FunctionalSubAreaId,a.RowNum,a.PlannedYear,a.PrnCode,a.Name,a.ValueAllowed,a.Nvalue as nval1,b.nvalue as nval2,c.Nvalue as nval3
+            string sql2 = $@"select a.Id,a.FunctionalSubAreaId,a.RowNum,a.PlannedYear,a.PrnCode,a.Name,a.ValueAllowed,a.Nvalue as nval1,b.nvalue as nval2,c.Nvalue as nval3,d.Nvalue as nval4
 	              from ProgramData a 
 	              left join ProgramData b on a.FunctionalSubAreaId=b.FunctionalSubAreaId and a.RowNum=b.RowNum and b.PlannedYear=a.PlannedYear+1
 	              left join ProgramData c on a.FunctionalSubAreaId=c.FunctionalSubAreaId and a.RowNum=c.RowNum and c.PlannedYear=a.PlannedYear+2
+                  left join ProgramData d on a.FunctionalSubAreaId=d.FunctionalSubAreaId and a.RowNum=d.RowNum and d.PlannedYear=a.PlannedYear+3
 
 	              where a.FunctionalSubAreaId={functionalSubAreaId} and a.PlannedYear={ny} and a.IsActive=1";
 
@@ -1003,10 +1004,11 @@ namespace CielaDocs.Shared.Repository
             return result?.ToList();
         }
         public async Task<IEnumerable<ProgramDataCourt3Y>> GetProgramDataCourt3YAsync(int functionalSubAreaId, int ny, int? rowNum) {
-            string sql2 = $@"select a.Id,a.CourtId,a.FunctionalSubAreaId,a.RowNum,a.PlannedYear,a.PrnCode,a.Name,a.ValueAllowed,a.Nvalue as nval1,b.nvalue as nval2,c.Nvalue as nval3, co.Name as CourtName
+            string sql2 = $@"select a.Id,a.CourtId,a.FunctionalSubAreaId,a.RowNum,a.PlannedYear,a.PrnCode,a.Name,a.ValueAllowed,a.Nvalue as nval1,b.nvalue as nval2,c.Nvalue as nval3,d.Nvalue as nval4, co.Name as CourtName
 	              from ProgramDataCourt a 
 	              left join ProgramDataCourt b on a.FunctionalSubAreaId=b.FunctionalSubAreaId and a.RowNum=b.RowNum and a.CourtId=b.CourtId and b.PlannedYear=a.PlannedYear+1
 	              left join ProgramDataCourt c on a.FunctionalSubAreaId=c.FunctionalSubAreaId and a.RowNum=c.RowNum and a.CourtId=c.CourtId and c.PlannedYear=a.PlannedYear+2 
+                  left join ProgramDataCourt d on a.FunctionalSubAreaId=d.FunctionalSubAreaId and a.RowNum=d.RowNum and a.CourtId=d.CourtId and d.PlannedYear=a.PlannedYear+3
 
                   left join Court co on a.CourtId=co.Id
 
@@ -1018,10 +1020,11 @@ namespace CielaDocs.Shared.Repository
             return result?.ToList();
         }
         public async Task<IEnumerable<ProgramDataCourt3Y>> GetProgramDataCourt3YByCourtIdAsync(int? programDefNum, int? ny, int? courtId) {
-            string sql2 = $@"select a.Id,a.CourtId,a.FunctionalSubAreaId,a.RowNum,a.PlannedYear,a.PrnCode,a.Name,a.ValueAllowed,a.Nvalue as nval1,b.nvalue as nval2,c.Nvalue as nval3, co.Name as CourtName
+            string sql2 = $@"select a.Id,a.CourtId,a.FunctionalSubAreaId,a.RowNum,a.PlannedYear,a.PrnCode,a.Name,a.ValueAllowed,a.Nvalue as nval1,b.nvalue as nval2,c.Nvalue as nval3,d.Nvalue as nval4, co.Name as CourtName
 	              from ProgramDataCourt a 
 	              left join ProgramDataCourt b on a.FunctionalSubAreaId=b.FunctionalSubAreaId and a.RowNum=b.RowNum and a.CourtId=b.CourtId and b.PlannedYear=a.PlannedYear+1
 	              left join ProgramDataCourt c on a.FunctionalSubAreaId=c.FunctionalSubAreaId and a.RowNum=c.RowNum and a.CourtId=c.CourtId and c.PlannedYear=a.PlannedYear+2 
+                  left join ProgramDataCourt d on a.FunctionalSubAreaId=d.FunctionalSubAreaId and a.RowNum=d.RowNum and a.CourtId=d.CourtId and d.PlannedYear=a.PlannedYear+3
 
                   left join Court co on a.CourtId=co.Id
 
@@ -1034,7 +1037,7 @@ namespace CielaDocs.Shared.Repository
         }
         public async Task<IEnumerable<ProgramDef3Y>> GetProgramDataCourt3YCommonAsync(int? programDefNum, int? ny)
         {
-            string sql2 = $@"select a.Id,a.FunctionalSubAreaId,a.RowNum,a.PrnCode,a.Name,t1.Nval1, t2.Nval2,t3.Nval3 
+            string sql2 = $@"select a.Id,a.FunctionalSubAreaId,a.RowNum,a.PrnCode,a.Name,t1.Nval1, t2.Nval2,t3.Nval3,t4.Nval4 
 	             from ProgramDef a 
                  left join    (
                                   select  FunctionalSubAreaId,RowNum,PlannedYear,Sum(Nvalue) as Nval1
@@ -1058,6 +1061,13 @@ namespace CielaDocs.Shared.Repository
                                           FunctionalSubAreaId,RowNum,PlannedYear
                                   ) t3
                           on      t3.FunctionalSubAreaId=a.FunctionalSubAreaId and t3.RowNum=a.RowNum and t3.PlannedYear={ny+2}
+                left join    (
+                                  select  FunctionalSubAreaId,RowNum,PlannedYear,Sum(Nvalue) as Nval4
+                                  from    ProgramDataCourt
+                                  group by
+                                          FunctionalSubAreaId,RowNum,PlannedYear
+                                  ) t4
+                          on      t4.FunctionalSubAreaId=a.FunctionalSubAreaId and t4.RowNum=a.RowNum and t4.PlannedYear={ny + 3}
 
 	              where a.FunctionalSubAreaId={programDefNum ?? 0}  and a.IsActive=1";
 
@@ -1068,7 +1078,7 @@ namespace CielaDocs.Shared.Repository
         }
         public async Task<IEnumerable<ProgramDef3Y>> GetProgramDataInstitution3YCommonAsync(int? programDefNum, int? ny)
         {
-            string sql2 = $@"select a.Id,a.FunctionalSubAreaId,a.RowNum,a.PrnCode,a.Name,t1.Nval1, t2.Nval2,t3.Nval3 
+            string sql2 = $@"select a.Id,a.FunctionalSubAreaId,a.RowNum,a.PrnCode,a.Name,t1.Nval1, t2.Nval2,t3.Nval3,t4.Nval4  
 	             from ProgramDef a 
                  left join    (
                                   select  FunctionalSubAreaId,RowNum,PlannedYear,Sum(Nvalue) as Nval1
@@ -1092,6 +1102,13 @@ namespace CielaDocs.Shared.Repository
                                           FunctionalSubAreaId,RowNum,PlannedYear
                                   ) t3
                           on      t3.FunctionalSubAreaId=a.FunctionalSubAreaId and t3.RowNum=a.RowNum and t3.PlannedYear={ny + 2}
+                left join    (
+                                  select  FunctionalSubAreaId,RowNum,PlannedYear,Sum(Nvalue) as Nval4
+                                  from    ProgramDataInstitution
+                                  group by
+                                          FunctionalSubAreaId,RowNum,PlannedYear
+                                  ) t4
+                          on      t4.FunctionalSubAreaId=a.FunctionalSubAreaId and t4.RowNum=a.RowNum and t4.PlannedYear={ny + 3}
 
 	              where a.FunctionalSubAreaId={programDefNum ?? 0}  and a.IsActive=1";
 
@@ -1106,7 +1123,7 @@ namespace CielaDocs.Shared.Repository
 	              from ProgramDataInstitution a 
 	              left join ProgramDataInstitution b on a.FunctionalSubAreaId=b.FunctionalSubAreaId and a.RowNum=b.RowNum and a.InstitutionTypeId=b.InstitutionTypeId and b.PlannedYear=a.PlannedYear+1
 	              left join ProgramDataInstitution c on a.FunctionalSubAreaId=c.FunctionalSubAreaId and a.RowNum=c.RowNum and a.InstitutionTypeId=c.InstitutionTypeId and c.PlannedYear=a.PlannedYear+2 
-
+                  left join ProgramDataInstitution d on a.FunctionalSubAreaId=d.FunctionalSubAreaId and a.RowNum=d.RowNum and a.InstitutionTypeId=d.InstitutionTypeId and d.PlannedYear=a.PlannedYear+3
                   left join InstitutionType co on a.InstitutionTypeId=co.Id
 
 	              where a.FunctionalSubAreaId={programDefNum ?? 0} and a.PlannedYear={ny} and a.InstitutionTypeId={institutionTypeId ?? 0} and a.IsActive=1";
@@ -1138,6 +1155,7 @@ namespace CielaDocs.Shared.Repository
                 obj.Nval1 = await GetTotalNvalue(item.FunctionalSubAreaId, item.RowNum,institutionTypeId, ny);
                 obj.Nval2 = await GetTotalNvalue(item.FunctionalSubAreaId, item.RowNum, institutionTypeId, ny+1);
                 obj.Nval3 = await GetTotalNvalue(item.FunctionalSubAreaId, item.RowNum, institutionTypeId, ny+2);
+                obj.Nval4 = await GetTotalNvalue(item.FunctionalSubAreaId, item.RowNum, institutionTypeId, ny + 3);
                 res.Add(obj);
             }
 
@@ -1472,10 +1490,9 @@ namespace CielaDocs.Shared.Repository
             int currentYear= rec?.PlannedYear ?? 0;
            
             switch (fieldName.ToLower()) {
-                case "nval2":
-                    currentYear = currentYear + 1;
-                    break;
+                case "nval2": currentYear = currentYear + 1; break;
                 case "nval3": currentYear = currentYear + 2; break;
+                case "nval4": currentYear = currentYear + 3; break;
             }
             var sql = $@"UPDATE ProgramData SET Nvalue = {val}, EnteredDate=getDate() WHERE FunctionalSubAreaId={rec?.FunctionalSubAreaId} and PlannedYear={currentYear} and RowNum={rec?.RowNum??0}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -1494,6 +1511,7 @@ namespace CielaDocs.Shared.Repository
                     currentYear = currentYear + 1;
                     break;
                 case "nval3": currentYear = currentYear + 2; break;
+                case "nval4": currentYear = currentYear + 3; break;
             }
             var sql = $@"UPDATE ProgramDataCourt SET Nvalue = {val}, EnteredDate=getDate() WHERE FunctionalSubAreaId={rec?.FunctionalSubAreaId} and PlannedYear={currentYear} and RowNum={rec?.RowNum ?? 0} and CourtId={rec.CourtId}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -1509,10 +1527,9 @@ namespace CielaDocs.Shared.Repository
 
             switch (fieldName.ToLower())
             {
-                case "nval2":
-                    currentYear = currentYear + 1;
-                    break;
+                case "nval2": currentYear = currentYear + 1; break;
                 case "nval3": currentYear = currentYear + 2; break;
+                case "nval4": currentYear = currentYear + 3; break;
             }
             var sql = $@"UPDATE ProgramDataInstitution SET Nvalue = {val}, EnteredDate=getDate() WHERE FunctionalSubAreaId={rec?.FunctionalSubAreaId} and PlannedYear={currentYear} and RowNum={rec?.RowNum ?? 0} and InstitutionTypeId={rec.InstitutionTypeId}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -1531,7 +1548,9 @@ namespace CielaDocs.Shared.Repository
             return affectedRows;
         }
         public async Task<IEnumerable<IdNames>> GetCurrencies() {
-            string sql = $@"select Id,Name from Currency";
+           
+            string sql = $@"select c.Id,c.Name from Currency c
+                left join cfg g on c.Id=g.OfficialCurrencyId where g.id=0";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
@@ -1540,7 +1559,8 @@ namespace CielaDocs.Shared.Repository
         }
         public async Task<IEnumerable<IdNames>> GetCurrencyMeasures()
         {
-            string sql = $@"select Id,Name from CurrencyMeasure";
+            string sql = $@"select c.Id,c.Name from CurrencyMeasure c
+            left join cfg g on c.id=g.DefaultCurrencyMeasureId where g.id=0";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
@@ -5044,6 +5064,19 @@ namespace CielaDocs.Shared.Repository
                 return affectedRows;
             }
         }
-     
+        public async Task<CfgVm> GetCfgAsync()
+        {
+            string sql = $@"SELECT [Id]
+                  ,[OfficialCurrencyId]
+                  ,[OfficialCurrencyCode]
+                  ,[OfficialEuroRate]
+                  ,DefaultCurrencyMeasureId
+              FROM [dbo].[Cfg] where id=0";
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<CfgVm>(sql);
+            return result?.FirstOrDefault();
+        }
     }
 }

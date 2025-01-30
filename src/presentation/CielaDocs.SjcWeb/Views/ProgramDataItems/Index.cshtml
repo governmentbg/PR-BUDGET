@@ -230,6 +230,20 @@
                         }
 
                     },
+                    {
+                        dataField: "Nval4",
+                        width: "10%",
+                        caption: selectedYear+3,
+                        alllowEditing: true,
+                        valueFormat: '#0.00',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
                 ],
                 toolbar: {
                     items: [
@@ -336,6 +350,19 @@
                                             }
                                         }
 
+                                    }, {
+                                        dataField: "Nval4",
+                                        width: "10%",
+                                        caption: selectedYear + 3,
+                                        alllowEditing: true,
+                                        valueFormat: '#0.00',
+                                        dataType: 'number',
+                                        format: {
+                                            formatter: function (value) {
+                                                return value.toLocaleString('bg-BG');
+                                            }
+                                        }
+
                                     },
 
                                 ],
@@ -419,7 +446,7 @@
                                 },
                                 onEditorPreparing: function (e) {
                                     if (e.dataField === "PrnCode"  || e.dataField === "Name") e.editorOptions.disabled = true
-                                    if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3") && e.parentType === "dataRow") {
+                                    if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3" || e.dataField === "Nval4") && e.parentType === "dataRow") {
                                         const defaultValueChangeHandler = e.editorOptions.onValueChanged;
                                         e.editorOptions.onValueChanged = function (args) {
                                             defaultValueChangeHandler(args);
@@ -443,7 +470,7 @@
                 },
                 onEditorPreparing: function (e) {
                     if (e.dataField === "PrnCode" || e.dataField === "Name") e.editorOptions.disabled = true
-                    if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3") && e.parentType === "dataRow") {
+                    if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3"|| e.dataField === "Nval4") && e.parentType === "dataRow") {
                         const defaultValueChangeHandler = e.editorOptions.onValueChanged;
                         e.editorOptions.onValueChanged = function (args) { 
                             defaultValueChangeHandler(args);

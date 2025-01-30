@@ -98,6 +98,7 @@ namespace CielaDocs.SjcWeb.Controllers
                 _ = await _sjcRepo.sp_RecalculateProgramDataCourtAsync(functionalSubAreaId ?? 0, nyear ?? 0, courtId);
                 _ = await _sjcRepo.sp_RecalculateProgramDataCourtAsync(functionalSubAreaId ?? 0, nyear + 1 ?? 0, courtId);
                 _ = await _sjcRepo.sp_RecalculateProgramDataCourtAsync(functionalSubAreaId ?? 0, nyear + 2 ?? 0, courtId);
+                _ = await _sjcRepo.sp_RecalculateProgramDataCourtAsync(functionalSubAreaId ?? 0, nyear + 3 ?? 0, courtId);
 
                 return Json(new { error = string.Empty });
             }

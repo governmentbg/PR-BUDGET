@@ -3,6 +3,7 @@ using CielaDocs.Data.Contexts;
 using CielaDocs.Shared.Repository;
 using CielaDocs.Shared.Services;
 using CielaDocs.SjcWeb.Extensions;
+using CielaDocs.SjcWeb.Helper;
 using CielaDocs.SjcWeb.Models;
 using CielaDocs.SjcWeb.Models.AccountViewModels;
 
@@ -72,7 +73,8 @@ namespace CielaDocs.SjcWeb.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(string? returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/");
+          
+            returnUrl ??=  Url.Content("~/");
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
@@ -117,6 +119,7 @@ namespace CielaDocs.SjcWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
+            
             returnUrl ??= Url.Content("~/");
             ViewData["ReturnUrl"] = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();

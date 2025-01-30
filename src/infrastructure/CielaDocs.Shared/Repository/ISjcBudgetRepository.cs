@@ -142,6 +142,7 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<ProgramDef3Y>> GetProgramDataInstitution3YCommonAsync(int? programDefNum, int? ny);
         Task<int?> Sp_InitProgramDataCourtByIdAsync(int? programNum, int? courtId, int? ny);
         Task<IEnumerable<IdNames>> GetCourtInProgramData(int? programNum, int? courtId);
+        Task<CfgVm> GetCfgAsync();
     }
   
 }

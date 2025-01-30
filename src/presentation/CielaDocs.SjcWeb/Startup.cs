@@ -5,6 +5,7 @@ using CielaDocs.Models;
 using CielaDocs.Shared;
 using CielaDocs.Shared.Services;
 using CielaDocs.SjcWeb.Extensions;
+using CielaDocs.SjcWeb.Helper;
 using CielaDocs.SjcWeb.Models;
 using CielaDocs.SjcWeb.Services;
 
@@ -23,6 +24,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
@@ -228,7 +230,15 @@ namespace CielaDocs.SjcWeb
             app.UseSaml2();
             app.UseAuthentication();
             app.UseAuthorization();
-           
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.All
+            });
+            string? appMode = GlobalConfig.GetValue("ApplicationMode:AppMode");
+            if (appMode.ToLower() == "demo")
+            {
+                app.UsePathBase("/pbDemo");
+            }
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(

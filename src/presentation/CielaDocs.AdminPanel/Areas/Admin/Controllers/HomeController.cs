@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CielaDocs.Application.Models;
+using CielaDocs.Shared.Services;
 
 namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
 {
@@ -30,37 +31,40 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
     public class HomeController : CommonController
     {
 
-        private readonly IMapper _mapper;
+        
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ISjcService _sjcService;
 
-        public HomeController(IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor)
+        public HomeController( ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor,ISjcService sjcService)
         {
 
-            _mapper = mapper;
+            
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _httpContextAccessor = httpContextAccessor;
+            _sjcService= sjcService;
         }
 
         public async Task<IActionResult> Index()
         {
 
-            var dbUser = await Mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
-
-
+            //var dbUser = await Mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            var dbUser = await CurrentEmpl.GetCurrentEmplAsync();
+            var cfg = await _sjcService.GetCfg();
             ViewBag.CourtId = dbUser?.CourtId ?? 0;
             var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
             string logmsg = $"Администриране и конфигуриране на системата от {User?.Identity?.Name ?? string.Empty}";
             await _logRepo.AddToAppUserLogAsync(new Domain.Entities.AppUserLog { AppUserId = dbUser?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
+            ViewBag.OfficialCurrencyCode=cfg.OfficialCurrencyCode;
             return View();
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> InitFinYear(int? id)
         {
-            var empl = await Mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            var empl = await CurrentEmpl.GetCurrentEmplAsync();
             if ((!empl.CanAdd) && (!empl.CanUpdate))
             {
                 return Json(new { msg = "Нямате предоставени права да добавяте/редактирате данни ", success = false, id = 0 });

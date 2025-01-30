@@ -4,6 +4,8 @@ using CielaDocs.Application;
 using CielaDocs.Application.Models;
 using CielaDocs.Shared.Repository;
 using CielaDocs.SjcWeb.Extensions;
+using CielaDocs.SjcWeb.Helper;
+
 using MediatR;
 
 using Microsoft.AspNetCore.Authorization;
@@ -51,9 +53,10 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
            
             var court = await _mediator.Send(new GetCourtByIdQuery { Id = empl?.CourtId??0 });
+            string? appMode = GlobalConfig.GetValue("ApplicationMode:AppMode");
+            ViewBag.AppMode = (appMode?.ToLower() == "demo") ? "ДЕМО версия" : string.Empty;
 
-
-             ViewBag.CourtName = court?.Name ?? string.Empty;
+            ViewBag.CourtName = court?.Name ?? string.Empty;
              ViewBag.CourtId= court?.Id??0;
              ViewBag.UserId=empl?.Id??0;
             return  View() ;

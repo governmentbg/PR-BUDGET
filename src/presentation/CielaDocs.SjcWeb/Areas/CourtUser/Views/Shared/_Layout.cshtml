@@ -73,11 +73,11 @@
     <header>
         <nav class="navbar navbar-expand-md navbar-toggleable-md navbar-light bg-white border-bottom  mb-3">
             <div class="container">
-                  <a class="navbar-brand" asp-area="CourtUser" asp-controller="Home" asp-action="Index">
-                    <img src="~/images/logo.png" alt="Logo">&nbsp;&nbsp;  @ViewBag.CourtName
+                  <a class="navbar-brand" href="@Url.Action("Index","Home",new {area="CourtUser"})" asp-area="CourtUser" asp-controller="Home" asp-action="Index">
+                    <img src="~/images/logo.png" alt="Logo"> 
                   </a>
             
-                   <partial name="_LoginPartial" />
+                   @Html.Partial("_LoginPartial")
                 </div>
          </nav>
        

@@ -9,7 +9,7 @@
     @await Html.PartialAsync("_ModalDialogPartial")
     <div id="popup"></div>
     <div class="container">
-
+        <h3 style="color:red;">@ViewBag.AppMode</h3>
         <div class="row">
                 <div class="col-md-4" id="admin">
                     <div class="capsule-at">
@@ -33,7 +33,7 @@ else{
 
     <section id="intro" class="clearfix">
         <div class="container">
-
+            <h3 style="color:red;">@ViewBag.AppMode</h3>
             <div class="intro-img">
                 <img src=@Url.Content("~/images/admin.png") alt="" class="img-fluid">
             </div>

@@ -25,6 +25,8 @@ using CielaDocs.Application.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Graph;
 using DocumentFormat.OpenXml.Office2010.Excel;
+using CielaDocs.Shared.Services;
+using DocumentFormat.OpenXml.Office2010.ExcelAc;
 
 namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
 {
@@ -40,10 +42,11 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             private readonly ILogRepository _logRepo;
             private readonly ISjcBudgetRepository _sjcRepo;
             private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ISjcService _sjcService;
 
-            public UsersController(SignInManager<IdentityUser> signInManager,
+        public UsersController(SignInManager<IdentityUser> signInManager,
              ILogger<UsersController> logger,
-             UserManager<IdentityUser> userManager, IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor)
+             UserManager<IdentityUser> userManager, IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor,ISjcService sjcService)
             {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -52,6 +55,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                 _logRepo = logRepo;
                 _sjcRepo = sjcRepo;
                 _httpContextAccessor = httpContextAccessor;
+                _sjcService= sjcService;
             }
 
             public async Task<IActionResult> Index()
@@ -95,8 +99,9 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                 }
                 var usr = await _mediator.Send(new GetUserByIdQuery { Id = id ?? 0 });
             if (string.IsNullOrWhiteSpace(usr.Email)) usr.Email = usr.UserName;
-
-                return PartialView("AddUserPartialView", usr);
+            var selIds = await _sjcService.QueryRawList<int>($"Select UserLockedItemId from UserLock where UserId={id??0}");
+            ViewBag.SelIds = string.Join(",", selIds.Select(n => n.ToString()).ToArray());
+                return PartialView("EditUserPartialView", usr);
             }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -286,6 +291,20 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             string logmsg = $"Изтриване на потребител с Id: {id} от {empl?.UserName}";
             await _logRepo.AddToUserLogAsync(new Domain.Entities.Ulog { OnrId = empl?.CourtId ?? 0, EmplId = empl.Id, CardId = 0, MsgId = (int?)CommonConstants.LogMessageType.Delete, Msg = logmsg, IP = ip });
             return Json(new { result = true, msg = "Записът бе премахнат" });
+        }
+        [HttpPost]
+        public async Task<ActionResult> SetUserLock(int? userId, string selectedIds)
+        { 
+            if(userId is null) return  Json(new { success = false, msg = "Невалиден указател към потребител!" });
+
+            _ = await _sjcService.ExecuteRawSql($"Delete from UserLock where UserId={userId ?? 0}");
+            if (!string.IsNullOrWhiteSpace(selectedIds)) {
+                List<int> Ids = selectedIds.Split(',').Select(int.Parse).ToList();
+                foreach (var id in Ids) {
+                    _ = await _sjcService.ExecuteRawSql($"Insert into UserLock(UserId,UserLockedItemId) values({userId ?? 0},{id})");
+                }
+            }
+            return Json(new { success = true, msg = "Данните са записани!" });
         }
     }
 }

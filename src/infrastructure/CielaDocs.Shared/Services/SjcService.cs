@@ -19,6 +19,11 @@ namespace CielaDocs.Shared.Services
         }
 
         public async Task<CfgVm> GetCfg() { return await _repo.GetCfgAsync(); }
-        
+        public async Task<IEnumerable<UserLockedItemVm>> GetAllUserLockedItems() { return await _repo.GetAllUserLockedItemsAsync(); }
+        public async Task<int> ExecuteRawSql(string sql) { return await _repo.ExecuteRawSqlAsync(sql); }
+        public async Task<IEnumerable<T>> QueryRawList<T>(string sql) { return await _repo.QueryRawListAsync<T>(sql); }
+        public async Task<T> QueryRaw<T>(string sql) { return await _repo.QueryRawAsync<T>(sql); }
+
+
     }
 }

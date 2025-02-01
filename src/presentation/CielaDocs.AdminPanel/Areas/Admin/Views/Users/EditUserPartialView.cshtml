@@ -117,8 +117,20 @@
 
     </div>
 </form>
+<div class="spacer_5"></div>
+<h4>Права за заключване</h4>
+<div id="grid2"></div>
 <script>
     $(() => {
+         let selectedRowKeys;
+         let selKeys= `[${'@ViewBag.SelIds'
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean)
+            .map(Number)
+            .join(',')}]`;
+
+         let selectedUserId='@Model.Id';
 
         $('#cbLoginEnabled').prop('checked', ($('#LoginEnabled').val().toLowerCase() == 'true') ? true : false);
         $('#cbCanAdd').prop('checked', ($('#CanAdd').val().toLowerCase() == 'true') ? true : false);
@@ -234,31 +246,75 @@
             commonModal.modal('hide');
             $("#grid").dxDataGrid("instance").refresh();
         });
-        function saveUser() {
-            var userData = $("#userForm").serialize();
-
+       
+        //userlocks
+        $('#grid2').dxDataGrid({
+            dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(EduDl.baseUrl + "Noms/GetAllUserLockedItems", 'Get', {});
+                    }
+                }),
+            }),
+            paging: {
+                pageSize: 10,
+            },
+            pager: {
+                visible: true,
+                showNavigationButtons: true,
+                allowedPageSizes: [10],
+                showPageSizeSelector: true,
+                showInfo: true,
+                showNavigationButtons: true,
+            },
+            searchPanel: {
+                visible: true,
+                highlightCaseSensitive: true,
+            },
+            selection: {
+               mode: 'multiple',
+            },
+            showBorders: true,
+            showRowLines: true,
+            onContentReady(e) {
+                const dataGrid = e.component;
+                dataGrid.selectRows(JSON.parse(selKeys), false);
+            },
+            columns: [
+                { dataField: 'Name', caption: 'Заключване на', width: "95%" },
+            ],
+                 toolbar: {
+                items: [
+                      {
+                        location: "after",
+                        widget: "dxButton",
+                        options: {
+                            text: "Запиши",
+                            icon: "check",
+                            onClick: function (e) {
+                                 setUserLockItems(selectedUserId,selectedRowKeys.toString());
+                            }
+                        }
+                    }
+                ]
+            },
+            focusedRowEnabled: true,
+            onSelectionChanged(selectedItems) {
+                selectedRowKeys = selectedItems.selectedRowKeys;
+            },
+        });
+        function setUserLockItems(userId,selectedIds){
             $.ajax({
-                beforeSend: function (request) {
-                    request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
-                },
-                url: "@Url.Action("SaveUser", "Users",new {area="Admin"})", method: 'POST', data: userData
-
+               url: EduDl.baseUrl + "Users/SetUserLock", data: { userId: userId,selectedIds:selectedIds }, method: 'POST'
             })
-                .done(function (result) {
-                    if (result.success === true) {
-                        $("#grid").dxDataGrid("instance").refresh();
-                        commonModal.modal('hide');
-
-                    }
-                    else {
-                        DevExpress.ui.dialog.alert(result.msg, 'Внимание');
-                    }
-
-                })
-                .fail(function (e) {
-                    DevExpress.ui.notify('Failed to save! ' + e);
-
-                });
+            .done(function (result) {
+                $("#grid2").dxDataGrid("instance").refresh();
+                 DevExpress.ui.notify(result.msg);
+             })
+            .fail(function () {
+                   DevExpress.ui.notify('Грешка при запис на права за заключване.');
+             });
         }
     });
 

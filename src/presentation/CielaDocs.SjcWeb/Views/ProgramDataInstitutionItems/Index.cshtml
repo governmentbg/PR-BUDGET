@@ -167,6 +167,19 @@
                             }
                         }
 
+                    }, {
+                        dataField: "Nval4",
+                        width: "10%",
+                        caption: selectedYear + 3,
+                        alllowEditing: true,
+                        valueFormat: '#0.00',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
                     },
                 ],
                 toolbar: {

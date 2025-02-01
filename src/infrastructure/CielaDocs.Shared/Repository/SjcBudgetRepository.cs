@@ -5078,5 +5078,33 @@ namespace CielaDocs.Shared.Repository
             var result = await connection.QueryAsync<CfgVm>(sql);
             return result?.FirstOrDefault();
         }
+        public async Task<IEnumerable<UserLockedItemVm>> GetAllUserLockedItemsAsync()
+        {
+            string sql = $@"SELECT [Id],[Name] FROM [dbo].[UserLockedItem] ";
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<UserLockedItemVm>(sql);
+            return result;
+        }
+        public async Task<int> ExecuteRawSqlAsync(string sql)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.ExecuteAsync(sql);
+            return result;
+        }
+        public async Task<IEnumerable<T>> QueryRawListAsync<T>(string sql) {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<T>(sql);
+            return result;
+        }
+        public async Task<T> QueryRawAsync<T>(string sql)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QuerySingleOrDefaultAsync<T>(sql);
+            return result;
+        }
     }
 }

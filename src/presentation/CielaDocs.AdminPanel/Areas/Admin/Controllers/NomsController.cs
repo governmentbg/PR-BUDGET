@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CielaDocs.Application.Models;
 using CielaDocs.Domain.Entities;
+using CielaDocs.Shared.Services;
 
 namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
 {
@@ -34,14 +35,16 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ISjcService _sjcService;
 
-        public NomsController(IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor)
+        public NomsController(IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor,ISjcService sjcService)
         {
             _mediator = mediator;
             _mapper = mapper;
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _httpContextAccessor = httpContextAccessor;
+            _sjcService= sjcService;
         }
         [HttpGet]
         public async Task<JsonResult> GetInstitutionTypes()
@@ -379,6 +382,18 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                 return Json(new List<IdNames>());
             }
         }
-
+        [HttpGet]
+        public async Task<JsonResult> GetAllUserLockedItems()
+        {
+            try
+            {
+                var data = await _sjcService.GetAllUserLockedItems();
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<UserLockedItemVm>());
+            }
+        }
     }
 }

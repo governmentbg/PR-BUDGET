@@ -375,3 +375,32 @@ function validateDigits(evt) {
         if (theEvent.preventDefault) theEvent.preventDefault();
     }
 }
+async function fetchDataAsync(url, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${url}?${queryString}`);
+    return response.json();
+}
+//example call
+//fetchData('https://api.example.com/data', { id: 123, type: 'user', status: 'active' })
+//    .then(data => console.log(data));
+function checkValuesAndAct(action, ...values) {
+    const allHaveValues = values.every(value => value !== null && value !== undefined && value !== '');
+    if (allHaveValues) {
+        action(); // Trigger the provided action
+    }
+}
+//example call
+//let a = 'Hello';
+//let b = 42;
+//let c = 'World';
+
+//checkValuesAndAct(() => {
+//    console.log('All variables have values!');
+//}, a, b, c);  // ✅ This will log because all variables have values
+
+function checkIntValuesAndAct(action, ...values) {
+    const allHaveValues = values.every(value => value !== null && value !== undefined && value !== '' && parseInt(value)>0 );
+    if (allHaveValues) {
+        action(); // Trigger the provided action
+    }
+}

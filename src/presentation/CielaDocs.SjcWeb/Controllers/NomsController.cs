@@ -18,8 +18,10 @@ using CielaDocs.Domain.Entities;
 using System.Globalization;
 using CielaDocs.Application.Features.CourtTypes.Queries;
 using Microsoft.Graph.TermStore;
+using CielaDocs.Shared.Services;
+using CielaDocs.SjcWeb.Extensions;
 
-namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
+namespace CielaDocs.SjcWeb.Controllers
 {
   
     public class NomsController : Controller
@@ -29,14 +31,16 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ISjcService _sjcService;
 
-        public NomsController(IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor)
+        public NomsController(IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor,ISjcService sjcService)
         {
             _mediator = mediator;
             _mapper = mapper;
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _httpContextAccessor = httpContextAccessor;
+            _sjcService= sjcService;
         }
         [HttpGet]
         public async Task<JsonResult> GetInstitutionTypes()
@@ -403,6 +407,53 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                 return Json(new List<IdNames>());
             }
         }
-
+        [HttpGet]
+        public async Task<JsonResult> CheckPeriod1Locked(int? programId, int? ny)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRaw<ProgramDataLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName 
+                    FROM ProgramDataLocked a
+                    left join users u on a.LockedBy=u.id
+                    where FunctionalSubAreaId={programId??0} and Nyear={ny??0} ");
+                return Json(data);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<ProgramDataLockedVm>());
+            }
+        }
+        public async Task<bool> CheckUserCanLock(int userId, int lockedItemId) {
+            try
+            {
+                var data = await _sjcService.QueryRaw<int?>($@"SELECT TOP 1 Id from UserLock where UserId={userId} and UserLockedItemId={lockedItemId}");
+                return (data!=null);
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+        [HttpPost]
+        public async Task<JsonResult> LockProgramData(int? typeoflock, int? programId, int? ny) {
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var canUserLock = await CheckUserCanLock(empl?.Id ?? 0, 1);
+            if(!canUserLock) { return Json(new { success = false, msg = "Нямате права за заключване или отключване на този период" }); }
+            if (typeoflock == 0)
+            {
+                _ = await _sjcService.ExecuteRawSql($"Insert into ProgramDataLocked (FunctionalSubAreaId ,Nyear,LockedBy) VALUES ({programId??0},{ny??0} ,{empl?.Id??0}) ");
+                return Json(new { success = true, msg = "Периодът бе заключен" });
+            }
+            if (typeoflock == 1)
+            {
+                var rec=await _sjcService.QueryRaw<ProgramDataLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.Nyear,a.LockedBy,a.LockedOn FROM ProgramDataLocked a where FunctionalSubAreaId={programId ?? 0} and Nyear={ny ?? 0}");
+                if(rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+                if(rec?.LockedBy!=empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
+                _ = await _sjcService.ExecuteRawSql($"Delete from  ProgramDataLocked where FunctionalSubAreaId={programId ?? 0} and Nyear={ny ?? 0} ");
+                return Json(new { success = true, msg = "Периодът бе отключен" });
+            }
+            return Json(new { success = true, msg = "Неуточнено действие" });
+        }
     }
 }

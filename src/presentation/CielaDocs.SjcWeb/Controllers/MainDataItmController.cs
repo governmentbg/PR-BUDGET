@@ -35,11 +35,12 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
-
+        private readonly ISjcService _sjcService;
         private FilterMainDataVm? FilterData = null;
 
         public MainDataItmController(ILogger<MainDataController> logger, IConfiguration configuration, ISendGridMailer emailSender,
-                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IWebHostEnvironment env)
+                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, 
+                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env,ISjcService sjcService)
         {
             _logger = logger;
             _mediator = mediator;
@@ -48,6 +49,7 @@ namespace CielaDocs.SjcWeb.Controllers
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _env = env;
+            _sjcService= sjcService;
         }
         public async Task<IActionResult> Index()
         {
@@ -61,7 +63,7 @@ namespace CielaDocs.SjcWeb.Controllers
             var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
             string logmsg = $"Достъп до показатели от {User?.Identity?.Name}";
             await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
-
+            ViewBag.IsLocked = FilterData?.IsLocked ?? false;
             return View();
         }
         [HttpGet]
@@ -216,6 +218,17 @@ namespace CielaDocs.SjcWeb.Controllers
                 }
                 FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm();
                 var dbdata = await _sjcRepo.GetMainDataItemsGridByFilterAsync(FilterData?.CourtId ?? 0, FilterData?.Nmonth ?? 0, FilterData?.Nyear ?? 0);
+
+                //------check locked period------------
+                var checkLocked=  await _sjcService.QueryRaw<MainDataItemLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName 
+                    FROM MainDataItemLocked a
+                    left join users u on a.LockedBy=u.id
+                    where a.CourtId={FilterData?.CourtId ?? 0} and a.Nmonth={FilterData?.Nmonth ?? 0} and a.Nyear={FilterData?.Nyear ?? 0} ");
+                if (checkLocked != null) {
+                    return Json(new { msg = $"Този период е заключен! Моля проверете!", success = false });
+                }
+                //-------end check locked period------------------------
+
                 var data = Toolbox.ExcelToDataTable(file);
                 int nCnt = 0;
                 foreach (DataTable thisTable in data.Tables)
@@ -267,6 +280,17 @@ namespace CielaDocs.SjcWeb.Controllers
                 prevY = ny;
             }
             FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm();
+
+            //------check locked period------------
+            var checkLocked = await _sjcService.QueryRaw<MainDataItemLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName 
+                    FROM MainDataItemLocked a
+                    left join users u on a.LockedBy=u.id
+                    where a.CourtId={FilterData?.CourtId ?? 0} and a.Nmonth={FilterData?.Nmonth ?? 0} and a.Nyear={FilterData?.Nyear ?? 0} ");
+            if (checkLocked != null)
+            {
+                return Json(new { msg = $"Този период е заключен! Моля проверете!", success = false });
+            }
+            //-------end check locked period------------------------
             var dbdata = await _sjcRepo.GetMainDataItemsGridByFilterAsync(FilterData?.CourtId ?? 0, nm, ny);
             var prevdata = await _sjcRepo.GetMainDataItemsGridByFilterAsync(FilterData?.CourtId ?? 0, prevM, prevY);
             if (prevdata.Any()) {

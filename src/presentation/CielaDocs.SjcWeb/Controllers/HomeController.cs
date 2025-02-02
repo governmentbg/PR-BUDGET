@@ -238,7 +238,7 @@ namespace CielaDocs.SjcWeb.Controllers
             }
         }
         [HttpPost]
-        public async Task<JsonResult> SetMainDataItemFilter(int? courtId, int? nm, int? ny)
+        public async Task<JsonResult> SetMainDataItemFilter(int? courtId, int? nm, int? ny, bool? isLocked)
         {
             try
             {
@@ -257,7 +257,7 @@ namespace CielaDocs.SjcWeb.Controllers
                     _ = await _sjcRepo.SpLoadMainDataItemsByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
                 }
                 HttpContext.Session.Remove("FilterMainDataSess");
-                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = 0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0 });
+                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = 0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0, IsLocked = isLocked ?? false });
                 return Json(new { success = true, msg = "Ok" });
             }
             catch (Exception ex)
@@ -294,7 +294,7 @@ namespace CielaDocs.SjcWeb.Controllers
             }
         }
         [HttpPost]
-        public async Task<JsonResult> SetProgramDataFilter(int? functionalSubAreaId,  int? ny, int? currencyId, int? currencyMeasureId)
+        public async Task<JsonResult> SetProgramDataFilter(int? functionalSubAreaId,  int? ny, int? currencyId, int? currencyMeasureId, bool? isLocked)
         {
             try
             {
@@ -304,7 +304,7 @@ namespace CielaDocs.SjcWeb.Controllers
                 }
                
                 HttpContext.Session.Remove("FilterMainDataSess");
-                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0,  Nyear = ny ?? 0 ,CurrencyId=currencyId??0, CurrencyMeasureId=currencyMeasureId??0});
+                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0,  Nyear = ny ?? 0 ,CurrencyId=currencyId??0, CurrencyMeasureId=currencyMeasureId??0,IsLocked=isLocked??false});
                 _ = await _sjcRepo.Sp_InitProgramDataAsync(functionalSubAreaId ?? 0, ny ?? 0);
                 _ = await _sjcRepo.Sp_InitProgramDataCourtAsync(functionalSubAreaId ?? 0, ny ?? 0);
                 var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });

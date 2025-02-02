@@ -7,34 +7,7 @@
         z-index: 99999999
     }
 
-    .lock-container {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    #lock-result {
-        font-weight: bold;
-        text-align: center;
-        font-size: 14px;
-        background-color: #ede7f6;
-        border-radius: 6px;
-        border: none;
-        padding: 6px;
-        outline: none;
-        color: #1d1d1d;
-        width: 100%;
-    }
-
-    .hideme {
-        display: none;
-        visibility: hidden;
-    }
-
-    .showme {
-        display: inline;
-        visibility: visible;
-    }
+  
 </style>
 <form id="anyForm">
     <div class="modal-body form-horizontal">
@@ -107,14 +80,15 @@
         let ny = 0;
         let currencyId = 0;
         let currencyMeasureId = 0;
+        let isLocked=false;
         $('#lock-result').addClass("hideme");
          const contextMenu = $("#dxContextMenu").dxContextMenu({
         dataSource: [
             {id:1, text: "Заключи периода" },
             {id:2, text: "Отключи периода" }
         ],
-        target: "#btnLock", // Link to the button
-        visible: false,       // Hidden by default
+        target: "#btnLock", 
+        visible: false,       
         onItemClick: function (e) {
      
                switch (e.itemData.id) {
@@ -371,6 +345,7 @@
                 if(!isEmpty(data)){
                     $('#lock-result').val('Заключен период от '+data?.LockedByUserName);
                     $('#lock-result').toggleClass("hideme showme");
+                    isLocked=true;
                 }
              });
              
@@ -388,7 +363,7 @@
                     DevExpress.ui.dialog.alert('Изберете задължително бюджетна програма и година', 'Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('programDataFilterOk', ''.concat(functionalSubAreaId, "|", ny,"|",currencyId,"|",currencyMeasureId));
+                window.parent.OnClosePopupEventHandlerEx('programDataFilterOk', ''.concat(functionalSubAreaId, "|", ny,"|",currencyId,"|",currencyMeasureId,"|",isLocked));
             },
         });
         $('#closeFilterBtn').dxButton({

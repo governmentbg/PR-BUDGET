@@ -14,5 +14,6 @@ namespace CielaDocs.Application.Models
         public int Nyear { get; set; }
         public int CurrencyId { get; set; }
         public int CurrencyMeasureId { get; set; }
+        public bool? IsLocked { get; set; }
     }
 }

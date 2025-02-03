@@ -21,6 +21,7 @@
 <div style="display:inline-block;padding-left:10px;" id="menu"></div>
 <div class="spacer_5"></div>
 <div id="programTitle" style="color:red;"></div>
+<div id="image-indicator"></div>
 <div id="grid"></div>
 <span>Конто кодове:&nbsp;</span><div id="elem-info" style="margin-top:10px;color:red;"></div>
 @await Html.PartialAsync("_ModalDialogPartial")
@@ -31,6 +32,10 @@
         const anyTitle = $('#anyTitle');
         var selectedId = 0;
         let selectedFnSubAreaId = 0;
+          let loadIndicator;
+        $('#image-indicator').dxLoadIndicator({
+            indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
+        });
         $('#btnAnySave').on('click', saveRow);
         $('#btnAnyCancel').on('click', function () {
             anyModal.modal('hide');
@@ -87,6 +92,10 @@
 
         $(() => {
 
+             loadIndicator = $('#image-indicator').dxLoadIndicator({
+                visible: false,
+            }).dxLoadIndicator('instance');
+            loadIndicator.option('visible', false);
 
             $("#selectProgram").select2({
                 placeholder: "",
@@ -257,6 +266,8 @@
             });
 
 
+        
+
         });
         async function getExtraDataItem(row) {
 
@@ -298,6 +309,11 @@
                 name: 'Обнови',
                 icon: '../images/refresh.png',
 
+            }, {
+                id: '5',
+                name: 'Синхронизация',
+                icon: '../images/sync16.png',
+
             }];
         const dxMenu = $('#menu').dxMenu({
             dataSource: menuData,
@@ -313,6 +329,9 @@
 
                         case '4':
                             $("#grid").dxDataGrid("instance").refresh();
+                            break;
+                        case '5':
+                            syncData();
                             break;
                         case '6_1':
                             var workbook = new ExcelJS.Workbook();
@@ -339,7 +358,25 @@
             name: 'onClick',
             delay: { show: 0, hide: 300 },
         }];
+         function syncData() {
 
-
+           var result = DevExpress.ui.dialog.confirm("<i>Потвърдете синхронизирането на данните за програмата? Добре е да имате направен архив на базата данни</i>", "Потвърждение");
+                             result.done(function (dialogResult) {
+                                 if (dialogResult === true) {
+                                       loadIndicator.option('visible', true);
+                                     $.ajax({
+                                         url: EduDl.baseUrl + "Noms/SynchronizeProgramData", data: {id: selectedFnSubAreaId }, method: 'Post'
+                                     })
+                                         .done(function (result) {
+                                               loadIndicator.option('visible', false);
+                                             DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                               loadIndicator.option('visible', false);
+                                             DevExpress.ui.notify('Грешка при заключване на период.');
+                                         });
+                                 }
+                             });
+        }
     </script>
 }

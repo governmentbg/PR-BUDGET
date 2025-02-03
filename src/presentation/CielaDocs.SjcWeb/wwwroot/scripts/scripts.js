@@ -562,8 +562,8 @@ $(function() {
 
         if(isGrid)
             filterInstance.needSelectElement = true;
-        console.log('value=' + value);
-        console.log('type=' + type);
+        //console.log('value=' + value);
+       // console.log('type=' + type);
         switch (type) {
            
             case "custom":

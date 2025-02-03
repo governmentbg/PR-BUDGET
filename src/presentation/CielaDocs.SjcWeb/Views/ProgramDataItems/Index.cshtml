@@ -6,6 +6,7 @@
     Layout = "~/Views/Shared/_LayoutMax.cshtml";
     var tokenSet = antiforgery.GetAndStoreTokens(Context);
     var title = $" година: {ViewBag.Year}";
+    
 }
 <style>
     .select2-dropdown {
@@ -41,7 +42,16 @@
 <div class="spacer_5"></div>
 <h4>Бюджетна прогноза по ведомствени и администрирани разходни параграфи на програмата за @title</h4>
 <h4>@ViewBag.ProgramName</h4>
-<h5>Валута:@ViewBag.CurrencyName, Мярка:@ViewBag.CurrencyMeasureName</h5> 
+<h5>Валута:@ViewBag.CurrencyName, Мярка:@ViewBag.CurrencyMeasureName</h5>
+
+<div class="row">
+    <div class="col-3">
+        <div class="lock-container">
+            <input type="text" readonly id="lock-result">
+        </div>
+    </div>
+</div>
+
 <div class="spacer_5"></div>
 <div style="display:inline-block;padding-left:10px;" id="menu"></div>
 <div class="spacer_5"></div>
@@ -126,6 +136,16 @@
         }
 
         $(() => {
+
+             let bIsLocked = '@(ViewBag.IsLocked ?? "false")'.toLowerCase() === 'true';
+                  
+             $('#lock-result').addClass("hideme");
+             if(bIsLocked){
+                  $('#lock-result').val('Заключен период');
+                  $('#lock-result').toggleClass("hideme showme");
+             }
+
+
             loadIndicator = $('#image-indicator').dxLoadIndicator({
                 visible: false,
             }).dxLoadIndicator('instance');
@@ -194,13 +214,12 @@
                         width: "10%",
                         caption: selectedYear,
                         alllowEditing: true,
-                        valueFormat: '#0.00',
+                        valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nval1 = value.toFixed(2);
+                            },
 
                     },
                     {
@@ -208,26 +227,24 @@
                         width: "10%",
                         caption: selectedYear+1,
                         alllowEditing: true,
-                        valueFormat: '#0.00',
+                        valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nval2 = value.toFixed(2);
+                            },
 
                     }, {
                         dataField: "Nval3",
                         width: "10%",
                         caption: selectedYear+2,
                         alllowEditing: true,
-                        valueFormat: '#0.00',
+                        valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nval3 = value.toFixed(2);
+                            },
 
                     },
                     {
@@ -235,13 +252,12 @@
                         width: "10%",
                         caption: selectedYear+3,
                         alllowEditing: true,
-                        valueFormat: '#0.00',
+                        valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                       format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nval4 = value.toFixed(2);
+                            },
 
                     },
                 ],
@@ -315,13 +331,12 @@
                                         width: "10%",
                                         caption: selectedYear,
                                         alllowEditing: true,
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        }
+                                       format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.Nval1 = value.toFixed(2);
+                                            },
 
                                     },
                                     {
@@ -329,39 +344,36 @@
                                         width: "10%",
                                         caption: selectedYear + 1,
                                         alllowEditing: true,
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        }
+                                         format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.Nval2 = value.toFixed(2);
+                                            },
 
                                     }, {
                                         dataField: "Nval3",
                                         width: "10%",
                                         caption: selectedYear + 2,
                                         alllowEditing: true,
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        }
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.Nval3 = value.toFixed(2);
+                                            },
 
                                     }, {
                                         dataField: "Nval4",
                                         width: "10%",
                                         caption: selectedYear + 3,
                                         alllowEditing: true,
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        }
+                                        format: function (value) { return value.toFixed(2); },
+                                        setCellValue: function (rowData, value) {
+                                            rowData.Nval4 = value.toFixed(2);
+                                        },
 
                                     },
 
@@ -373,33 +385,39 @@
                                     }, {
                                         column: 'Nval1',
                                         summaryType: 'sum',
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        },
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.Nval1 = value.toFixed(2);
+                                            },
                                     }, {
                                         column: 'Nval2',
                                         summaryType: 'sum',
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        },
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.Nval2 = value.toFixed(2);
+                                            },
                                     }, {
                                         column: 'Nval3',
                                         summaryType: 'sum',
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        },
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.Nval3 = value.toFixed(2);
+                                            },
+                                    }, {
+                                        column: 'Nval4',
+                                        summaryType: 'sum',
+                                        valueFormat: '0.00',
+                                        dataType: 'number',
+                                       format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.Nval4 = value.toFixed(2);
+                                            },
                                     }],
                                 },
                                 toolbar: {
@@ -440,12 +458,12 @@
                                 },
                                editing: {
                                     mode: 'cell',
-                                    allowUpdating: true,
+                                    allowUpdating: !bIsLocked,
                                     allowDeleting: false,
                                     allowAdding: false,
                                 },
                                 onEditorPreparing: function (e) {
-                                    if (e.dataField === "PrnCode"  || e.dataField === "Name") e.editorOptions.disabled = true
+                                    if (e.dataField === "PrnCode"  || e.dataField === "Name" ||(e.dataField==="ValueAllowed" && e.value===0)) e.editorOptions.disabled = true
                                     if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3" || e.dataField === "Nval4") && e.parentType === "dataRow") {
                                         const defaultValueChangeHandler = e.editorOptions.onValueChanged;
                                         e.editorOptions.onValueChanged = function (args) {
@@ -464,12 +482,12 @@
                 },
                 editing: {
                     mode: 'cell',
-                    allowUpdating: true,
+                    allowUpdating: !bIsLocked,
                     allowDeleting: false,
                     allowAdding: false,
                 },
                 onEditorPreparing: function (e) {
-                    if (e.dataField === "PrnCode" || e.dataField === "Name") e.editorOptions.disabled = true
+                    if (e.dataField === "PrnCode" || e.dataField === "Name" ||(e.dataField=="ValueAllowed" && e.value==false)) e.editorOptions.disabled = true
                     if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3"|| e.dataField === "Nval4") && e.parentType === "dataRow") {
                         const defaultValueChangeHandler = e.editorOptions.onValueChanged;
                         e.editorOptions.onValueChanged = function (args) { 

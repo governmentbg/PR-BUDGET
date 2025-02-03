@@ -143,6 +143,10 @@ namespace CielaDocs.Shared.Repository
         Task<int?> Sp_InitProgramDataCourtByIdAsync(int? programNum, int? courtId, int? ny);
         Task<IEnumerable<IdNames>> GetCourtInProgramData(int? programNum, int? courtId);
         Task<CfgVm> GetCfgAsync();
+        Task<IEnumerable<UserLockedItemVm>> GetAllUserLockedItemsAsync();
+        Task<int> ExecuteRawSqlAsync(string sql);
+        Task<IEnumerable<T>> QueryRawListAsync<T>(string sql);
+        Task<T> QueryRawAsync<T>(string sql);
     }
   
 }

@@ -483,6 +483,7 @@ $('#btnAnySave').on('click', function() {
             },
 
         }).dxPopup('instance');
+
      function applyMainDataFilter(e) { 
          var itm = e.split('|');
             $.ajax({
@@ -490,7 +491,7 @@ $('#btnAnySave').on('click', function() {
                     request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
                 },
 
-            url: "@Url.Action("SetMainDataFilter", "Home")", method: 'POST', data: { functionalSubAreaId: itm[0], courtId: itm[1], nm: itm[2], ny: itm[3] }
+                    url: "@Url.Action("SetMainDataFilter", "Home")", method: 'POST', data: { functionalSubAreaId: itm[0], courtId: itm[1], nm: itm[2], ny: itm[3],isLocked:itm[4] }
 
             }).done(function (result) {
                 if (result.success === true) {
@@ -511,7 +512,7 @@ $('#btnAnySave').on('click', function() {
                     request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
                 },
 
-                url: "@Url.Action("SetMainDataFilter", "Home")", method: 'POST', data: { functionalSubAreaId: itm[0], courtId: itm[1], nm: itm[2], ny: itm[3] }
+                        url: "@Url.Action("SetMainDataFilter", "Home")", method: 'POST', data: { functionalSubAreaId: itm[0], courtId: itm[1], nm: itm[2], ny: itm[3],isLocked:itm[4] }
 
             }).done(function (result) {
                 if (result.success === true) {
@@ -532,7 +533,7 @@ $('#btnAnySave').on('click', function() {
                     request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
                 },
 
-                url: "@Url.Action("SetMainDataItemFilter", "Home")", method: 'POST', data: {  courtId: itm[0], nm: itm[1], ny: itm[2] }
+                        url: "@Url.Action("SetMainDataItemFilter", "Home")", method: 'POST', data: {  courtId: itm[0], nm: itm[1], ny: itm[2],isLocked:itm[3] }
 
             }).done(function (result) {
                 if (result.success === true) {
@@ -553,7 +554,7 @@ $('#btnAnySave').on('click', function() {
                     request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
                 },
 
-                url: "@Url.Action("SetProgramDataFilter", "Home")", method: 'POST', data: { functionalSubAreaId: itm[0], ny: itm[1],currencyId:itm[2],currencyMeasureId:itm[3] }
+                url: "@Url.Action("SetProgramDataFilter", "Home")", method: 'POST', data: { functionalSubAreaId: itm[0], ny: itm[1],currencyId:itm[2],currencyMeasureId:itm[3],isLocked:itm[4] }
 
             }).done(function (result) {
                 if (result.success === true) {

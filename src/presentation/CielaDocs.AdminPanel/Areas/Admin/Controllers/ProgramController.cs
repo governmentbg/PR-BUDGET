@@ -73,7 +73,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             {
 
 
-                if (record?.Id == 0)
+                if (record?.Id == -1)
                 {
 
                     try
@@ -109,6 +109,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                             Notes = record?.Notes ?? string.Empty,
                             IsCalculated = record?.IsCalculated ?? false,
                             ProgCode= record?.ProgCode ?? string.Empty,
+                            Formula=record?.Formula ?? string.Empty,
                         };
                         var ret = await _mediator.Send(command);
 
@@ -153,7 +154,8 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                         KontoCodes = record?.KontoCodes ?? string.Empty,
                         Notes = record?.Notes ?? string.Empty,
                         IsCalculated = record?.IsCalculated ?? false,
-                        ProgCode= record?.ProgCode ?? string.Empty
+                        ProgCode= record?.ProgCode ?? string.Empty,
+                        Formula= record?.Formula ?? string.Empty
 
                     };
                     var ret = await _mediator.Send(command);

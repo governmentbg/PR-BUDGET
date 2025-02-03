@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CielaDocs.Application.Models;
 using CielaDocs.Domain.Entities;
+using CielaDocs.Shared.Services;
 
 namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
 {
@@ -34,14 +35,16 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ISjcService _sjcService;
 
-        public NomsController(IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor)
+        public NomsController(IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor,ISjcService sjcService)
         {
             _mediator = mediator;
             _mapper = mapper;
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _httpContextAccessor = httpContextAccessor;
+            _sjcService= sjcService;
         }
         [HttpGet]
         public async Task<JsonResult> GetInstitutionTypes()
@@ -379,6 +382,45 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                 return Json(new List<IdNames>());
             }
         }
+        [HttpGet]
+        public async Task<JsonResult> GetAllUserLockedItems()
+        {
+            try
+            {
+                var data = await _sjcService.GetAllUserLockedItems();
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<UserLockedItemVm>());
+            }
+        }
+        [HttpPost]
 
+        public async Task<JsonResult> SynchronizeProgramData(int? id)
+        {
+            try
+            {
+                var data = await _sjcRepo.GetProgramDefByProgramIdAsync(id ?? 0);
+                if (data.Any()) {
+                    _ = await _sjcService.ExecuteRawSql($"Update ProgramData set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
+                    _ = await _sjcService.ExecuteRawSql($"Update ProgramDataCourt set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
+                    _ = await _sjcService.ExecuteRawSql($"Update ProgramDataInstitution set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
+                    foreach (var itemVm in data) {
+                        if (itemVm.ValueAllowed == true) {
+                            _ = await _sjcService.ExecuteRawSql($"Update ProgramData set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum??0}");
+                            _ = await _sjcService.ExecuteRawSql($"Update ProgramDataCourt set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum ?? 0}");
+                            _ = await _sjcService.ExecuteRawSql($"Update ProgramDataInstitution set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum ?? 0}");
+                        }
+                    }
+                    return Json(new { msg = "Данните бяха актуализирани", success = false });
+                }
+                else return Json(new { msg = "Липсват данни за актуализация", success = false });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { msg = ex?.Message, success = false });
+            }
+        }
     }
 }

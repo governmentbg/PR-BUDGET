@@ -33,5 +33,6 @@ namespace CielaDocs.Domain.Entities
         public string? Notes { get; set; }
         public bool? IsCalculated { get; set; }
         public string? ProgCode { get; set; }
+        public string? Formula { get; set; }
     }
 }

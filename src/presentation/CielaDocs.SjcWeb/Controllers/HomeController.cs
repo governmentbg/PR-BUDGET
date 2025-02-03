@@ -207,7 +207,7 @@ namespace CielaDocs.SjcWeb.Controllers
             return PartialView("EmplLogFilterPartialView", model);
         }
         [HttpPost]
-        public async Task<JsonResult> SetMainDataFilter(int? functionalSubAreaId,int? courtId, int? nm, int? ny) {
+        public async Task<JsonResult> SetMainDataFilter(int? functionalSubAreaId,int? courtId, int? nm, int? ny, bool? isLocked) {
             try
             {
                 if ((functionalSubAreaId==null)||(functionalSubAreaId<1)||(courtId == null) || (courtId < 1) || (nm == null) || (nm < 1) || (ny == null) || (ny < 2022)) {
@@ -224,7 +224,7 @@ namespace CielaDocs.SjcWeb.Controllers
                     _ = await _sjcRepo.SpLoadMainDataItemsByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
                 }
                 HttpContext.Session.Remove("FilterMainDataSess");
-                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId= functionalSubAreaId??0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0 });
+                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId= functionalSubAreaId??0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0,IsLocked=isLocked??false });
 
                 var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
                 var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();

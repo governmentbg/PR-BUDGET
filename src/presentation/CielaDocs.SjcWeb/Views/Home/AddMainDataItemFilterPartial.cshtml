@@ -257,10 +257,15 @@
                 // Trigger your custom logic here
                 let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod2Locked", { courtId: courtId,nm:nm, ny: ny })
                  .then(data =>{
-                    if(!isEmpty(data)){
+                        if(!isEmpty(data)){
                         $('#lock-result').val('Заключен период от '+data?.LockedByUserName);
-                        $('#lock-result').toggleClass("hideme showme");
+                        $('#lock-result').removeClass("hideme");
                         isLocked=true;
+                    }
+                    else {
+                          $('#lock-result').val('');
+                        $('#lock-result').addClass("hideme");
+                        isLocked=false;
                     }
                  });
 

@@ -39,6 +39,7 @@ namespace CielaDocs.Application
         public string? Notes { get; set; }
         public bool? IsCalculated { get; set; }
         public string? ProgCode { get; set; }
+        public string? Formula { get; set; }
 
     }
 
@@ -78,7 +79,8 @@ namespace CielaDocs.Application
                         KontoCodes=request?.KontoCodes??string.Empty,
                         Notes=request?.Notes??string.Empty,
                         IsCalculated=request?.IsCalculated ?? false,
-                        ProgCode=request?.ProgCode??string.Empty
+                        ProgCode=request?.ProgCode??string.Empty,
+                        Formula=request?.Formula ?? string.Empty,
                 };
                 _context.ProgramDef.Add(entry);
                 await _context.SaveChangesAsync(cancellationToken);

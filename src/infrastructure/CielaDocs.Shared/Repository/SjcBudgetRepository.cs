@@ -319,7 +319,7 @@ namespace CielaDocs.Shared.Repository
         }
         public async Task<IEnumerable<ProgramDefVm>> GetProgramDefByProgramIdAsync(int programId) {
                         string sql = $@"SELECT Id,FunctionalAreaId,FunctionalSubAreaId,FunctionalActionId,RowNum,RowCode,PrnCode,Name,ParentRowNum
-                              ,Nvalue,EnteredDate,CurrencyId,CurrencyMeasureId,Datum,ValueAllowed,Num,IsActive,OrderNum,KontoCodes,Notes,IsCalculated,ProgCode
+                              ,Nvalue,EnteredDate,CurrencyId,CurrencyMeasureId,Datum,ValueAllowed,Num,IsActive,OrderNum,KontoCodes,Notes,IsCalculated,ProgCode,Formula
                           FROM dbo.ProgramDef  where FunctionalSubAreaId=@FunctionalSubAreaId";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -329,7 +329,7 @@ namespace CielaDocs.Shared.Repository
         }
         public async Task<IEnumerable<ProgramDefVm>> GetProgramDefProgCodesByProgramIdAsync(int programId) {
             string sql = $@"SELECT Id,FunctionalAreaId,FunctionalSubAreaId,FunctionalActionId,RowNum,RowCode,PrnCode,Name,ParentRowNum
-                              ,Nvalue,EnteredDate,CurrencyId,CurrencyMeasureId,Datum,ValueAllowed,Num,IsActive,OrderNum,KontoCodes,Notes,IsCalculated,ProgCode
+                              ,Nvalue,EnteredDate,CurrencyId,CurrencyMeasureId,Datum,ValueAllowed,Num,IsActive,OrderNum,KontoCodes,Notes,IsCalculated,ProgCode,Formula
                           FROM dbo.ProgramDef  where FunctionalSubAreaId=@FunctionalSubAreaId and ProgCode<>'' ";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -348,7 +348,7 @@ namespace CielaDocs.Shared.Repository
         public async Task<ProgramDefVm> GetProgramDefByIdAsync(int id)
         {
             string sql = $@"SELECT top 1 Id,FunctionalAreaId,FunctionalSubAreaId,FunctionalActionId,RowNum,RowCode,PrnCode,Name,ParentRowNum
-                              ,Nvalue,EnteredDate,CurrencyId,CurrencyMeasureId,Datum,ValueAllowed,Num,IsActive,OrderNum,KontoCodes,Notes,IsCalculated,ProgCode
+                              ,Nvalue,EnteredDate,CurrencyId,CurrencyMeasureId,Datum,ValueAllowed,Num,IsActive,OrderNum,KontoCodes,Notes,IsCalculated,ProgCode,Formula
                           FROM dbo.ProgramDef  where Id=@Id";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();

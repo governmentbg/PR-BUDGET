@@ -395,5 +395,32 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                 return Json(new List<UserLockedItemVm>());
             }
         }
+        [HttpPost]
+
+        public async Task<JsonResult> SynchronizeProgramData(int? id)
+        {
+            try
+            {
+                var data = await _sjcRepo.GetProgramDefByProgramIdAsync(id ?? 0);
+                if (data.Any()) {
+                    _ = await _sjcService.ExecuteRawSql($"Update ProgramData set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
+                    _ = await _sjcService.ExecuteRawSql($"Update ProgramDataCourt set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
+                    _ = await _sjcService.ExecuteRawSql($"Update ProgramDataInstitution set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
+                    foreach (var itemVm in data) {
+                        if (itemVm.ValueAllowed == true) {
+                            _ = await _sjcService.ExecuteRawSql($"Update ProgramData set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum??0}");
+                            _ = await _sjcService.ExecuteRawSql($"Update ProgramDataCourt set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum ?? 0}");
+                            _ = await _sjcService.ExecuteRawSql($"Update ProgramDataInstitution set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum ?? 0}");
+                        }
+                    }
+                    return Json(new { msg = "Данните бяха актуализирани", success = false });
+                }
+                else return Json(new { msg = "Липсват данни за актуализация", success = false });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { msg = ex?.Message, success = false });
+            }
+        }
     }
 }

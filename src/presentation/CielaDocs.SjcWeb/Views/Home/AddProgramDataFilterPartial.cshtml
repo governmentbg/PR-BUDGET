@@ -81,8 +81,9 @@
         let currencyId = 0;
         let currencyMeasureId = 0;
         let isLocked=false;
-        $('#lock-result').addClass("hideme");
-         const contextMenu = $("#dxContextMenu").dxContextMenu({
+        $('#lock-result').val('');
+        $('#lock-result').addClass("hideme")
+        const contextMenu = $("#dxContextMenu").dxContextMenu({
         dataSource: [
             {id:1, text: "Заключи периода" },
             {id:2, text: "Отключи периода" }
@@ -152,6 +153,7 @@
             displayExpr: 'name',
             onValueChanged: function (e) {
                 ny = e.value;
+    
             }
 
         });
@@ -339,13 +341,19 @@
         if (allSelected) {
             console.log('All dropdowns have selected values!');
            ny=$("#selectBoxYear").dxSelectBox("option", "value");
+           console.log('ny='+ny);
             // Trigger your custom logic here
             let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod1Locked", { programId: functionalSubAreaId, ny: ny })
              .then(data =>{
                 if(!isEmpty(data)){
                     $('#lock-result').val('Заключен период от '+data?.LockedByUserName);
-                    $('#lock-result').toggleClass("hideme showme");
+                    $('#lock-result').removeClass("hideme");
                     isLocked=true;
+                }
+                else { 
+                      $('#lock-result').val('');
+                    $('#lock-result').addClass("hideme");
+                    isLocked=false;
                 }
              });
              

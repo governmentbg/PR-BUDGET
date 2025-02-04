@@ -37,11 +37,12 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
-
+        private readonly ISjcService _sjcService;
         private FilterMainDataVm? FilterData = null;
 
         public ImportKontoController(ILogger<MainDataController> logger, IConfiguration configuration, ISendGridMailer emailSender,
-                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IWebHostEnvironment env)
+                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo,
+                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env,ISjcService sjcService)
         {
             _logger = logger;
             _mediator = mediator;
@@ -50,6 +51,7 @@ namespace CielaDocs.SjcWeb.Controllers
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _env = env;
+            _sjcService= sjcService;
         }
         public async Task<IActionResult> Index()
         {
@@ -298,6 +300,14 @@ namespace CielaDocs.SjcWeb.Controllers
             {
                 return (0, 0);
             }
+        }
+        [HttpGet]
+        [AllowAnonymous]
+        public PartialViewResult AddImportKontoLockedPartial()
+        {
+
+            return PartialView("AddImportKontoLockedPartial");
+
         }
     }
 }

@@ -1,0 +1,202 @@
+﻿@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    ViewBag.Title = "ImportKontoLocked";
+    Layout = null;
+}
+@{
+    ViewData["Title"] = "Index";
+
+}
+<style type="text/css">
+
+    .ui-autocomplete {
+        z-index: 5000;
+    }
+
+    .select2-dropdown {
+        z-index: 50002;
+    }
+
+    .header-container {
+        display: flex;
+        align-items: center; 
+        gap: 10px;
+    }
+</style>
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+       
+            <div class="row" >
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="m1">Месец</label>
+                        <div id="selectBoxMonth"></div>
+                    </div>
+                </div>
+              
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="nyear">Година</label>
+                        <div id="selectBoxYear"></div>
+                    </div>
+                </div>
+               <div class="col-6">
+               </div>
+            </div>
+      
+    </div>
+</form>
+<div class="spacer_10"></div>
+<div class="header-container">
+    <h6 style="margin: 0;">Заключени периоди </h6><span id="selectedYear" style="color:red;font-size:medium;"></span><div id="btnLockKonto"></div>
+</div>
+<div class="spacer_10"></div>
+<div id="menuKontoItem"></div>
+<div id="gridKontoItem"></div>
+<div class="spacer_10"></div>
+<script>
+   
+
+    $(()=>{
+         let nm;
+         let ny;
+         ny=ny ?? new Date().getFullYear();
+         $("#selectBoxMonth").dxSelectBox({
+            dataSource: selectBoxMonthData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            value:1,
+            onValueChanged: function (e) {
+                nm = e.value;
+            }
+
+        });
+         $("#selectBoxYear").dxSelectBox({
+            dataSource: selectBoxYearData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            value:new Date().getFullYear(),
+            onValueChanged: function (e) {
+                ny = e.value;
+            }
+
+        });
+        
+       $('#selectedYear').text(`За ${ny}г.`);
+
+       $("#btnLockKonto").dxButton({
+        hint:'Заключи периода',
+        icon:'./images/lock-open.svg',
+            onClick: function () {
+              nm=nm ?? 1;
+              ny=ny ?? new Date().getFullYear();
+              var result = DevExpress.ui.dialog.confirm(`Потвърдете заключването на периода месец: ${nm}, година ${ny}?`, "Потвърждение");
+                             result.done(function (dialogResult) {
+                                 if (dialogResult === true) {
+                                     $.ajax({
+                                         url: Ciela.baseUrl + "Noms/LockImportKonto", data: {typeoflock:0, nm: nm, ny: ny }, method: 'POST'
+                                     })
+                                         .done(function (result) {
+                                              $("#gridKontoItem").dxDataGrid("instance").refresh();
+                                             DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                             DevExpress.ui.notify('Грешка при заключване на период.');
+                                         });
+                                 }
+                             });
+            }
+        });
+
+
+        $('#gridKontoItem').dxDataGrid({
+            dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/ShowImportKontoLocked", 'Get', { ny: ny ?? new Date().getFullYear() });
+                    }
+                }),
+            }),
+            paging: {
+                pageSize: 10,
+            },
+            selection: {
+                mode: "single"
+            },
+            showBorders: true,
+            showRowLines: true,
+            columns: [
+
+                { dataField: 'Nmonth', caption: 'Месец', width: "10%" },
+                { dataField: 'Nyear', caption: 'Година', width: "10%" },
+                { dataField: 'LockedByUserName', caption: 'Заключил', width: "55%" },
+                {
+                        dataField: "LockedOn",
+                        width: "10%",
+                        caption: "Заключено на",
+                        alllowEditing: false,
+                        valueFormat: 'dd.MM.yyyy',
+                        dataType: 'date',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                },
+                {
+                    type: 'buttons',
+                    width: 124,
+                    buttons: [
+                    {
+                        hint: 'Изтриване',
+                        icon: 'trash',
+
+                        onClick(e) {
+                            removeKontoPeriodById(e.row.data.Id);
+                            e.component.refresh(true);
+                            e.event.preventDefault();
+                        },
+                    }
+                    ],
+                }
+            ],
+
+            onRowRemoved: function (e) {
+                e.component.selectRowsByIndexes(0);
+            },
+            onSelectionChanged: function (items) {
+                if (items.selectedRowsData[0]) {
+                    //selectedId = items.selectedRowsData[0].Id;
+                }
+            },
+            focusedRowEnabled: true,
+            onFocusedRowChanged(e) {
+                if (e) {
+                    //getExtraDataItem(e.row);
+                }
+            },
+        });
+        function removeKontoPeriodById(id){
+              var result = DevExpress.ui.dialog.confirm("Потвърдете изтриването на заключения период?", "Потвърждение");
+                             result.done(function (dialogResult) {
+                                 if (dialogResult === true) {
+                                     $.ajax({
+                                         url: Ciela.baseUrl + "Noms/DeleteImportKontoById", data: {id:id }, method: 'POST'
+                                     })
+                                         .done(function (result) {
+                                              $("#gridKontoItem").dxDataGrid("instance").refresh();
+                                             DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                             DevExpress.ui.notify('Грешка при отключване на период.');
+                                         });
+                                 }
+                             });
+        }
+    });
+</script>

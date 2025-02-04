@@ -55,8 +55,8 @@
                         <div id="autoLoad"></div>
                         <div class="content" id="selected-files">
                         </div>
-
                     </div>
+                    <div id="btnLock" style="float:right;margin-right:10px;"></div>
                 </div>
             </div>
         </div>
@@ -67,11 +67,26 @@
 
 
 <script>
-   
     $(() => {
-
        
- 
+        const button = $("#btnLock").dxButton({
+        visible: true,
+        icon:'./images/lock-open.svg',
+        hint:'Заключване на период',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "ImportKonto/AddImportKontoLockedPartial", { }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Заключени периоди',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+
+
+
+
         $('#divUploading').hide();
 
         const isOverwrite = $('#cbOverwrite').dxCheckBox({

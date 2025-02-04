@@ -26,9 +26,17 @@
 <h4>Бюджетна прогноза по ведомствени и администрирани разходни параграфи на програмата за @title</h4>
 <h4>@ViewBag.ProgramName</h4>
 <h5>Валута:@ViewBag.CurrencyName, Мярка:@ViewBag.CurrencyMeasureName</h5>
+<div class="row">
+    <div class="col-3">
+        <div class="lock-container">
+            <input type="text" readonly id="lock-result">
+        </div>
+    </div>
+</div>
 <div class="spacer_5"></div>
 <div style="display:inline-block;padding-left:10px;" id="menu"></div>
 <div class="spacer_5"></div>
+<div id="image-indicator"></div>
 <div id="grid"></div>
 @Html.Hidden("FunctionalSubAreaId", (int)ViewBag.FunctionalSubAreaId)
 @await Html.PartialAsync("_ModalDialogPartial")
@@ -48,7 +56,10 @@
             $("#grid").dxDataGrid("instance").refresh();
         });
         $('#btnAnySave').on('click', Save);
-
+         let loadIndicator;
+        $('#image-indicator').dxLoadIndicator({
+            indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
+        });
         function Save() {
         };
         function getCourtFromGrid() {
@@ -87,6 +98,19 @@
 
 
         $(() => {
+             let bIsLocked = '@(ViewBag.IsLocked ?? "false")'.toLowerCase() === 'true';
+
+             $('#lock-result').addClass("hideme");
+             if(bIsLocked){
+                  $('#lock-result').val('Заключен период');
+                  $('#lock-result').toggleClass("hideme showme");
+             }
+
+
+            loadIndicator = $('#image-indicator').dxLoadIndicator({
+                visible: false,
+            }).dxLoadIndicator('instance');
+            loadIndicator.option('visible', false);
 
             $('#grid').dxDataGrid({
                 dataSource: new DevExpress.data.DataSource({
@@ -114,7 +138,7 @@
                     enabled: true,
                 },
                 paging: {
-                    pageSize: 10,
+                    pageSize: 100,
                 },
                 pager: {
                     visible: true,
@@ -151,13 +175,12 @@
                         width: "10%",
                         caption: "Прогнозна С-ст",
                         alllowEditing: true,
-                        valueFormat: '#0.00',
+                        valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nvalue = value.toFixed(2);
+                            },
 
                     },
                     {
@@ -167,11 +190,10 @@
                         alllowEditing: true,
                         valueFormat: '#0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.ApprovedValue = value.toFixed(2);
+                            },
 
                     },
                     {
@@ -182,11 +204,10 @@
                         valueFormat: '#0.00',
                         dataType: 'number',
                         visible: false,
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.CalculatedValue = value.toFixed(2);
+                            },
 
                     },
                 ],
@@ -253,13 +274,12 @@
                                         width: "10%",
                                         caption: "Прогнозна С-ст",
                                         alllowEditing: true,
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        }
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.Nvalue = value.toFixed(2);
+                                            },
 
                                     },
                                     {
@@ -267,13 +287,12 @@
                                         width: "10%",
                                         caption: "Утвърден бюджет",
                                         alllowEditing: true,
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        }
+                                       format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.ApprovedValue = value.toFixed(2);
+                                            },
 
                                     },
                                     {
@@ -281,13 +300,12 @@
                                         width: "10%",
                                         caption: "Конто С-ст",
                                         alllowEditing: false,
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        }
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.CalculatedValue = value.toFixed(2);
+                                            },
 
                                     },
                                     // {
@@ -314,33 +332,30 @@
                                     }, {
                                         column: 'Nvalue',
                                         summaryType: 'sum',
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        },
+                                     format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.Nvalue = value.toFixed(2);
+                                            },
                                     }, {
                                         column: 'ApprovedValue',
                                         summaryType: 'sum',
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        },
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.ApprovedValue = value.toFixed(2);
+                                            },
                                     }, {
                                         column: 'CalculatedValue',
                                         summaryType: 'sum',
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        },
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.CalculatedValue = value.toFixed(2);
+                                            },
                                     }],
                                 },
                                 toolbar: {
@@ -381,7 +396,7 @@
                                 },
                                 editing: {
                                     mode: 'cell',
-                                    allowUpdating: true,
+                                    allowUpdating: !bIsLocked,
                                     allowDeleting: false,
                                     allowAdding: false,
                                 },
@@ -411,7 +426,7 @@
                 },
                 editing: {
                     mode: 'cell',
-                    allowUpdating: true,
+                    allowUpdating: !bIsLocked,
                     allowDeleting: false,
                     allowAdding: false,
                 },
@@ -463,20 +478,20 @@
         const menuData = [{
             id: '1',
             name: 'Начало',
-            icon: '../images/back.png',
+            icon: './images/back.png',
 
 
         },
         {
             id: '6_1',
             name: 'Експорт',
-            icon: '../images/exporter.svg',
+            icon: './images/exporter.svg',
 
 
         }, {
             id: '4',
             name: 'Обнови',
-            icon: '../images/refresh.png',
+            icon: './images/refresh.png',
 
         },
         ];

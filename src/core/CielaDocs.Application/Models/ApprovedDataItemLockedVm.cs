@@ -13,5 +13,6 @@ namespace CielaDocs.Application.Models
         public int? Nyear { get; set; }
         public int? LockedBy { get; set; }
         public DateTime? LockedOn { get; set; }
+        public string LockedByUserName { get; set; }
     }
 }

@@ -84,6 +84,9 @@
             @RenderBody()
         </main>
     </div>
+    <div id="main-popup"></div>
+    <div id="add-main-popup"></div>
+    <div id="right-readonly-popup"></div>
     <div class="expandableCollapsibleDiv">
         <img id="arrowimg" src="~/images/Swap-Right.png" style="padding-left:20px;z-index: 100;padding-bottom:10px;" />
     <footer id="footer" class="border-top" style="position:absolute;bottom: 0;width: 100%; height: 6.5rem;">
@@ -149,6 +152,104 @@
                 showElementDescription.hide();
             }
       });
+        const mainPopup = $("#main-popup").dxPopup({
+              visible: false,
+              width: 600,
+              height: "auto",
+              showTitle: true,
+              showCloseButton: true,
+              dragEnabled: true,
+              hideOnOutsideClick: true,
+              position: {
+                  at: 'center',
+                  my: 'center',
+                  of: window,
+
+                  collision: {
+                      x: 'none',
+                      y: 'flip'
+                  },
+                  offset: '0 0'
+              },
+
+          }).dxPopup('instance');
+
+          const mainAddPopup = $("#add-main-popup").dxPopup({
+              visible: false,
+              width: 600,
+              height: "auto",
+              showTitle: true,
+              showCloseButton: true,
+              dragEnabled: true,
+              hideOnOutsideClick: true,
+              position: {
+                  at: 'center',
+                  my: 'center',
+                  of: window,
+
+                  collision: {
+                      x: 'none',
+                      y: 'flip'
+                  },
+                  offset: '0 0'
+              },
+
+          }).dxPopup('instance');
+
+          const mainRightReadOnlyPopup = $("#right-readonly-popup").dxPopup({
+              visible: false,
+              width: 800,
+              height: "auto",
+              showTitle: true,
+              showCloseButton: true,
+              dragEnabled: true,
+              hideOnOutsideClick: false,
+              resizeEnabled: true,
+              animation: null,
+              position: {
+                  at: 'right',
+                  my: 'right',
+                  of: window,
+
+                  collision: {
+                      x: 'none',
+                      y: 'flip'
+                  },
+                  offset: '0 0'
+              },
+              toolbarItems: [{
+                  widget: 'dxButton',
+                  toolbar: 'bottom',
+                  location: 'after',
+                  options: {
+                      stylingMode: 'text',
+                      text: 'Затвори',
+                      type: 'normal',
+                      icon: 'close',
+                      width: 120,
+                      onClick() {
+                          mainRightReadOnlyPopup.hide();
+                      },
+                  },
+              }],
+          }).dxPopup('instance');
+          const layoutPopupContentTemplateByName = function (url, arg) {
+              const scrollView = $('<div />');
+
+              $.ajax({ url: url, data: arg, method: 'Get', async: true, dataType: "html" })
+                  .done(function (result) {
+
+                      scrollView.append($('<div id="emplr" />').html(result));
+                      scrollView.dxScrollView({
+                          width: '100%',
+                          height: '100%',
+                      });
+                  })
+                  .fail(function (xhr) {
+                      alert('Грешка при зареждане на данни.' + xhr.status + ' -' + xhr.statusText + ' -' + xhr.responseText);
+                  });
+              return scrollView;
+          };
 
   </script>
    

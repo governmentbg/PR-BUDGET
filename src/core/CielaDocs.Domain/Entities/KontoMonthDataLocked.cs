@@ -9,8 +9,6 @@ namespace CielaDocs.Domain.Entities
    public class KontoMonthDataLocked
     {
         public int Id { get; set; }
-        public int? FunctionalSubAreaId { get; set; }
-        public int? CourtId { get; set; }
         public int? Nmonth { get; set; }
         public int? Nyear { get; set; }
         public int? LockedBy { get; set; }

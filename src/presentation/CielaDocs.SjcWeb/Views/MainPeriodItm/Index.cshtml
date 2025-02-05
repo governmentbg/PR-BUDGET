@@ -11,6 +11,13 @@
 <div class="spacer_20"></div>
 <div class="spacer_5"></div>
 <h4>@title</h4>
+<div class="row">
+    <div class="col-3">
+        <div class="lock-container">
+            <input type="text" readonly id="lock-result">
+        </div>
+    </div>
+</div>
 <div class="spacer_5"></div>
 <div style="display:inline-block;padding-left:10px;" id="menu"></div>
 <div class="spacer_5"></div>
@@ -51,6 +58,13 @@
         }
 
         $(() => {
+             let bIsLocked = '@(ViewBag.IsLocked ?? "false")'.toLowerCase() === 'true';
+
+             $('#lock-result').addClass("hideme");
+             if(bIsLocked){
+                  $('#lock-result').val('Заключен период');
+                  $('#lock-result').toggleClass("hideme showme");
+             }
 
             $('#grid').dxDataGrid({
                 dataSource: new DevExpress.data.DataSource({
@@ -105,13 +119,12 @@
                         width: "10%",
                         caption: "Стойност",
                         alllowEditing: true,
-                        valueFormat: '#0.00',
+                        valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nvalue = value.toFixed(2);
+                            },
 
                     },
                     {
@@ -132,7 +145,7 @@
                 ],
                 editing: {
                     mode: 'cell',
-                    allowUpdating: true,
+                    allowUpdating: !bIsLocked,
                     allowDeleting: false,
                     allowAdding: false,
                 },
@@ -183,7 +196,11 @@
             return false;
         }
 
-        const menuData = [
+        const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: './images/back.png',
+            },
             {
                 id: '6_1',
                 name: 'Експорт',
@@ -210,6 +227,9 @@
                 if (item.id) {
 
                     switch (item.id) {
+                        case '1':
+                            window.location.href = Ciela.baseUrl;
+                            break;
                         case '4':
                             $("#grid").dxDataGrid("instance").refresh();
                             break;

@@ -75,6 +75,7 @@
         <div style="float:right;margin-right:10px;margin-bottom:10px;">
             <div id="dxContextMenu"></div>
             <div id="btnLock"></div>
+            <div id="btnLockedView"></div>
         <div id="okFilterBtn"></div>
         <div id="closeFilterBtn"></div>
         </div>
@@ -88,6 +89,21 @@
         let courtId = 0;
         let nm = 0;
         let ny = 0;
+        const buttonView = $("#btnLockedView").dxButton({
+        visible: true,
+        icon:'./images/lock-closed.svg',
+        hint:'Заключени периоди',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Home/AddMainDataLockedPartial", { }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Заключени периоди',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+
          let isLocked=false;
         $('#lock-result').val('');
         $('#lock-result').addClass("hideme")
@@ -149,7 +165,7 @@
 
             function toggleButtonVisibility(condition) {
                 button.option('visible', condition);
-                button.option('icon','../images/lock-open.svg')
+                button.option('icon','./images/lock-open.svg')
             }
 
     // Initialize the Context Menu
@@ -168,6 +184,7 @@
             displayExpr: 'name',
             onValueChanged: function (e) {
                ny=e.value;
+               nSelectedYear=ny;
             }
 
         });
@@ -346,7 +363,7 @@
            // console.log('All dropdowns have selected values!');
            nm=$("#selectBoxMonth").dxSelectBox("option", "value");
            ny=$("#selectBoxYear").dxSelectBox("option", "value");
-
+           nSelectedYear=ny;
             let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod3Locked", { programId: functionalSubAreaId,courtId:courtId,nm:nm, ny: ny })
              .then(data =>{
                 if(!isEmpty(data)){

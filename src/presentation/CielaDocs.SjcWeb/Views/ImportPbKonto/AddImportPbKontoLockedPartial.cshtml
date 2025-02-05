@@ -1,0 +1,131 @@
+﻿@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    ViewBag.Title = "ImportPbKontoLocked";
+    Layout = null;
+}
+@{
+    ViewData["Title"] = "Index";
+
+}
+<style type="text/css">
+
+    .ui-autocomplete {
+        z-index: 5000;
+    }
+
+    .select2-dropdown {
+        z-index: 50002;
+    }
+
+    .header-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+</style>
+
+<div class="spacer_10"></div>
+<div class="header-container">
+    <h6 style="margin: 0;">Заключени периоди </h6>
+</div>
+<div class="spacer_10"></div>
+<div id="gridKontoPbItem"></div>
+<div class="spacer_10"></div>
+<script>
+
+
+    $(()=>{
+        
+
+
+        $('#gridKontoPbItem').dxDataGrid({
+            dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/ShowImportPbKontoLocked", 'Get', { importType: importType,courtId:courtId,institutionTypeId:institutionTypeId, ny: ny });
+                    }
+                }),
+            }),
+            paging: {
+                pageSize: 10,
+            },
+            selection: {
+                mode: "single"
+            },
+            showBorders: true,
+            showRowLines: true,
+            columns: [
+
+                { dataField: 'Nyear', caption: 'Година', width: "10%" },
+                { dataField: 'Name', caption: 'Отчетна единица', width: "35%" },
+                { dataField: 'LockedByUserName', caption: 'Заключил', width: "35%" },
+                {
+                        dataField: "LockedOn",
+                        width: "10%",
+                        caption: "Заключено на",
+                        alllowEditing: false,
+                        valueFormat: 'dd.MM.yyyy',
+                        dataType: 'date',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                },
+                {
+                    type: 'buttons',
+                    width: 124,
+                    buttons: [
+                    {
+                        hint: 'Изтриване',
+                        icon: 'trash',
+
+                        onClick(e) {
+                            removeKontoPbPeriodById(e.row.data.Id);
+                            e.component.refresh(true);
+                            e.event.preventDefault();
+                        },
+                    }
+                    ],
+                }
+            ],
+
+            onRowRemoved: function (e) {
+                e.component.selectRowsByIndexes(0);
+            },
+            onSelectionChanged: function (items) {
+                if (items.selectedRowsData[0]) {
+                    //selectedId = items.selectedRowsData[0].Id;
+                }
+            },
+            focusedRowEnabled: true,
+            onFocusedRowChanged(e) {
+                if (e) {
+                    //getExtraDataItem(e.row);
+                }
+            },
+        });
+        function removeKontoPbPeriodById(id){
+              var result = DevExpress.ui.dialog.confirm("Потвърдете изтриването на заключения период?", "Потвърждение");
+                             result.done(function (dialogResult) {
+                                 if (dialogResult === true) {
+                                     $.ajax({
+                                         url: Ciela.baseUrl + "Noms/DeleteImportPbKontoById", data: {id:id,importType: importType }, method: 'POST'
+                                     })
+                                         .done(function (result) {
+                                              $("#gridKontoPbItem").dxDataGrid("instance").refresh();
+                                             DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                             DevExpress.ui.notify('Грешка при отключване на период.');
+                                         });
+                                 }
+                             });
+        }
+    });
+</script>

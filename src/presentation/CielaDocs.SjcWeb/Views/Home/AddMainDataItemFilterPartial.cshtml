@@ -56,17 +56,35 @@
         <div style="float:right;margin-right:10px;margin-bottom:10px;">
             <div id="dxContextMenu"></div>
             <div id="btnLock"></div>
+            <div id="btnLockedView"></div>
         <div id="okFilterItemBtn"></div>
         <div id="closeFilterItemBtn"></div>
         </div>
     </div>
 </form>
 <script>
+     
     $(() => {
         let courtTypeId = 0;
         let courtId = 0;
         let nm = 0;
-        let ny = 0;
+        let ny=0;
+
+             const buttonView = $("#btnLockedView").dxButton({
+        visible: true,
+        icon:'./images/lock-closed.svg',
+        hint:'Заключени периоди',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Home/AddMainDataItemLockedPartial", { }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Заключени периоди',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+
          let isLocked=false;
         $('#lock-result').addClass("hideme");
          const contextMenu = $("#dxContextMenu").dxContextMenu({
@@ -76,6 +94,7 @@
         ],
         target: "#btnLock",
         visible: false,
+        hint:'Заключи период',
         onItemClick: function (e) {
 
                switch (e.itemData.id) {
@@ -127,7 +146,7 @@
 
             function toggleButtonVisibility(condition) {
                 button.option('visible', condition);
-                button.option('icon','../images/lock-open.svg')
+                button.option('icon','./images/lock-open.svg')
             }
 
     // Initialize the Context Menu
@@ -146,6 +165,7 @@
             displayExpr: 'name',
             onValueChanged: function (e) {
                ny=e.value;
+               nSelectedYear=ny;
             }
 
         });
@@ -254,6 +274,7 @@
                // console.log('All dropdowns have selected values!');
                nm=$("#selectBoxMonth").dxSelectBox("option", "value");
                ny=$("#selectBoxYear").dxSelectBox("option", "value");
+               nSelectedYear=ny;
                 // Trigger your custom logic here
                 let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod2Locked", { courtId: courtId,nm:nm, ny: ny })
                  .then(data =>{

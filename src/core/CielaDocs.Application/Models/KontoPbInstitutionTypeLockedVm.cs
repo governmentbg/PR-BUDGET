@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace CielaDocs.Application.Models
 {
-    public class ProgramDataLockedVm
+    public class KontoPbInstitutionTypeLockedVm
     {
         public int Id { get; set; }
-        public int? FunctionalSubAreaId { get; set; }
+        public int? InstitutionTypeId { get; set; }
         public int? Nyear { get; set; }
         public int? LockedBy { get; set; }
         public DateTime? LockedOn { get; set; }
         public string LockedByUserName { get; set; }
-        public string ProgramName { get; set; }
+        public string Name { get; set; }
     }
 }

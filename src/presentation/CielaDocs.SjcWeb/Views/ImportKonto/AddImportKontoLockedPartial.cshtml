@@ -81,6 +81,8 @@
             value:new Date().getFullYear(),
             onValueChanged: function (e) {
                 ny = e.value;
+                $('#selectedYear').text(`За ${ny}г.`);
+                $("#gridKontoItem").dxDataGrid("instance").refresh();
             }
 
         });

@@ -20,6 +20,7 @@ using CielaDocs.Application.Features.CourtTypes.Queries;
 using Microsoft.Graph.TermStore;
 using CielaDocs.Shared.Services;
 using CielaDocs.SjcWeb.Extensions;
+using DevExpress.Export;
 
 namespace CielaDocs.SjcWeb.Controllers
 {
@@ -537,21 +538,220 @@ namespace CielaDocs.SjcWeb.Controllers
                 return Json(new List<ApprovedDataItemLockedVm>());
             }
         }
+        [HttpGet]
+        public async Task<JsonResult> ShowImportPbKontoLocked(int? importType, int? courtId, int? institutionTypeId, int? ny)
+        {
+            try
+            {
+                if (importType == 1)
+                {
+                    var data = await _sjcService.QueryRawList<KontoPbInstitutionTypeLockedVm>($@"SELECT  a.Id,a.InstitutionTypeId,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName,t.Name as Name 
+                    FROM KontoPbInstitutionTypeLocked a
+                    left join users u on a.LockedBy=u.id
+                    left join InstitutionType t on a.InstitutionTypeId=t.id
+                    where a.InstitutionTypeId={institutionTypeId ?? 0} and a.Nyear={ny ?? 0} ");
+                    return Json(data);
+                }
+                else
+                {
+                    var data = await _sjcService.QueryRawList<KontoPbCourtLockedVm>($@"SELECT a.Id,a.CourtId,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName,c.Name as Name 
+                    FROM KontoPbCourtLocked a
+                    left join users u on a.LockedBy=u.id
+                    left join court c on a.CourtId=c.id
+                    where a.CourtId={courtId ?? 0} and a.Nyear={ny ?? 0} ");
+                    return Json(data);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<KontoPbCourtLockedVm>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> ShowMainPeriodItemLocked(int? ny)
+        {
+            try
+            {
+               
+                    var data = await _sjcService.QueryRawList<MainPeriodItemLockedVm>($@"SELECT a.Id,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName,c.Name as CourtName 
+                    FROM MainPeriodItemLocked a
+                    left join users u on a.LockedBy=u.id
+                    left join court c on a.CourtId=c.id
+                    where a.Nyear={ny ?? 0} ");
+                    return Json(data);
+                
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MainPeriodItemLockedVm>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> ShowProgramDataLocked(int? ny)
+        {
+            try
+            {
+
+                var data = await _sjcService.QueryRawList<ProgramDataLockedVm>($@"SELECT a.Id,a.FunctionalSubAreaId,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName,f.Name as ProgramName
+                              FROM ProgramDataLocked a
+                            left join users u on a.LockedBy=u.id
+                            left join FunctionalSubArea f on a.FunctionalSubAreaId=f.id
+                            where a.Nyear={ny ?? 0} ");
+                return Json(data);
+
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<ProgramDataLockedVm>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> ShowMainDataItemLocked(int? ny)
+        {
+            try
+            {
+
+                var data = await _sjcService.QueryRawList<MainDataItemLockedVm>($@"SELECT a.Id,a.CourtId,a.NMonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName,c.Name as CourtName
+                              FROM MainDataItemLocked a
+                            left join users u on a.LockedBy=u.id
+                            left join Court c on a.CourtId=c.id
+                            where a.Nyear={ny ?? 0} ");
+                return Json(data);
+
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MainDataItemLockedVm>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> ShowMainDataLocked(int? ny)
+        {
+            try
+            {
+
+                var data = await _sjcService.QueryRawList<MainDataLockedVm>($@"SELECT a.Id,a.FunctionalSubAreaId,a.CourtId,a.NMonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName,c.Name as CourtName,f.Name as ProgramName
+                              FROM MainDataLocked a
+                            left join users u on a.LockedBy=u.id
+                            left join Court c on a.CourtId=c.id
+                            left join FunctionalSubArea f on a.FunctionalSubAreaId=f.id
+                            where a.Nyear={ny ?? 0} ");
+                return Json(data);
+
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MainDataLockedVm>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> ShowMainDataPeriodLocked(int? ny)
+        {
+            try
+            {
+
+                var data = await _sjcService.QueryRawList<MainDataPeriodLockedVm>($@"SELECT a.Id,a.FunctionalSubAreaId,a.CourtId,a.NMonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName,c.Name as CourtName,f.Name as ProgramName
+                              FROM MainDataPeriodLocked a
+                            left join users u on a.LockedBy=u.id
+                            left join Court c on a.CourtId=c.id
+                            left join FunctionalSubArea f on a.FunctionalSubAreaId=f.id
+                            where a.Nyear={ny ?? 0} ");
+                return Json(data);
+
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MainDataPeriodLockedVm>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> ShowApprovedDataItemLocked(int? ny)
+        {
+            try
+            {
+
+                var data = await _sjcService.QueryRawList<ApprovedDataItemLockedVm>($@"SELECT a.Id,a.FunctionalSubAreaId,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName,f.Name as ProgramName
+                            FROM ApprovedDataItemLocked a
+                            left join users u on a.LockedBy=u.id
+                            left join FunctionalSubArea f on a.FunctionalSubAreaId=f.id
+                            where a.Nyear={ny ?? 0} ");
+                return Json(data);
+
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<ApprovedDataItemLockedVm>());
+            }
+        }
+        
+
+
+        [HttpGet]
+        public async Task<JsonResult> CheckPeriod7Locked(int? importType, int? courtId, int? institutionTypeId, int? ny)
+        {
+            try
+            {
+                if (importType == 1)
+                {
+                    var data = await _sjcService.QueryRaw<KontoPbInstitutionTypeLockedVm>($@"SELECT TOP 1 a.Id,a.InstitutionTypeId,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName,t.Name as Name 
+                    FROM KontoPbInstitutionTypeLocked a
+                    left join users u on a.LockedBy=u.id
+                    left join InstitutionType t on a.InstitutionTypeId=t.id
+                    where a.InstitutionTypeId={institutionTypeId ?? 0} and a.Nyear={ny ?? 0} ");
+                    return Json(data);
+                }
+                else
+                {
+                    var data = await _sjcService.QueryRaw<KontoPbCourtLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName,c.Name as Name 
+                    FROM KontoPbCourtLocked a
+                    left join users u on a.LockedBy=u.id
+                    left join court c on a.CourtId=c.id
+                    where a.CourtId={courtId ?? 0} and a.Nyear={ny ?? 0} ");
+                    return Json(data);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<KontoPbCourtLockedVm>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> CheckPeriod8Locked(int? courtId, int? nm, int? ny)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRaw<MainPeriodItemLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName,c.Name as CourtName 
+                    FROM MainPeriodItemLocked a
+                    left join users u on a.LockedBy=u.id
+                    left join Court c on a.CourtId=c.id
+                    where a.CourtId={courtId ?? 0} and a.Nmonth={nm ?? 0} and a.Nyear={ny ?? 0} ");
+                return Json(data);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MainPeriodItemLockedVm>());
+            }
+        }
         [HttpPost]
         public async Task<JsonResult> LockProgramData(int? typeoflock, int? programId, int? ny) {
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
             if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var rec = await _sjcService.QueryRaw<ProgramDataLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.Nyear,a.LockedBy,a.LockedOn FROM ProgramDataLocked a where FunctionalSubAreaId={programId ?? 0} and Nyear={ny ?? 0}");
+
             var canUserLock = await CheckUserCanLock(empl?.Id ?? 0, 1);
             if(!canUserLock) { return Json(new { success = false, msg = "Нямате права за заключване или отключване на този период" }); }
             if (typeoflock == 0)
             {
-                _ = await _sjcService.ExecuteRawSql($"Insert into ProgramDataLocked (FunctionalSubAreaId ,Nyear,LockedBy) VALUES ({programId??0},{ny??0} ,{empl?.Id??0}) ");
-                return Json(new { success = true, msg = "Периодът бе заключен" });
+                if (rec is null)
+                {
+                    _ = await _sjcService.ExecuteRawSql($"Insert into ProgramDataLocked (FunctionalSubAreaId ,Nyear,LockedBy) VALUES ({programId ?? 0},{ny ?? 0} ,{empl?.Id ?? 0}) ");
+                    return Json(new { success = true, msg = "Периодът бе заключен" });
+                }
+                else return Json(new { success = true, msg = "Периодът вече е заключен!" });
             }
             if (typeoflock == 1)
             {
-                var rec=await _sjcService.QueryRaw<ProgramDataLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.Nyear,a.LockedBy,a.LockedOn FROM ProgramDataLocked a where FunctionalSubAreaId={programId ?? 0} and Nyear={ny ?? 0}");
-                if(rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+                 if(rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
                 if(rec?.LockedBy!=empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
                 _ = await _sjcService.ExecuteRawSql($"Delete from  ProgramDataLocked where FunctionalSubAreaId={programId ?? 0} and Nyear={ny ?? 0} ");
                 return Json(new { success = true, msg = "Периодът бе отключен" });
@@ -563,17 +763,22 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
             if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var rec = await _sjcService.QueryRaw<MainDataItemLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM MainDataItemLocked a where a.CourtId={courtId ?? 0} and a.Nmonth={nm ?? 0} and a.Nyear={ny ?? 0}");
+
             //2 means userLockedItem=>id=2, name=2.Входни данни
             var canUserLock = await CheckUserCanLock(empl?.Id ?? 0, 2);
             if (!canUserLock) { return Json(new { success = false, msg = "Нямате права за заключване или отключване на този период" }); }
             if (typeoflock == 0)
             {
-                _ = await _sjcService.ExecuteRawSql($"Insert into MainDataItemLocked (CourtId,Nmonth ,Nyear,LockedBy) VALUES ({courtId ?? 0},{nm??0},{ny ?? 0} ,{empl?.Id ?? 0}) ");
-                return Json(new { success = true, msg = "Периодът бе заключен" });
+                if (rec is null)
+                {
+                    _ = await _sjcService.ExecuteRawSql($"Insert into MainDataItemLocked (CourtId,Nmonth ,Nyear,LockedBy) VALUES ({courtId ?? 0},{nm ?? 0},{ny ?? 0} ,{empl?.Id ?? 0}) ");
+                    return Json(new { success = true, msg = "Периодът бе заключен" });
+                }
+                else return Json(new { success = true, msg = "Периодът вече е заключен!" });
             }
             if (typeoflock == 1)
             {
-                var rec = await _sjcService.QueryRaw<MainDataItemLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM MainDataItemLocked a where a.CourtId={courtId ?? 0} and a.Nmonth={nm ?? 0} and a.Nyear={ny ?? 0}");
                 if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
                 if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
                 _ = await _sjcService.ExecuteRawSql($"Delete from  MainDataItemLocked where CourtId={courtId ?? 0} and Nmonth={nm??0} and Nyear={ny ?? 0} ");
@@ -586,18 +791,23 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
             if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var rec = await _sjcService.QueryRaw<MainDataLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM MainDataLocked a where a.FunctionalSubAreaId={programId ?? 0} and a.CourtId={courtId ?? 0} and a.Nmonth={nm ?? 0} and a.Nyear={ny ?? 0}");
+
             //3 means userLockedItem=>id=3, name=3.Данни за показатели-месечни
             var canUserLock = await CheckUserCanLock(empl?.Id ?? 0, 3);
             if (!canUserLock) { return Json(new { success = false, msg = "Нямате права за заключване или отключване на този период" }); }
             if (typeoflock == 0)
             {
-                _ = await _sjcService.ExecuteRawSql($"Insert into MainDataLocked (FunctionalSubAreaId,CourtId,Nmonth ,Nyear,LockedBy) VALUES ({programId??0},{courtId ?? 0},{nm ?? 0},{ny ?? 0} ,{empl?.Id ?? 0}) ");
-                return Json(new { success = true, msg = "Периодът бе заключен" });
+                if (rec is null)
+                {
+                    _ = await _sjcService.ExecuteRawSql($"Insert into MainDataLocked (FunctionalSubAreaId,CourtId,Nmonth ,Nyear,LockedBy) VALUES ({programId ?? 0},{courtId ?? 0},{nm ?? 0},{ny ?? 0} ,{empl?.Id ?? 0}) ");
+                    return Json(new { success = true, msg = "Периодът бе заключен" });
+                }
+                else return Json(new { success = true, msg = "Периодът вече е заключен!" });
             }
             if (typeoflock == 1)
             {
-                var rec = await _sjcService.QueryRaw<MainDataLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM MainDataLocked a where a.FunctionalSubAreaId={programId??0} and a.CourtId={courtId ?? 0} and a.Nmonth={nm ?? 0} and a.Nyear={ny ?? 0}");
-                if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+                              if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
                 if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
                 _ = await _sjcService.ExecuteRawSql($"Delete from  MainDataLocked where FunctionalSubAreaId={programId ?? 0} and CourtId={courtId ?? 0} and Nmonth={nm ?? 0} and Nyear={ny ?? 0} ");
                 return Json(new { success = true, msg = "Периодът бе отключен" });
@@ -609,18 +819,23 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
             if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var rec = await _sjcService.QueryRaw<MainDataLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM MainDataPeriodLocked a where a.FunctionalSubAreaId={programId ?? 0} and a.CourtId={courtId ?? 0} and a.Nmonth={nm ?? 0} and a.Nyear={ny ?? 0}");
+
             //4 means userLockedItem=>id=4, name=4.Данни за показатели за период
             var canUserLock = await CheckUserCanLock(empl?.Id ?? 0, 4);
             if (!canUserLock) { return Json(new { success = false, msg = "Нямате права за заключване или отключване на този период" }); }
             if (typeoflock == 0)
             {
-                _ = await _sjcService.ExecuteRawSql($"Insert into MainDataPeriodLocked (FunctionalSubAreaId,CourtId,Nmonth ,Nyear,LockedBy) VALUES ({programId ?? 0},{courtId ?? 0},{nm ?? 0},{ny ?? 0} ,{empl?.Id ?? 0}) ");
-                return Json(new { success = true, msg = "Периодът бе заключен" });
+                if (rec is null)
+                {
+                    _ = await _sjcService.ExecuteRawSql($"Insert into MainDataPeriodLocked (FunctionalSubAreaId,CourtId,Nmonth ,Nyear,LockedBy) VALUES ({programId ?? 0},{courtId ?? 0},{nm ?? 0},{ny ?? 0} ,{empl?.Id ?? 0}) ");
+                    return Json(new { success = true, msg = "Периодът бе заключен" });
+                }
+                else return Json(new { success = true, msg = "Периодът вече е заключен!" });
             }
             if (typeoflock == 1)
             {
-                var rec = await _sjcService.QueryRaw<MainDataLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM MainDataPeriodLocked a where a.FunctionalSubAreaId={programId ?? 0} and a.CourtId={courtId ?? 0} and a.Nmonth={nm ?? 0} and a.Nyear={ny ?? 0}");
-                if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+                               if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
                 if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
                 _ = await _sjcService.ExecuteRawSql($"Delete from  MainDataPeriodLocked where FunctionalSubAreaId={programId ?? 0} and CourtId={courtId ?? 0} and Nmonth={nm ?? 0} and Nyear={ny ?? 0} ");
                 return Json(new { success = true, msg = "Периодът бе отключен" });
@@ -632,17 +847,21 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
             if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var rec = await _sjcService.QueryRaw<ApprovedDataItemLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.Nyear,a.LockedBy,a.LockedOn FROM ApprovedDataItemLocked a where FunctionalSubAreaId={programId ?? 0} and Nyear={ny ?? 0}");
             //5 means userLockedItem=>id=5, name=5.Утвърден бюджет
             var canUserLock = await CheckUserCanLock(empl?.Id ?? 0, 5);
             if (!canUserLock) { return Json(new { success = false, msg = "Нямате права за заключване или отключване на този период" }); }
             if (typeoflock == 0)
             {
+                if (rec is null) { 
                 _ = await _sjcService.ExecuteRawSql($"Insert into ApprovedDataItemLocked (FunctionalSubAreaId ,Nyear,LockedBy) VALUES ({programId ?? 0},{ny ?? 0} ,{empl?.Id ?? 0}) ");
                 return Json(new { success = true, msg = "Периодът бе заключен" });
+                 }
+                else return Json(new { success = true, msg = "Периодът вече е заключен!" });
             }
             if (typeoflock == 1)
             {
-                var rec = await _sjcService.QueryRaw<ApprovedDataItemLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.Nyear,a.LockedBy,a.LockedOn FROM ApprovedDataItemLocked a where FunctionalSubAreaId={programId ?? 0} and Nyear={ny ?? 0}");
+               
                 if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
                 if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
                 _ = await _sjcService.ExecuteRawSql($"Delete from  ApprovedDataItemLocked where FunctionalSubAreaId={programId ?? 0} and Nyear={ny ?? 0} ");
@@ -655,7 +874,7 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
             if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
-            var rec = await _sjcService.QueryRaw<ApprovedDataItemLockedVm>($@"SELECT TOP 1 a.Id,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM KontoMonthDataLocked a where a.Nmonth={nm ?? 0} and a.Nyear={ny ?? 0}");
+            var rec = await _sjcService.QueryRaw<KontoMonthDataLockedVm>($@"SELECT TOP 1 a.Id,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM KontoMonthDataLocked a where a.Nmonth={nm ?? 0} and a.Nyear={ny ?? 0}");
             //6 means userLockedItem=>id=6, name=6.Импорт на данни от Конто
             var canUserLock = await CheckUserCanLock(empl?.Id ?? 0, 6);
             if (!canUserLock) { return Json(new { success = false, msg = "Нямате права за заключване или отключване на този период" }); }
@@ -680,15 +899,192 @@ namespace CielaDocs.SjcWeb.Controllers
             return Json(new { success = true, msg = "Неуточнено действие" });
         }
         [HttpPost]
+        public async Task<JsonResult> LockImportPbKonto(int? typeoflock, int? importType, int? courtId, int? institutionTypeId, int? ny)
+        {
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+
+            if (importType == 1)
+            {
+                var rec = await _sjcService.QueryRaw<KontoPbInstitutionTypeLockedVm>($@"SELECT TOP 1 a.Id,a.InstitutionTypeId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbInstitutionTypeLocked a where a.InstitutionTypeId={institutionTypeId ?? 0} and a.Nyear={ny ?? 0}");
+                //7 means userLockedItem=>id=7, name=7.Импорт на данни проекто бюджет
+                var canUserLock = await CheckUserCanLock(empl?.Id ?? 0, 6);
+                if (!canUserLock) { return Json(new { success = false, msg = "Нямате права за заключване или отключване на този период" }); }
+                if (typeoflock == 0)
+                {
+                    if (rec is null)
+                    {
+                        _ = await _sjcService.ExecuteRawSql($"Insert into KontoPbInstitutionTypeLocked (InstitutionTypeId ,Nyear,LockedBy) VALUES ({institutionTypeId ?? 0},{ny ?? 0} ,{empl?.Id ?? 0}) ");
+                        return Json(new { success = true, msg = "Периодът бе заключен" });
+                    }
+                    else return Json(new { success = true, msg = "Периодът вече е заключен!" });
+
+                }
+                if (typeoflock == 1)
+                {
+
+                    if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+                    if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
+                    _ = await _sjcService.ExecuteRawSql($"Delete from  KontoPbInstitutionTypeLocked where InstitutionTypeId={institutionTypeId?? 0} and Nyear={ny ?? 0} ");
+                    return Json(new { success = true, msg = "Периодът бе отключен" });
+                }
+                return Json(new { success = true, msg = "Неуточнено действие" });
+            }
+            else
+            {
+                var rec = await _sjcService.QueryRaw<KontoPbCourtLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbCourtLocked a where a.CourtId={courtId ?? 0} and a.Nyear={ny ?? 0}");
+                //7 means userLockedItem=>id=7, name=7.Импорт на данни проекто бюджет
+                var canUserLock = await CheckUserCanLock(empl?.Id ?? 0, 6);
+                if (!canUserLock) { return Json(new { success = false, msg = "Нямате права за заключване или отключване на този период" }); }
+                if (typeoflock == 0)
+                {
+                    if (rec is null)
+                    {
+                        _ = await _sjcService.ExecuteRawSql($"Insert into KontoPbCourtLocked (CourtId ,Nyear,LockedBy) VALUES ({courtId ?? 0},{ny ?? 0} ,{empl?.Id ?? 0}) ");
+                        return Json(new { success = true, msg = "Периодът бе заключен" });
+                    }
+                    else return Json(new { success = true, msg = "Периодът вече е заключен!" });
+
+                }
+                if (typeoflock == 1)
+                {
+
+                    if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+                    if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
+                    _ = await _sjcService.ExecuteRawSql($"Delete from  KontoPbCourtLocked where CourtId={courtId ?? 0} and Nyear={ny ?? 0} ");
+                    return Json(new { success = true, msg = "Периодът бе отключен" });
+                }
+                return Json(new { success = true, msg = "Неуточнено действие" });
+            }
+        }
+        [HttpPost]
         public async Task<JsonResult> DeleteImportKontoById(int? id)
         {
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
             if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
-            var rec = await _sjcService.QueryRaw<ApprovedDataItemLockedVm>($@"SELECT TOP 1 a.Id,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM KontoMonthDataLocked a where a.id={id ?? 0}");
+            var rec = await _sjcService.QueryRaw<KontoMonthDataLockedVm>($@"SELECT TOP 1 a.Id,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM KontoMonthDataLocked a where a.id={id ?? 0}");
             if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
             if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
             _ = await _sjcService.ExecuteRawSql($"Delete from  KontoMonthDataLocked where id={id ?? 0}");
             return Json(new { success = true, msg = "Периодът бе отключен" });
         }
+        [HttpPost]
+        public async Task<JsonResult> DeleteImportPbKontoById(int? id,int importType)
+        {
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            if (importType == 1)
+            {
+                var rec = await _sjcService.QueryRaw<KontoPbInstitutionTypeLockedVm>($@"SELECT TOP 1 a.Id,a.InstitutionTypeId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbInstitutionTypeLocked a where a.id={id ?? 0}");
+                if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+                if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
+                _ = await _sjcService.ExecuteRawSql($"Delete from  KontoPbInstitutionTypeLocked where id={id ?? 0}");
+                return Json(new { success = true, msg = "Периодът бе отключен" });
+            }
+            else
+            {
+                var rec = await _sjcService.QueryRaw<KontoPbCourtLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbCourtLocked a where a.id={id ?? 0}");
+                if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+                if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
+                _ = await _sjcService.ExecuteRawSql($"Delete from  KontoPbCourtLocked where id={id ?? 0}");
+                return Json(new { success = true, msg = "Периодът бе отключен" });
+            }
+        }
+        [HttpPost]
+        public async Task<JsonResult> LockMainPeriodItem(int? typeoflock, int? courtId, int? nm, int? ny)
+        {
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var rec = await _sjcService.QueryRaw<MainPeriodItemLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM MainPeriodItemLocked a where a.CourtId={courtId ?? 0} and a.Nmonth={nm ?? 0} and a.Nyear={ny ?? 0}");
+
+            //8 means userLockedItem=>id=8, name=8.Импорт на входни данни
+            var canUserLock = await CheckUserCanLock(empl?.Id ?? 0, 8);
+            if (!canUserLock) { return Json(new { success = false, msg = "Нямате права за заключване или отключване на този период" }); }
+            if (typeoflock == 0)
+            {
+                if (rec is null)
+                {
+                    _ = await _sjcService.ExecuteRawSql($"Insert into MainPeriodItemLocked (CourtId,Nmonth ,Nyear,LockedBy) VALUES ({courtId ?? 0},{nm ?? 0},{ny ?? 0} ,{empl?.Id ?? 0}) ");
+                    return Json(new { success = true, msg = "Периодът бе заключен" });
+                }
+                else return Json(new { success = true, msg = "Периодът вече е заключен!" });
+            }
+            if (typeoflock == 1)
+            {
+                if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+                if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
+                _ = await _sjcService.ExecuteRawSql($"Delete from  MainPeriodItemLocked where CourtId={courtId ?? 0} and Nmonth={nm ?? 0} and Nyear={ny ?? 0} ");
+                return Json(new { success = true, msg = "Периодът бе отключен" });
+            }
+            return Json(new { success = true, msg = "Неуточнено действие" });
+        }
+        [HttpPost]
+        public async Task<JsonResult> DeleteMainPeriodItemLockedById(int? id)
+        {
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var rec = await _sjcService.QueryRaw<MainPeriodItemLockedVm>($@"SELECT TOP 1 a.Id,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM MainPeriodItemLocked a where a.id={id ?? 0}");
+            if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+            if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
+            _ = await _sjcService.ExecuteRawSql($"Delete from  MainPeriodItemLocked where id={id ?? 0}");
+            return Json(new { success = true, msg = "Периодът бе отключен" });
+        }
+        [HttpPost]
+        public async Task<JsonResult> DeleteProgramDataLockedById(int? id)
+        {
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var rec = await _sjcService.QueryRaw<ProgramDataLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.Nyear,a.LockedBy,a.LockedOn FROM ProgramDataLocked a where a.id={id ?? 0}");
+            if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+            if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
+            _ = await _sjcService.ExecuteRawSql($"Delete from  ProgramDataLocked where id={id ?? 0}");
+            return Json(new { success = true, msg = "Периодът бе отключен" });
+        }
+        [HttpPost]
+        public async Task<JsonResult> DeleteMainDataItemLockedById(int? id)
+        {
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var rec = await _sjcService.QueryRaw<MainDataItemLockedVm>($@"SELECT TOP 1 a.Id,a.Court,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM MainDataItemLocked a where a.id={id ?? 0}");
+            if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+            if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
+            _ = await _sjcService.ExecuteRawSql($"Delete from  MainDataItemLocked where id={id ?? 0}");
+            return Json(new { success = true, msg = "Периодът бе отключен" });
+        }
+        [HttpPost]
+        public async Task<JsonResult> DeleteMainDataLockedById(int? id)
+        {
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var rec = await _sjcService.QueryRaw<MainDataLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.Court,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM MainDataLocked a where a.id={id ?? 0}");
+            if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+            if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
+            _ = await _sjcService.ExecuteRawSql($"Delete from  MainDataLocked where id={id ?? 0}");
+            return Json(new { success = true, msg = "Периодът бе отключен" });
+        }
+        [HttpPost]
+        public async Task<JsonResult> DeleteMainDataPeriodLockedById(int? id)
+        {
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var rec = await _sjcService.QueryRaw<MainDataPeriodLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.Court,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn FROM MainDataPeriodLocked a where a.id={id ?? 0}");
+            if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+            if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
+            _ = await _sjcService.ExecuteRawSql($"Delete from  MainDataPeriodLocked where id={id ?? 0}");
+            return Json(new { success = true, msg = "Периодът бе отключен" });
+        }
+        [HttpPost]
+        public async Task<JsonResult> DeleteApprovedDataItemLockedById(int? id)
+        {
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if (empl == null) { return Json(new { success = false, msg = "Невалиден указател към текущ потребител на системата" }); }
+            var rec = await _sjcService.QueryRaw<ApprovedDataItemLockedVm>($@"SELECT TOP 1 a.Id,a.FunctionalSubAreaId,a.Nyear,a.LockedBy,a.LockedOn FROM ApprovedDataItemLocked a where a.id={id ?? 0}");
+            if (rec is null) { return Json(new { success = false, msg = "Този период не е заключен за да го отключвате" }); }
+            if (rec?.LockedBy != empl?.Id) { return Json(new { success = false, msg = "Този период не е заключен от вас. В този случай отключването се прекратява" }); }
+            _ = await _sjcService.ExecuteRawSql($"Delete from  ApprovedDataItemLocked where id={id ?? 0}");
+            return Json(new { success = true, msg = "Периодът бе отключен" });
+        }
+
+
     }
 }

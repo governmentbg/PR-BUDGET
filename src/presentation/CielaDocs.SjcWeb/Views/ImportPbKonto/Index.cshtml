@@ -4,13 +4,17 @@
 @{
     var tokenSet = antiforgery.GetAndStoreTokens(Context);
 }
-
+<style type="text/css">
+    .header-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+</style>
 <div class="spacer_20"></div>
 <h4>Импорт на данни за проектобюджет</h4>
 
     <div class="modal-body form-horizontal">
-
-        <div class="container-fluid">
 
         <div class="row">
 
@@ -38,30 +42,34 @@
                @*  <div class="col-3">
                     <div style="margin-bottom:20px;" id="cbAddToProgramData"></div>
                 </div> *@
-            <div class="col-9">
-                <label for="selectProgram">Програма</label>
-                <select class="form-control" id="selectProgram">
-                    <option> </option>
-                </select>
-            </div>
+                <div class="col-9">
+                    <label for="selectProgram">Програма</label>
+                    <select class="form-control" id="selectProgram">
+                        <option> </option>
+                    </select>
+                </div>
             </div>
             <div class="row">
                 <div class="col-12">
-                 
-
+                    <div class="lock-container">
+                        <input type="text" readonly id="lock-result">
+                    </div>
+                </div>
+            </div>
                         <div id="divUploading">
                             <p>Моля изчакайте . . . <img src="@Url.Content("~/images/ajax_loader.gif")"></p>
                         </div>
-                       
+                 <div class="header-container">
                         <div id="buttonExcelViewer"></div>
                         <div id="buttonGridCourtViewer"></div>
-
-                
+                        <div id="dxContextMenu"></div>
+                        <div id="btnLock"></div>
+                        <div id="btnLockedView"></div>
+                </div>
 
                     
-                </div>
-            </div>
-        </div>
+           
+
      </div>
    <div class="spacer_20"></div>
 
@@ -74,10 +82,11 @@
     let institutionTypeId = 0;
     let courtTypeId = 0;
     let courtId = 0;
+    let ny=0;
     $(() => {
       
        
-        let ny = 0;
+        
         let selectedFnSubAreaId = 0;
         $("#divProcessing").hide();
         $("input[name=ImportType][value=" + importType + "]").prop('checked', true);
@@ -85,11 +94,85 @@
         $('[name=ImportType]').click(function () { ImportTypeChanged(this.value); });
         $('#divUploading').hide();
 
-        // const addToProgramData = $('#cbAddToProgramData').dxCheckBox({
-        //     value: false,
-        //     text: 'Добави към общите данни',
-        // }).dxCheckBox('instance');
-        
+         const buttonView = $("#btnLockedView").dxButton({
+        visible: true,
+        icon:'./images/lock-closed.svg',
+        hint:'Заключени периоди',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "ImportPbKonto/AddImportPbKontoLockedPartial", { }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Заключени периоди',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+       let isLocked=false;
+        $('#lock-result').val('');
+        $('#lock-result').addClass("hideme")
+        const contextMenu = $("#dxContextMenu").dxContextMenu({
+        dataSource: [
+            {id:1, text: "Заключи периода" },
+            {id:2, text: "Отключи периода" }
+        ],
+        target: "#btnLock",
+        visible: false,
+        onItemClick: function (e) {
+
+               switch (e.itemData.id) {
+                    case 1:
+                    const questText=(importType==0)?" за избрания съд":"За избраната институция";
+                            var result = DevExpress.ui.dialog.confirm(`Потвърдете заключването на периода за ${ny} г. ${questText}?`, "Потвърждение");
+                             result.done(function (dialogResult) {
+                                 if (dialogResult === true) {
+                                     $.ajax({
+                                         url: Ciela.baseUrl + "Noms/LockImportPbKonto", data: {typeoflock:0, importType: importType,courtId:courtId,institutionTypeId:institutionTypeId, ny: ny }, method: 'POST'
+                                     })
+                                         .done(function (result) {
+                                             DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                             DevExpress.ui.notify('Грешка при заключване на период.');
+                                         });
+                                 }
+                             });
+                        break;
+                    case 2:
+                       var result = DevExpress.ui.dialog.confirm("<i>Потвърдете отключването на периода?</i>", "Потвърждение");
+                             result.done(function (dialogResult) {
+                                 if (dialogResult === true) {
+                                     $.ajax({
+                                         url: Ciela.baseUrl + "Noms/LockImportPbKonto", data: {typeoflock:1, importType: importType,courtId:courtId,institutionTypeId:institutionTypeId, ny: ny }, method: 'POST'
+                                     })
+                                         .done(function (result) {
+                                             DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                             DevExpress.ui.notify('Грешка при заключване на период.');
+                                         });
+                                 }
+                             });
+                        break;
+
+                }
+             }
+         }).dxContextMenu("instance");
+
+        const button = $("#btnLock").dxButton({
+        visible: false, // Initially hidden
+        onClick: function (e) {
+           contextMenu.show(e.event);
+        }
+        }).dxButton("instance");
+
+
+            function toggleButtonVisibility(condition) {
+                button.option('visible', condition);
+                button.option('icon','./images/lock-open.svg')
+            }
+
+    // Initialize the Context Menu
 
         $("#selectBoxYear").dxSelectBox({
             dataSource: selectBoxYearData,
@@ -178,6 +261,55 @@
                 redirectme1New("@Url.Action("Index", "ExcelViewer")", "id", ''.concat("", "|", courtId, "|", ny, "|", 0,"|",importType,"|",institutionTypeId));
            
         }
+        //  ---------get dynamic action if selected two evalues
+           const dropdowns = [
+            {  type: 'dxDropDown', element: $('#selectBoxYear').dxSelectBox('instance') }
+        ];
+
+            dropdowns.forEach(dropdown => {
+             if (dropdown.type === 'dxDropDown') {
+                dropdown.element.option('onValueChanged', checkAllSelected);
+            } else {
+                dropdown.element.addEventListener('change', checkAllSelected);
+            }
+        });
+
+        function getValue(dropdown) {
+            if (dropdown.type === 'dxDropDown') {
+                return dropdown.element.option('value');
+            } else {
+                return dropdown.element.value;
+            }
+        }
+
+        async function  checkAllSelected() {
+            const allSelected = dropdowns.every(d => {
+                const value = getValue(d);
+                return value !== null && value !== undefined && value !== '';
+            });
+
+            if (allSelected) {
+               
+               ny=$("#selectBoxYear").dxSelectBox("option", "value");
+          
+                let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod7Locked", { importType: importType,courtId:courtId,institutionTypeId:institutionTypeId, ny: ny })
+                 .then(data =>{
+                    if(!isEmpty(data)){
+                        $('#lock-result').val('Заключен период от '+data?.LockedByUserName);
+                        $('#lock-result').removeClass("hideme");
+                        isLocked=true;
+                    }
+                    else {
+                          $('#lock-result').val('');
+                        $('#lock-result').addClass("hideme");
+                        isLocked=false;
+                    }
+                 });
+
+                toggleButtonVisibility(true);
+            }
+        }
+        //-------------buttons--------------
 
     });
     function ImportTypeChanged(uTypeId) {

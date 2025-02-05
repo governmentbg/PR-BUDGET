@@ -266,7 +266,7 @@ namespace CielaDocs.SjcWeb.Controllers
             }
         }
         [HttpPost]
-        public async Task<JsonResult> SetPeriodDataItemFilter(int? courtId, int? nm, int? ny)
+        public async Task<JsonResult> SetPeriodDataItemFilter(int? courtId, int? nm, int? ny, bool? isLocked)
         {
             try
             {
@@ -274,18 +274,11 @@ namespace CielaDocs.SjcWeb.Controllers
                 {
                     return Json(new { success = false, msg = "Не сте избрали коректни условия! " });
                 }
-                var mdexists = await _sjcRepo.CheckPeriodDataByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
-                var mditemsexists = await _sjcRepo.CheckPeriodDataItemsByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
-                //if (!mdexists)
-                //{
-                //    _ = await _sjcRepo.SpLoadMainPeriodByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
-                //}
-                //if (!mditemsexists)
-                //{
-                //    _ = await _sjcRepo.SpLoadMainPeriodItemsByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
-                //}
+                //var mdexists = await _sjcRepo.CheckPeriodDataByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
+                //var mditemsexists = await _sjcRepo.CheckPeriodDataItemsByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
+
                 HttpContext.Session.Remove("FilterMainDataSess");
-                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = 0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0 });
+                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = 0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0, IsLocked=isLocked??false });
                 return Json(new { success = true, msg = "Ok" });
             }
             catch (Exception ex)
@@ -347,7 +340,7 @@ namespace CielaDocs.SjcWeb.Controllers
 
        
              [HttpPost]
-        public async Task<JsonResult> SetApprovedDataFilter(int? functionalSubAreaId, int? ny, int? currencyId, int? currencyMeasureId)
+        public async Task<JsonResult> SetApprovedDataFilter(int? functionalSubAreaId, int? ny, int? currencyId, int? currencyMeasureId,bool? isLocked)
         {
             try
             {
@@ -357,7 +350,7 @@ namespace CielaDocs.SjcWeb.Controllers
                 }
 
                 HttpContext.Session.Remove("FilterMainDataSess");
-                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0, Nyear = ny ?? 0, CurrencyId = currencyId ?? 0, CurrencyMeasureId = currencyMeasureId ?? 0 });
+                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0, Nyear = ny ?? 0, CurrencyId = currencyId ?? 0, CurrencyMeasureId = currencyMeasureId ?? 0,IsLocked=isLocked??false });
                 _ = await _sjcRepo.Sp_InitProgramDataAsync(functionalSubAreaId ?? 0, ny ?? 0);
                 _ = await _sjcRepo.Sp_InitProgramDataCourtAsync(functionalSubAreaId ?? 0, ny ?? 0);
                 return Json(new { success = true, msg = "Ok" });
@@ -421,8 +414,16 @@ namespace CielaDocs.SjcWeb.Controllers
             var settings = new JsonSerializerSettings() { DateFormatString = "dd.MM.yyyy HH:mm:ss" };
             return Json(new { records, total }, settings);
         }
-       
-       
-       
+
+
+        [HttpGet]
+        public PartialViewResult AddProgramDataLockedPartial() => PartialView("AddProgramDataLockedPartial");
+        public PartialViewResult AddMainDataItemLockedPartial() => PartialView("AddMainDataItemLockedPartial");
+        public PartialViewResult AddMainDataLockedPartial() => PartialView("AddMainDataLockedPartial");
+        public PartialViewResult AddMainDataPeriodLockedPartial() => PartialView("AddMainDataPeriodLockedPartial");
+        public PartialViewResult AddApprovedDataItemLockedPartial() => PartialView("AddApprovedDataItemLockedPartial");
+
+        
+
     }
 }

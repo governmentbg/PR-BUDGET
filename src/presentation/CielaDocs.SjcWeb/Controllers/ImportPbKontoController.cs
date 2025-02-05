@@ -37,11 +37,13 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
-       
+        private readonly ISjcService _sjcService;
         private FilterMainDataVm? FilterData = null;
 
         public ImportPbKontoController(ILogger<MainDataController> logger, IConfiguration configuration, ISendGridMailer emailSender,
-                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IWebHostEnvironment env)
+                        IMediator mediator, IHttpContextAccessor httpContextAccessor, 
+                        ILogRepository logRepo, ISjcBudgetRepository sjcRepo, 
+                        IWebHostEnvironment env, ISjcService sjcService)
         {
             _logger = logger;
             _mediator = mediator;
@@ -50,6 +52,7 @@ namespace CielaDocs.SjcWeb.Controllers
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _env = env;
+            _sjcService=sjcService;
         }
         public async Task<IActionResult> Index()
         {
@@ -108,6 +111,14 @@ namespace CielaDocs.SjcWeb.Controllers
                 List<int> yearsLst = new List<int> { 
                     nYear, nYear+1, nYear+2
                 };
+                //------check locked period------------
+                var checkLocked = await _sjcService.QueryRaw<KontoPbCourtLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbCourtLocked a where a.CourtId={court?.Id ?? 0} and a.Nyear={nYear}");
+               
+                if (checkLocked != null)
+                {
+                    return Json(new { msg = $"Този период е заключен! Моля проверете!", success = false });
+                }
+                //-------end check locked period------------------------
                 List<DraftBudgetRow> dic = new();
                 using (var excelWorkbook = new XLWorkbook(file))
                 {
@@ -155,8 +166,6 @@ namespace CielaDocs.SjcWeb.Controllers
                                 _ = await _sjcRepo.FirstInitProgramDataDraftBudgetCourtAsync(item?.CourtId, item?.FunctionalSubAreaId ?? 0, yearItem);
                             }
                             nYIndex++;
-
-         
 
                                 var programDefCodes = await _sjcRepo.GetProgramDefProgCodesByProgramIdAsync(item?.FunctionalSubAreaId??0);
 
@@ -265,7 +274,14 @@ namespace CielaDocs.SjcWeb.Controllers
                 {
                     return (0, 0);
                 }
+                //------check locked period------------
+                var checkLocked = await _sjcService.QueryRaw<KontoPbCourtLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbCourtLocked a where a.CourtId={court?.Id ?? 0} and a.Nyear={nYear}");
 
+                if (checkLocked != null)
+                {
+                    return (0,0);
+                }
+                //-------end check locked period------------------------
                 List<KontoRow> dic = new();
                 using (var excelWorkbook = new XLWorkbook(file))
                 {
@@ -356,6 +372,14 @@ namespace CielaDocs.SjcWeb.Controllers
         {
 
             return PartialView("_ImportExpertPartialView");
+        }
+        [HttpGet]
+        [AllowAnonymous]
+        public PartialViewResult AddImportPbKontoLockedPartial()
+        {
+
+            return PartialView("AddImportPbKontoLockedPartial");
+
         }
     }
 }

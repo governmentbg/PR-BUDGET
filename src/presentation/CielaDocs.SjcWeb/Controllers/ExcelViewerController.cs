@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Http;
 using MediatR;
 using DevExpress.XtraPrinting.Native;
 using CielaDocs.Application;
+using CielaDocs.Shared.Services;
 
 namespace CielaDocs.SjcWeb.Controllers
 {
@@ -36,15 +37,18 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ILogRepository _logRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMediator _mediator;
+        private readonly ISjcService _sjcService;
         private Dictionary<string, string> repl_values = new Dictionary<string, string>();
         private static bool addToProgramData = false;
-        public ExcelViewerController(IWebHostEnvironment env, ISjcBudgetRepository sjcRepo, ILogRepository logRepo,  IHttpContextAccessor httpContextAccessor, IMediator mediator)
+        public ExcelViewerController(IWebHostEnvironment env, ISjcBudgetRepository sjcRepo, ILogRepository logRepo,
+            IHttpContextAccessor httpContextAccessor, IMediator mediator, ISjcService sjcService)
         {
             _env = env;
             _sjcRepo= sjcRepo;
             _logRepo = logRepo;
             _httpContextAccessor = httpContextAccessor;
             _mediator=mediator;
+            _sjcService= sjcService;
         }
         public static Stream GetDocumentContentStream(string file)
         {
@@ -277,6 +281,16 @@ namespace CielaDocs.SjcWeb.Controllers
                     List<int> yearsLst = new List<int> {
                     nYear, nYear+1, nYear+2
                     };
+
+
+                    //------check locked period------------
+                    var checkLocked = await _sjcService.QueryRaw<KontoPbCourtLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbCourtLocked a where a.CourtId={court?.Id ?? 0} and a.Nyear={nYear}");
+
+                    if (checkLocked != null)
+                    {
+                        return Json(new { msg = $"Този период е заключен! Моля проверете!", success = false });
+                    }
+                    //-------end check locked period------------------------
                     List<DraftBudgetRow> dic = new();
                     using (var excelWorkbook = new XLWorkbook(file))
                     {
@@ -305,14 +319,11 @@ namespace CielaDocs.SjcWeb.Controllers
                             if (!string.IsNullOrEmpty(code))
                             {
                                 dic.Add(new DraftBudgetRow { Id = row, Code = code, Value1 = nv1, Value2 = nv2, Value3 = nv3 });
-                                // s += $"Id={row},Code={code},values1={nv1},values2={nv2}, value3={nv3}" + Environment.NewLine;
                             }
                             row++;
 
                         }
                     }
-
-
                     //list of programs by court
                     var courtInPrograms = await _sjcRepo.GetCourtInProgramByCourtIdAsync(court?.Id);
                     nCnt = 0;
@@ -342,11 +353,7 @@ namespace CielaDocs.SjcWeb.Controllers
                                         var progCode = prowDef?.ProgCode;
                                         if (string.IsNullOrWhiteSpace(progCode)) continue;
                                         decimal? nval = 0;
-                                        //test only
-                                        //if (progCode == "01.01.03.K") {
-                                        //    var dicTest = dic.Where(x => x.Code.ContainsWord(progCode)).ToList();
-                                        //}
-                                        //end test
+
                                         var dicFiltered = dic.Where(x => x.Code.ContainsWord(progCode)).ToList();
 
                                         switch (nYIndex)
@@ -420,6 +427,15 @@ namespace CielaDocs.SjcWeb.Controllers
                     List<int> yearsLst = new List<int> {
                     nYear, nYear+1, nYear+2
                     };
+
+                    //------check locked period------------
+                    var checkLocked = await _sjcService.QueryRaw<KontoPbInstitutionTypeLockedVm>($@"SELECT TOP 1 a.Id,a.InstitutionTypeId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbInstitutionTypeLocked a where a.CourtId={inst?.Id ?? 0} and a.Nyear={nYear}");
+
+                    if (checkLocked != null)
+                    {
+                        return Json(new { msg = $"Този период е заключен! Моля проверете!", success = false });
+                    }
+                    //-------end check locked period------------------------
                     List<DraftBudgetRow> dic = new();
                     using (var excelWorkbook = new XLWorkbook(file))
                     {

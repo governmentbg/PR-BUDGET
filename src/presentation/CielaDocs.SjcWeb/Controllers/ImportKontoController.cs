@@ -105,7 +105,16 @@ namespace CielaDocs.SjcWeb.Controllers
                 if (court == null) {
                     return Json(new { msg = $"Неоткрит код {kontoCode} на отчетна единица", success = false });
                 }
-
+                //------check locked period------------
+                var checkLocked = await _sjcService.QueryRaw<KontoMonthDataLockedVm>($@"SELECT TOP 1 a.Id,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName 
+                    FROM KontoMonthDataLocked a
+                    left join users u on a.LockedBy=u.id
+                    where a.Nmonth={nMonth} and a.Nyear={nYear} ");
+                if (checkLocked != null)
+                {
+                    return Json(new { msg = $"Този период е заключен! Моля проверете!", success = false });
+                }
+                //-------end check locked period------------------------
                 List<KontoRow> dic = new();
                 using (var excelWorkbook = new XLWorkbook(file))
                 {
@@ -224,6 +233,16 @@ namespace CielaDocs.SjcWeb.Controllers
                 {
                     return (0, 0);
                 }
+                //------check locked period------------
+                var checkLocked = await _sjcService.QueryRaw<KontoMonthDataLockedVm>($@"SELECT TOP 1 a.Id,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName 
+                    FROM KontoMonthDataLocked a
+                    left join users u on a.LockedBy=u.id
+                    where a.Nmonth={nMonth} and a.Nyear={nYear} ");
+                if (checkLocked != null)
+                {
+                    return (0,0);
+                }
+                //-------end check locked period------------------------
                 var court = await _sjcRepo.GetCourtByKontoCodeAsync(kontoCode);
                 if (court == null)
                 {

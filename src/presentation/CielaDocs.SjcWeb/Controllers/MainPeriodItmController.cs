@@ -13,6 +13,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 
 using MediatR;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Graph;
 
@@ -33,11 +34,12 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
-
+        private readonly ISjcService _sjcService;
         private FilterMainDataVm? FilterData = null;
 
         public MainPeriodItmController(ILogger<MainDataController> logger, IConfiguration configuration, ISendGridMailer emailSender,
-                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IWebHostEnvironment env)
+                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo,
+                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env,ISjcService sjcService)
         {
             _logger = logger;
             _mediator = mediator;
@@ -46,6 +48,7 @@ namespace CielaDocs.SjcWeb.Controllers
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _env = env;
+            _sjcService= sjcService;
         }
         public async Task<IActionResult> Index()
         {
@@ -54,7 +57,7 @@ namespace CielaDocs.SjcWeb.Controllers
             ViewData["court"] = court;
             ViewBag.Month = FilterData?.Nmonth;
             ViewBag.Year = FilterData?.Nyear;
-
+            ViewBag.IsLocked = FilterData?.IsLocked ?? false;
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
             var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
             string logmsg = $"Достъп до проектобюджет детайлно от {User?.Identity?.Name}";
@@ -214,7 +217,21 @@ namespace CielaDocs.SjcWeb.Controllers
                     return Json(new { msg = "Невалиден файл за зареждане на данни. Задължително изберете файл с разширение .xlsx или .xls", success = false });
                 }
                 FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm();
+
                 var dbdata = await _sjcRepo.GetMainPeriodItemsGridByFilterAsync(FilterData?.CourtId ?? 0, FilterData?.Nmonth ?? 0, FilterData?.Nyear ?? 0);
+
+                //------check locked period------------
+                var checkLocked = await _sjcService.QueryRaw<MainPeriodItemLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName,c.Name as CourtName 
+                    FROM MainPeriodItemLocked a
+                    left join users u on a.LockedBy=u.id
+                    left join Court c on a.CourtId=c.id
+                    where a.CourtId={FilterData?.CourtId ?? 0} and a.Nmonth={FilterData?.Nmonth ?? 0} and a.Nyear={FilterData?.Nyear ?? 0} ");
+                if (checkLocked != null)
+                {
+                    return Json(new { msg = $"Този период е заключен! Моля проверете!", success = false });
+                }
+                //-------end check locked period------------------------
+
                 var data = Toolbox.ExcelToDataTable(file);
                 int nCnt = 0;
                 foreach (DataTable thisTable in data.Tables)
@@ -262,5 +279,8 @@ namespace CielaDocs.SjcWeb.Controllers
                 return Json(new { msg = "Грешка при четене на файл: " + ex?.Message, success = false });
             }
         }
+        [HttpGet]
+        public PartialViewResult AddMainPeriodItemLockedPartial() => PartialView("AddMainPeriodItemLockedPartial");
+
     }
 }

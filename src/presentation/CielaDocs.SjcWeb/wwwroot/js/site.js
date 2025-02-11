@@ -11,7 +11,7 @@ var selectedEmplId = 0;
 var actionInProgress = false;
 var nextActionQueue = [];
 var officialCurrencyId = 0;
-
+var activeYear = 0;
 function warn(s) {
     $.alert({
         boxWidth: '30%',

@@ -15,6 +15,15 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
+                        <div class="lock-container">
+                            <input type="text" readonly id="aciveperiodparams" class="lock-result">
+                        </div>
+                    </div>
+                 </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
                         <label for="cbFunctionalArea">Функционална област</label>
                         <select class="form-control" style="width:100%" id="cbFunctionalArea">
                             <option>Избери... </option>
@@ -32,30 +41,7 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-4">
-                    <div class="form-group">
-                        <label for="nyear">За година</label>
-                        <div id="selectBoxYear"></div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="form-group">
-                        <label for="cbCurrency">Валута</label>
-                        <select class="form-control" style="width:100%" id="cbCurrency">
-                            <option>Избери... </option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="form-group">
-                        <label for="cbCurrencyMeasure">Единица</label>
-                        <select class="form-control" style="width:100%" id="cbCurrencyMeasure">
-                            <option>Избери... </option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+
             <div class="row">
                 <div class="col-12">
                     <div class="lock-container">
@@ -79,11 +65,9 @@
     $(() => {
         let functionalAreaId = 0;
         let functionalSubAreaId = 0;
-         let ny = 0;
-        let currencyId = 0;
-        let currencyMeasureId = 0;
 
-           const buttonView = $("#btnLockedView").dxButton({
+
+        const buttonView = $("#btnLockedView").dxButton({
         visible: true,
         icon: Ciela.baseUrl+'images/lock-closed.svg',
         hint:'Заключени периоди',
@@ -116,7 +100,7 @@
                              result.done(function (dialogResult) {
                                  if (dialogResult === true) {
                                      $.ajax({
-                                         url: Ciela.baseUrl + "Noms/LockProgramData", data: {typeoflock:0, programId: functionalSubAreaId, ny: ny }, method: 'POST'
+                                         url: Ciela.baseUrl + "Noms/LockProgramData", data: {typeoflock:0, programId: functionalSubAreaId, ny: activeYear }, method: 'POST'
                                      })
                                          .done(function (result) {
                                              DevExpress.ui.notify(result.msg);
@@ -132,7 +116,7 @@
                              result.done(function (dialogResult) {
                                  if (dialogResult === true) {
                                      $.ajax({
-                                         url: Ciela.baseUrl + "Noms/LockProgramData", data: {typeoflock:1, programId: functionalSubAreaId, ny: ny }, method: 'POST'
+                                         url: Ciela.baseUrl + "Noms/LockProgramData", data: {typeoflock:1, programId: functionalSubAreaId, ny: activeYear }, method: 'POST'
                                      })
                                          .done(function (result) {
                                              DevExpress.ui.notify(result.msg);
@@ -162,43 +146,17 @@
             }
 
     // Initialize the Context Menu
-   
+              let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
+             .then(data =>{
+                if(!isEmpty(data)){
+                    $('#aciveperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
+                }
+                else {
+                      $('#aciveperiodparams').val('');
+                }
+             });
 
-        $("#selectBoxYear").dxSelectBox({
-            dataSource: selectBoxYearData,
-            valueExpr: 'id',
-            displayExpr: 'name',
-            onValueChanged: function (e) {
-                ny = e.value;
-                nSelectedYear=ny;
-    
-            }
-
-        });
-        $.ajax({
-            url: "@Url.Action("GetCurrencyById", "Noms" )",
-            dataType: 'json',
-            type: "Get",
-            data: { id: currencyId },
-            success: function (data) {
-                $("#cbCurrency").empty();
-                $("#cbCurrency").append("<option value='-1'>--Избери--</option>");
-                $("#cbCurrency").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
-                $('#cbCurrency').val(currencyId);
-            }
-        });
-        $.ajax({
-            url: "@Url.Action("GetCurrencyMeasureById", "Noms" )",
-            dataType: 'json',
-            type: "Get",
-            data: { id: currencyMeasureId },
-            success: function (data) {
-                $("#cbCurrencyMeasure").empty();
-                $("#cbCurrencyMeasure").append("<option value='-1'>--Избери--</option>");
-                $("#cbCurrencyMeasure").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
-                $('#cbCurrencyMeasure').val(currencyMeasureId);
-            }
-        });
+       
         $("#cbFunctionalArea").select2({
             placeholder: "Избери...",
             allowClear: true,
@@ -262,79 +220,16 @@
         }).on('change', function (e) {
             functionalSubAreaId = $(e.currentTarget).val();
         });
-        $("#cbCurrency").select2({
-            placeholder: "Избери...",
-            allowClear: true,
-            ajax: {
-                url: "@Url.Action("GetCurrencies", "Noms" )",
-                contentType: "application/json; charset=utf-8",
-                data: function (params) {
-                    var query =
-                    {
-                        term: params.term,
-                    };
-                    return query;
-                },
-                processResults: function (result) {
-                    return {
-                        results: $.map(result, function (item) {
-                            return {
-                                id: item.Id,
-                                text: item.Name
-
-                            };
-
-                        }),
-
-                    };
-
-                }
-            }
-        }).on('change', function (e) {
-            currencyId = $(e.currentTarget).val();
-        });
-        $("#cbCurrencyMeasure").select2({
-            placeholder: "Избери...",
-            allowClear: true,
-            ajax: {
-                url: "@Url.Action("GetCurrencyMeasure", "Noms" )",
-                contentType: "application/json; charset=utf-8",
-                data: function (params) {
-                    var query =
-                    {
-                        term: params.term,
-                    };
-                    return query;
-                },
-                processResults: function (result) {
-                    return {
-                        results: $.map(result, function (item) {
-                            return {
-                                id: item.Id,
-                                text: item.Name
-
-                            };
-
-                        }),
-
-                    };
-
-                }
-            }
-        }).on('change', function (e) {
-            currencyMeasureId = $(e.currentTarget).val();
-        });
+       
+       
       //  ---------get dynamic action if selected two evalues
        const dropdowns = [
-        { type: 'select2', element: $('#cbFunctionalSubArea') },
-        { type: 'dxDropDown', element: $('#selectBoxYear').dxSelectBox('instance') }
+        { type: 'select2', element: $('#cbFunctionalSubArea')  }
     ];
 
         dropdowns.forEach(dropdown => {
         if (dropdown.type === 'select2') {
             dropdown.element.on('change', checkAllSelected);
-        } else if (dropdown.type === 'dxDropDown') {
-            dropdown.element.option('onValueChanged', checkAllSelected);
         } else {
             dropdown.element.addEventListener('change', checkAllSelected);
         }
@@ -343,9 +238,7 @@
     function getValue(dropdown) {
         if (dropdown.type === 'select2') {
             return dropdown.element.val();
-        } else if (dropdown.type === 'dxDropDown') {
-            return dropdown.element.option('value');
-        } else {
+        }  else {
             return dropdown.element.value;
         }
     }
@@ -357,12 +250,8 @@
         });
 
         if (allSelected) {
-           // console.log('All dropdowns have selected values!');
-           ny=$("#selectBoxYear").dxSelectBox("option", "value");
-           nSelectedYear=ny;
-          // console.log('ny='+ny);
             // Trigger your custom logic here
-            let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod1Locked", { programId: functionalSubAreaId, ny: ny })
+            let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod1Locked", { programId: functionalSubAreaId, ny: activeYear })
              .then(data =>{
                 if(!isEmpty(data)){
                     $('#lock-result').val('Заключен период от '+data?.LockedByUserName);
@@ -390,7 +279,7 @@
                     DevExpress.ui.dialog.alert('Изберете задължително бюджетна програма и година', 'Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('programDataFilterOk', ''.concat(functionalSubAreaId, "|", ny,"|",currencyId,"|",currencyMeasureId,"|",isLocked));
+                window.parent.OnClosePopupEventHandlerEx('programDataFilterOk', ''.concat(functionalSubAreaId, "|",activeYear,"|",officialCurrencyId,"|",0,"|",isLocked));
             },
         });
         $('#closeFilterBtn').dxButton({

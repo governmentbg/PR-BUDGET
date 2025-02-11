@@ -62,9 +62,11 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
         private readonly IConfiguration _config;
+        private readonly ISjcServiceV2 _sjcServiceV2;
 
         public HomeController(ILogger<HomeController> logger, IConfiguration configuration, ISendGridMailer emailSender,
-                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IWebHostEnvironment env)
+                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, 
+                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env,ISjcServiceV2 sjcServiceV2)
         {
             _logger = logger;
             _mediator = mediator;
@@ -74,6 +76,7 @@ namespace CielaDocs.SjcWeb.Controllers
             _sjcRepo = sjcRepo;
             _env =env;
             _config = configuration;
+            _sjcServiceV2= sjcServiceV2;
 
         }
 
@@ -117,9 +120,12 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             string? appMode= GlobalConfig.GetValue("ApplicationMode:AppMode");
             ViewBag.AppMode = (appMode?.ToLower()=="demo")?"ДЕМО версия":string.Empty;
+            ViewData["ActivePeriod"] = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+            ViewData["Cfg"] = await _sjcRepo.GetCfgAsync();
             if (User?.Identity?.IsAuthenticated ?? false)
             {
                
+
                 int custType = User.GetUserTypeIdValue();
                
                 var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });

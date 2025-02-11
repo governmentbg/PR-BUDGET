@@ -163,6 +163,7 @@ namespace CielaDocs.SjcWeb.Controllers
         public IActionResult AddProgramDataFilterPartial() => PartialView(nameof(AddProgramDataFilterPartial));
         public IActionResult AddInstitutionYearFilterPartial() => PartialView(nameof(AddInstitutionYearFilterPartial));
         public IActionResult AddProgramYearFilterPartial() => PartialView(nameof(AddProgramYearFilterPartial));
+        public IActionResult AddCommonBudgetFilterPartial() => PartialView(nameof(AddCommonBudgetFilterPartial));
 
         [HttpGet]
 

@@ -43,22 +43,6 @@
                         <div id="selectBoxYear"></div>
                     </div>
                 </div>
-                <div class="col-3">
-                    <div class="form-group">
-                        <label for="cbCurrency">Валута</label>
-                        <select class="form-control" style="width:100%" id="cbCurrency">
-                            <option>Избери... </option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-3">
-                    <div class="form-group">
-                        <label for="cbCurrencyMeasure">Единица</label>
-                        <select class="form-control" style="width:100%" id="cbCurrencyMeasure">
-                            <option>Избери... </option>
-                        </select>
-                    </div>
-                </div>
             </div>
         </div>
         <div class="spacer_10"></div>
@@ -73,8 +57,6 @@
         let functionalAreaId = 0;
         let functionalSubAreaId = 0;
         let ny = 0;
-        let currencyId = 0;
-        let currencyMeasureId = 0;
         let nm = 0;
 
         $("#selectBoxMonth").dxSelectBox({
@@ -95,30 +77,7 @@
             }
 
         });
-        $.ajax({
-            url: "@Url.Action("GetCurrencyById", "Noms" )",
-            dataType: 'json',
-            type: "Get",
-            data: { id: currencyId },
-            success: function (data) {
-                $("#cbCurrency").empty();
-                $("#cbCurrency").append("<option value='-1'>--Избери--</option>");
-                $("#cbCurrency").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
-                $('#cbCurrency').val(currencyId);
-            }
-        });
-        $.ajax({
-            url: "@Url.Action("GetCurrencyMeasureById", "Noms" )",
-            dataType: 'json',
-            type: "Get",
-            data: { id: currencyMeasureId },
-            success: function (data) {
-                $("#cbCurrencyMeasure").empty();
-                $("#cbCurrencyMeasure").append("<option value='-1'>--Избери--</option>");
-                $("#cbCurrencyMeasure").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
-                $('#cbCurrencyMeasure').val(currencyMeasureId);
-            }
-        });
+       
         $("#cbFunctionalArea").select2({
             placeholder: "Избери...",
             allowClear: true,
@@ -182,68 +141,7 @@
         }).on('change', function (e) {
             functionalSubAreaId = $(e.currentTarget).val();
         });
-        $("#cbCurrency").select2({
-            placeholder: "Избери...",
-            allowClear: true,
-            ajax: {
-                url: "@Url.Action("GetCurrencies", "Noms" )",
-                contentType: "application/json; charset=utf-8",
-                data: function (params) {
-                    var query =
-                    {
-                        term: params.term,
-                    };
-                    return query;
-                },
-                processResults: function (result) {
-                    return {
-                        results: $.map(result, function (item) {
-                            return {
-                                id: item.Id,
-                                text: item.Name
-
-                            };
-
-                        }),
-
-                    };
-
-                }
-            }
-        }).on('change', function (e) {
-            currencyId = $(e.currentTarget).val();
-        });
-        $("#cbCurrencyMeasure").select2({
-            placeholder: "Избери...",
-            allowClear: true,
-            ajax: {
-                url: "@Url.Action("GetCurrencyMeasure", "Noms" )",
-                contentType: "application/json; charset=utf-8",
-                data: function (params) {
-                    var query =
-                    {
-                        term: params.term,
-                    };
-                    return query;
-                },
-                processResults: function (result) {
-                    return {
-                        results: $.map(result, function (item) {
-                            return {
-                                id: item.Id,
-                                text: item.Name
-
-                            };
-
-                        }),
-
-                    };
-
-                }
-            }
-        }).on('change', function (e) {
-            currencyMeasureId = $(e.currentTarget).val();
-        });
+       
         //-------------buttons--------------
         $('#okFilterBtn').dxButton({
             stylingMode: 'contained',
@@ -255,7 +153,7 @@
                     DevExpress.ui.dialog.alert('Изберете задължително бюджетна програма, краен месец и година', 'Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('programDataFilterOk', ''.concat(functionalSubAreaId,"|",nm, "|", ny,"|",currencyId,"|",currencyMeasureId));
+                window.parent.OnClosePopupEventHandlerEx('programDataFilterOk', ''.concat(functionalSubAreaId,"|",nm, "|", ny));
             },
         });
         $('#closeFilterBtn').dxButton({

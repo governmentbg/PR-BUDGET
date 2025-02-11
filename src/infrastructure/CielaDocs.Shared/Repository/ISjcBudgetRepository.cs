@@ -116,8 +116,8 @@ namespace CielaDocs.Shared.Repository
         Task<int?> sp_RecalculateProgramDataAsync(int? functionalSubAreaId, int? ny);
         Task<int?> sp_RecalculateProgramDataCourtAsync(int? functionalSubAreaId, int? ny, int? courtId);
         Task<int?> sp_UpdateProgramsByProgramDefAsync(int? Id);
-        Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataGridAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear);
-        Task<IEnumerable<ProgramDataExecutionVm>> GetProgramDataCourtGridByFilterAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? rowNum);
+        Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataGridAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? currencyId);
+        Task<IEnumerable<ProgramDataExecutionVm>> GetProgramDataCourtGridByFilterAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? rowNum,int? displayCurrencyId);
 
         Task<IEnumerable<string>> GetCourtNamesByIds(IEnumerable<int> ids);
         Task<IEnumerable<ProgramDataExecutionVm>> GetProgramDataCourtGridByIdsAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, IEnumerable<int> courtIds);
@@ -147,6 +147,14 @@ namespace CielaDocs.Shared.Repository
         Task<int> ExecuteRawSqlAsync(string sql);
         Task<IEnumerable<T>> QueryRawListAsync<T>(string sql);
         Task<T> QueryRawAsync<T>(string sql);
+
+        Task<IEnumerable<ProgramDataGridVm>> GetProgramDataGridByFilterCurrencyAsync(int functionalSubAreaId, int ny, int displayCurrencyId);
+        Task<IEnumerable<ProgramDataCourtGridVm>> GetProgramDataCourtGridByFilterCurrencyAsync(int? programDefNum, int? ny, int? rowNum, int displayCurrencyId);
+        Task<IEnumerable<KontoCourtsYearVm>> GetKontoCourtsYearCurrencyAsync(int? institutionTypeId, int? courtTypeId, int? courtId, int? ny, int? nmonth, int? reportTypeId, int displayCurrencyId);
+        Task<IEnumerable<ProgramDataInstitution3Y>> GetProgramDataInstitution3YByInstitutionTypeIdCurrencyAsync(int? programDefNum, int? ny, int? institutionTypeId, int displayCurrencyId);
+        Task<IEnumerable<ProgramData3Y>> GetProgramData3YTotalCurrencyAsync(int? programDefNum, int? ny, int? institutionTypeId, int displayCurrencyId);
+        Task<IEnumerable<ProgramDef3Y>> GetProgramDataInstitution3YCommonCurrencyAsync(int? programDefNum, int? ny, int displayCurrencyId);
+        Task<IEnumerable<ProgramDef3Y>> GetProgramDataCourt3YCommonCurrencyAsync(int? programDefNum, int? ny, int displayCurrencyId);
     }
   
 }

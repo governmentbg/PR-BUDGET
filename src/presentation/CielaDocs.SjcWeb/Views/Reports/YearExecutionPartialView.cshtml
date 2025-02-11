@@ -41,7 +41,7 @@
                 store: new DevExpress.data.CustomStore({
                     key: 'Id',
                     load() {
-                        return sendRequest(Ciela.baseUrl + "Reports/GetYearExecutionDataGrid", 'Get', { functionalSubAreaId: selectedProgramNum, m1: selectedM1, m2: selectedM2, nyear: selectedYear });
+                        return sendRequest(Ciela.baseUrl + "Reports/GetYearExecutionDataGrid", 'Get', { functionalSubAreaId: selectedProgramNum, m1: selectedM1, m2: selectedM2, nyear: selectedYear,displayCurrencyId:window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId });
                     },
 
                 }),
@@ -97,13 +97,12 @@
                     width: "10%",
                     caption: 'Отчетни данни',
                     alllowEditing: true,
-                    valueFormat: '#0.00',
-                    dataType: 'number',
-                    format: {
-                        formatter: function (value) {
-                            return value.toLocaleString('bg-BG');
-                        }
-                    }
+                    valueFormat: '0.00',
+                        dataType: 'number',
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nvalue = value.toFixed(2);
+                            },
 
                 },
             ],
@@ -167,13 +166,12 @@
                                 width: "10%",
                                 caption: 'Отчетни данни',
                                 alllowEditing: true,
-                                valueFormat: '#0.00',
+                                valueFormat: '0.00',
                                 dataType: 'number',
-                                format: {
-                                    formatter: function (value) {
-                                        return value.toLocaleString('bg-BG');
-                                    }
-                                }
+                                format: function (value) { return value.toFixed(2); },
+                                    setCellValue: function (rowData, value) {
+                                        rowData.Nvalue = value.toFixed(2);
+                                    },
 
                             },
 
@@ -185,13 +183,12 @@
                                 }, {
                                     column: 'Nvalue',
                                     summaryType: 'sum',
-                                    valueFormat: '#0.00',
+                                     valueFormat: '0.00',
                                     dataType: 'number',
-                                    format: {
-                                        formatter: function (value) {
-                                            return value.toLocaleString('bg-BG');
-                                        }
-                                    },
+                                    format: function (value) { return value.toFixed(2); },
+                                        setCellValue: function (rowData, value) {
+                                            rowData.Nvalue = value.toFixed(2);
+                                        },
                                 }],
                             },
                             toolbar: {
@@ -209,7 +206,7 @@
                                 store: new DevExpress.data.CustomStore({
                                     key: 'Id',
                                     load() {
-                                        return sendRequest(Ciela.baseUrl + "Reports/GetYearExecutionCourtsByProgramDataId", 'Get', { m1: selectedM1, m2: selectedM2, nyear: selectedYear, programDataId: options.key });
+                                        return sendRequest(Ciela.baseUrl + "Reports/GetYearExecutionCourtsByProgramDataId", 'Get', { m1: selectedM1, m2: selectedM2, nyear: selectedYear, programDataId: options.key ,displayCurrencyId:window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId });
                                     }
                                 }),
                             }),

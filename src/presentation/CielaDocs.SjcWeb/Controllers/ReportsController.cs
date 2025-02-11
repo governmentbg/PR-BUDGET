@@ -7,6 +7,7 @@ using CielaDocs.Application.Models;
 using CielaDocs.Domain.Entities;
 using CielaDocs.Shared.Repository;
 using CielaDocs.Shared.Services;
+using CielaDocs.SjcWeb.Constants;
 using CielaDocs.SjcWeb.Extensions;
 using CielaDocs.SjcWeb.Models;
 
@@ -83,7 +84,7 @@ namespace CielaDocs.SjcWeb.Controllers
 
         }
 
-        public IActionResult KontoReport(string par) {
+        public async Task<IActionResult> KontoReport(string par, int? currencyId) {
             string[] args = par.Split('|');
             int.TryParse(args[0], out int institutionTypeId);
             int.TryParse(args[1], out int courtTypeId);
@@ -97,16 +98,17 @@ namespace CielaDocs.SjcWeb.Controllers
             ViewBag.Nyear = nYear;
             ViewBag.Nmonth = nMonth;
             ViewBag.ReportTypeId = reportTypeId;
+            @ViewBag.Currency = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
             return View();
         }
         [HttpGet]
 
-        public async Task<JsonResult> GetKontoData(int? institutionTypeId, int? courtTypeId, int? courtId, int? nyear, int? nmonth, int? reportTypeId)
+        public async Task<JsonResult> GetKontoData(int? institutionTypeId, int? courtTypeId, int? courtId, int? nyear, int? nmonth, int? reportTypeId,int? displayCurrencyId)
         {
             try
             {
                 
-                var data = await _sjcRepo.GetKontoCourtsYearAsync(institutionTypeId, courtTypeId,courtId,nyear,nmonth,reportTypeId);
+                var data = await _sjcRepo.GetKontoCourtsYearCurrencyAsync(institutionTypeId, courtTypeId,courtId,nyear,nmonth,reportTypeId, displayCurrencyId??0);
                 return Json(data.ToList());
             }
             catch (Exception ex)
@@ -114,28 +116,23 @@ namespace CielaDocs.SjcWeb.Controllers
                 return Json(new List<KontoCourtsYearVm>());
             }
         }
-        public async Task<IActionResult> ProgramExecutionReport(string par) {
-            //functionalSubAreaId,"|",mn, "|", ny,"|",currencyId,"|",currencyMeasureId
+        public async Task<IActionResult> ProgramExecutionReport(string par, int? currencyId) {
          
             string[] args = par.Split('|');
             int.TryParse(args[0], out int functionalSubAreaId);
             int.TryParse(args[1], out int nMonth);
             int.TryParse(args[2], out int nYear);
-            int.TryParse(args[3], out int currencyId);
-            int.TryParse(args[4], out int currencyMeasureId);
             var prog = await _sjcRepo.GetFunctionalSubAreabyIdAsync(functionalSubAreaId);
-            var currencyName = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
-            var currencyMeasureName = await _sjcRepo.GetNameByIdFromTable("CurrencyMeasure", currencyMeasureId);
-            ViewBag.CurrencyName = currencyName;
-            ViewBag.CurrencyMeasureName = currencyMeasureName;
+        
             ViewBag.Year = nYear;
             ViewBag.Month = nMonth;
             ViewBag.ProgramName = prog?.Name ?? string.Empty;
             ViewBag.FunctionalSubAreaId = functionalSubAreaId;
+            @ViewBag.Currency= await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
             return View();
         }
 
-        public IActionResult YearExecutionReport(string par) {
+        public IActionResult YearExecutionReport(string par, int? currencyId) {
             string[] args = par.Split('|');
             int.TryParse(args[0], out int nM1);
             int.TryParse(args[1], out int nM2);
@@ -145,9 +142,10 @@ namespace CielaDocs.SjcWeb.Controllers
             ViewBag.Year = nYear;
             ViewBag.M1 = nM1;
             ViewBag.M2 = nM2;
+            ViewBag.Currency = BaseStore.Items[currencyId??0]?.Name;
             return View();
         }
-        public async Task<IActionResult> InstitutionTypeYearExecutionReport(string par) {
+        public async Task<IActionResult> InstitutionTypeYearExecutionReport(string par, int? currencyId) {
             string[] args = par.Split('|');
             int.TryParse(args[0], out int institutionTypeId);
             int.TryParse(args[1], out int nYear);
@@ -157,6 +155,7 @@ namespace CielaDocs.SjcWeb.Controllers
             ViewBag.InstitutionTypeId = institutionTypeId;
             ViewBag.FunctionalSubAreaId = selectedFnSubAreaId;
             ViewBag.CourtName = court ?? string.Empty;
+            @ViewBag.Currency = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
             return View();
         }
         public IActionResult AddYearExecutionFilterPartial()=>PartialView(nameof(AddYearExecutionFilterPartial));
@@ -167,12 +166,12 @@ namespace CielaDocs.SjcWeb.Controllers
 
         [HttpGet]
 
-        public async Task<JsonResult> GetProgramExecutionDataGrid(int? functionalSubAreaId, int? nm, int? ny)
+        public async Task<JsonResult> GetProgramExecutionDataGrid(int? functionalSubAreaId, int? nm, int? ny,int? displayCurrencyId)
         {
             try
             {
                
-                var data = await _sjcRepo.GetProgramDataGridByFilterAsync(functionalSubAreaId ?? 0, ny??0);
+                var data = await _sjcRepo.GetProgramDataGridByFilterCurrencyAsync(functionalSubAreaId ?? 0, ny??0, displayCurrencyId??0);
                 return Json(data.ToList());
             }
             catch (Exception ex)
@@ -181,10 +180,10 @@ namespace CielaDocs.SjcWeb.Controllers
             }
         }
         [HttpGet]
-        public async Task<JsonResult> GetCourtsByProgramExecutionDataId(int? programDataId)
+        public async Task<JsonResult> GetCourtsByProgramExecutionDataId(int? programDataId,int? displayCurrencyId)
         {
             var prog = await _sjcRepo.GetProgramDataByIdAsync(programDataId);
-            var data = await _sjcRepo.GetProgramDataCourtGridByFilterAsync(prog?.ProgramDefNum, prog?.PlannedYear, prog?.RowNum);
+            var data = await _sjcRepo.GetProgramDataCourtGridByFilterCurrencyAsync(prog?.ProgramDefNum, prog?.PlannedYear, prog?.RowNum, displayCurrencyId ?? 0);
             return Json(data.ToList());
         }
 
@@ -197,11 +196,11 @@ namespace CielaDocs.SjcWeb.Controllers
         }
         [HttpGet]
 
-        public async Task<JsonResult> GetYearExecutionDataGrid(int? functionalSubAreaId, int? m1, int? m2, int? nyear)
+        public async Task<JsonResult> GetYearExecutionDataGrid(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? displayCurrencyId)
         {
             try
             {
-                var data = await _sjcRepo.GetYearExecutionDataGridAsync(functionalSubAreaId ?? 0,m1,m2, nyear ?? 0);
+                var data = await _sjcRepo.GetYearExecutionDataGridAsync(functionalSubAreaId ?? 0,m1,m2, nyear ?? 0, displayCurrencyId);
                 return Json(data.ToList());
             }
             catch (Exception ex)
@@ -211,10 +210,10 @@ namespace CielaDocs.SjcWeb.Controllers
         }
        
         [HttpGet]
-        public async Task<JsonResult> GetYearExecutionCourtsByProgramDataId(int? m1, int? m2, int? nyear,int? programDataId)
+        public async Task<JsonResult> GetYearExecutionCourtsByProgramDataId(int? m1, int? m2, int? nyear,int? programDataId, int? displayCurrencyId)
         {
             var prog = await _sjcRepo.GetProgramDataByIdAsync(programDataId);
-            var data = await _sjcRepo.GetProgramDataCourtGridByFilterAsync(prog?.ProgramDefNum, m1,m2, prog?.PlannedYear, prog?.RowNum);
+            var data = await _sjcRepo.GetProgramDataCourtGridByFilterAsync(prog?.ProgramDefNum, m1,m2, prog?.PlannedYear, prog?.RowNum, displayCurrencyId);
             return Json(data.ToList());
         }
         public ActionResult CourtsInProgram(int? functionalSubAreaId)
@@ -230,7 +229,7 @@ namespace CielaDocs.SjcWeb.Controllers
             var data = await _sjcRepo.GetCourtsInProgramData(functionalSubAreaId);
             return Json(data.ToList());
         }
-        public async Task<IActionResult> FunctionalSubAreaNumYearReport(string par)
+        public async Task<IActionResult> FunctionalSubAreaNumYearReport(string par,int? currencyId)
         {
             string[] args = par.Split('|');
             string[] reps = new string[] { "За отчетни единици", "Експертен бюджет" };
@@ -243,21 +242,22 @@ namespace CielaDocs.SjcWeb.Controllers
             var prog = await _sjcRepo.GetFunctionalSubAreabyIdAsync(selectedFnSubAreaId);
             ViewBag.ProgramName = prog?.Name ?? string.Empty;
             ViewBag.ReportTypeName = reps[reportTypeId];
+            @ViewBag.Currency = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId??0);
             return View();
         }
         [HttpGet]
 
-        public async Task<JsonResult> GetProgramNumDataGrid(int? functionalSubAreaId, int? reportTypeId, int? ny)
+        public async Task<JsonResult> GetProgramNumDataGrid(int? functionalSubAreaId, int? reportTypeId, int? ny, int? displayCurrencyId)
         {
             try
             {
                 if (reportTypeId == 1)
                 {
-                    var data = await _sjcRepo.GetProgramDataInstitution3YCommonAsync(functionalSubAreaId ?? 0, ny ?? 0);
+                    var data = await _sjcRepo.GetProgramDataInstitution3YCommonCurrencyAsync(functionalSubAreaId ?? 0, ny ?? 0,displayCurrencyId??0);
                     return Json(data.ToList());
                 }
                 else {
-                    var data = await _sjcRepo.GetProgramDataCourt3YCommonAsync(functionalSubAreaId ?? 0, ny ?? 0);
+                    var data = await _sjcRepo.GetProgramDataCourt3YCommonCurrencyAsync(functionalSubAreaId ?? 0, ny ?? 0, displayCurrencyId ?? 0);
                     return Json(data.ToList());
                 }
 

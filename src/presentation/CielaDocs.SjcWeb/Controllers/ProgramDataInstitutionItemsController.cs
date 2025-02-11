@@ -78,12 +78,12 @@ namespace CielaDocs.SjcWeb.Controllers
         }
         [HttpGet]
 
-        public async Task<JsonResult> GetDataGrid(int? programNum, int? institutionTypeId, int? nyear)
+        public async Task<JsonResult> GetDataGrid(int? programNum, int? institutionTypeId, int? nyear,int? displayCurrencyId)
         {
             try
             {
                 
-                var data = await _sjcRepo.GetProgramDataInstitution3YByInstitutionTypeIdAsync(programNum, nyear ?? 0, institutionTypeId ?? 0);
+                var data = await _sjcRepo.GetProgramDataInstitution3YByInstitutionTypeIdCurrencyAsync(programNum, nyear ?? 0, institutionTypeId ?? 0,displayCurrencyId??0);
                 return Json(data.ToList());
             }
             catch (Exception ex)
@@ -93,12 +93,12 @@ namespace CielaDocs.SjcWeb.Controllers
         }
         [HttpGet]
 
-        public async Task<JsonResult> GetDataGridTotal(int? programNum, int? institutionTypeId, int? nyear)
+        public async Task<JsonResult> GetDataGridTotal(int? programNum, int? institutionTypeId, int? nyear, int? displayCurrencyId)
         {
             try
             {
 
-                var data = await _sjcRepo.GetProgramData3YTotalAsync(programNum, nyear ?? 0, institutionTypeId ?? 0);
+                var data = await _sjcRepo.GetProgramData3YTotalCurrencyAsync(programNum, nyear ?? 0, institutionTypeId ?? 0, displayCurrencyId??0);
                 return Json(data.ToList());
             }
             catch (Exception ex)

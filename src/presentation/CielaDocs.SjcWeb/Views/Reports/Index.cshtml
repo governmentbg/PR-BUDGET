@@ -12,8 +12,14 @@
     <div id="popup"></div>
     <div class="container">
 
-
-        <div class="spacer_60"></div>
+        <div class="spacer_10"></div>
+        <div class="container-flex">
+            <div class="dropdown-right">
+                <label for="selectBoxCurrency">Вид валута</label>
+                <div id="selectBoxCurrency" ></div>
+            </div>
+        </div>
+        <div class="spacer_40"></div>
 
 
         <div class="row">
@@ -158,6 +164,17 @@ else
         }
         $(function () {
 
+             $("#selectBoxCurrency").dxSelectBox({
+             dataSource: selectBoxCurrencyData,
+             value: window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId,
+             valueExpr: 'id',
+             displayExpr: 'name',
+             onValueChanged: function (e) {
+                    window.localStorage.setItem('CurrencyId', e.value);
+             }
+
+         });
+
             $("#reportBudget").on("click", function () {
                 popup.option({
                     contentTemplate: () => popupContentTemplate(1)
@@ -293,19 +310,19 @@ else
         }).dxPopup('instance');
 
        function applyCourtYearFilter(e) {
-                redirectme1("@Url.Action("KontoReport", "Reports")","par",e);
+                  redirectme2("@Url.Action("KontoReport", "Reports")","par",e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
         }
         function applyProgramDataFilter(e) {
-            redirectme1("@Url.Action("ProgramExecutionReport", "Reports")", "par", e);
+             redirectme2("@Url.Action("ProgramExecutionReport", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
         }
         function applyYearExecutionFilter(e) {
-            redirectme1("@Url.Action("YearExecutionReport", "Reports")", "par", e);
+             redirectme2("@Url.Action("YearExecutionReport", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
         }
         function applyInstitutionTypeYearExecutionFilter(e) {
-            redirectme1("@Url.Action("InstitutionTypeYearExecutionReport", "Reports")", "par", e);
+             redirectme2("@Url.Action("InstitutionTypeYearExecutionReport", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
         }
         function applyProgramNumYear(e) {
-            redirectme1("@Url.Action("FunctionalSubAreaNumYearReport", "Reports")", "par", e);
+             redirectme2("@Url.Action("FunctionalSubAreaNumYearReport", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
         }
     </script>
 }

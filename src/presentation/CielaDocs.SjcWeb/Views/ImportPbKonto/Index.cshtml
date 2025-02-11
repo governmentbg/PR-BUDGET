@@ -96,7 +96,7 @@
 
          const buttonView = $("#btnLockedView").dxButton({
         visible: true,
-        icon:'./images/lock-closed.svg',
+        icon:Ciela.baseUrl+'images/lock-closed.svg',
         hint:'Заключени периоди',
         onClick: function () {
                 mainRightReadOnlyPopup.option({
@@ -169,7 +169,7 @@
 
             function toggleButtonVisibility(condition) {
                 button.option('visible', condition);
-                button.option('icon','./images/lock-open.svg')
+                button.option('icon',Ciela.baseUrl+'images/lock-open.svg')
             }
 
     // Initialize the Context Menu

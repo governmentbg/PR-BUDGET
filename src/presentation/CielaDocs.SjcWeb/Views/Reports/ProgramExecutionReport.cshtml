@@ -24,7 +24,11 @@
 </style>
 <div class="spacer_5"></div>
 <h4>@ViewBag.ProgramName към @ViewBag.Month/@ViewBag.Year</h4>
-<h5>Валута:@ViewBag.CurrencyName, Мярка:@ViewBag.CurrencyMeasureName</h5>
+<div class="container-flex">
+    <div class="right-currency">
+        <label for="currency" style="color:darkred;font-size:medium;">Валута:@ViewBag.Currency</label>
+    </div>
+</div>
 <div class="spacer_5"></div>
 <div style="display:inline-block;padding-left:10px;" id="menu"></div>
 <div class="spacer_5"></div>
@@ -60,7 +64,8 @@
                     store: new DevExpress.data.CustomStore({
                         key: 'Id',
                         load() {
-                            return sendRequest(Ciela.baseUrl + "Reports/GetProgramExecutionDataGrid", 'Get', { functionalSubAreaId: $("#FunctionalSubAreaId").val(), nm: $("#Month").val(), ny: $("#Year").val() });
+                            return sendRequest(Ciela.baseUrl + "Reports/GetProgramExecutionDataGrid", 'Get', { functionalSubAreaId: $("#FunctionalSubAreaId").val(), nm: $("#Month").val(), ny: $("#Year").val(),
+                            displayCurrencyId:window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId });
                         },
                     }),
                 }),
@@ -107,39 +112,39 @@
                         dataField: "Nvalue",
                         width: "10%",
                         caption: "Прогнозна С-ст",
-                        valueFormat: '#0.00',
+                        valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nvalue = value.toFixed(2);
+                            },
+
 
                     },
                     {
                         dataField: "ApprovedValue",
                         width: "10%",
                         caption: "Утвърден бюджет",
-                        valueFormat: '#0.00',
+                       valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.ApprovedValue = value.toFixed(2);
+                            },
+
 
                     },
                     {
                         dataField: "CalculatedValue",
                         width: "10%",
                         caption: "Конто С-ст",
-                        valueFormat: '#0.00',
+                        valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.CalculatedValue = value.toFixed(2);
+                            },
+
 
                     },
                 ],
@@ -190,13 +195,13 @@
                                         width: "10%",
                                         caption: "Прогнозна С-ст",
                                         alllowEditing: true,
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        }
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.Nvalue = value.toFixed(2);
+                                            },
+
 
                                     },
                                     {
@@ -204,13 +209,12 @@
                                         width: "10%",
                                         caption: "Утвърден бюджет",
                                         alllowEditing: true,
-                                        valueFormat: '#0.00',
+                                         valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        }
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.ApprovedValue = value.toFixed(2);
+                                            },
 
                                     },
                                     {
@@ -218,13 +222,12 @@
                                         width: "10%",
                                         caption: "Конто С-ст",
                                         alllowEditing: false,
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        }
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.CalculatedValue = value.toFixed(2);
+                                            },
 
                                     },
                                    
@@ -237,33 +240,30 @@
                                     }, {
                                         column: 'Nvalue',
                                         summaryType: 'sum',
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        },
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.Nvalue = value.toFixed(2);
+                                            },
                                     }, {
                                         column: 'ApprovedValue',
                                         summaryType: 'sum',
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        },
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.ApprovedValue = value.toFixed(2);
+                                            },
                                     }, {
                                         column: 'CalculatedValue',
                                         summaryType: 'sum',
-                                        valueFormat: '#0.00',
+                                        valueFormat: '0.00',
                                         dataType: 'number',
-                                        format: {
-                                            formatter: function (value) {
-                                                return value.toLocaleString('bg-BG');
-                                            }
-                                        },
+                                        format: function (value) { return value.toFixed(2); },
+                                            setCellValue: function (rowData, value) {
+                                                rowData.CalculatedValue = value.toFixed(2);
+                                            },
                                     }],
                                 },
                                 toolbar: {

@@ -24,7 +24,11 @@
 </style>
 <div class="spacer_5"></div>
 <h4>От месец: @ViewBag.M1 до месец: @ViewBag.M2 год.:@ViewBag.Year</h4>
-<div class="spacer_5"></div>
+<div class="container-flex">
+    <div class="right-currency">
+        <label for="currency" style="color:darkred;font-size:medium;">Валута:@ViewBag.Currency</label>
+ </div>
+</div>
 <div style="display:inline-block;padding-left:10px;" id="menu"></div>
 <div class="spacer_5"></div>
 @Html.Hidden("m1", (int)ViewBag.M1)
@@ -136,4 +140,65 @@
 
         }
     }
+     const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: Ciela.baseUrl+'images/back.png',
+
+
+        },
+        {
+            id: '6_1',
+            name: 'Експорт',
+            icon:  Ciela.baseUrl+'images/exporter.svg',
+
+
+        }, {
+            id: '4',
+            name: 'Обнови',
+            icon:  Ciela.baseUrl+'images/refresh.png',
+
+        },
+        ];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+                        case '1':
+                            window.location.href = Ciela.baseUrl+"Reports/index";
+                            break;
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("ProgramBudget");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "ProgramBudget.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
 </script>

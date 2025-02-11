@@ -134,13 +134,14 @@ namespace CielaDocs.SjcWeb.Controllers
             using (var excelWorkbook = new XLWorkbook(excelFile))
             {
 
-                excelWorkbook.Worksheets.Worksheet(1).Cell("A1").SetValue("РАЗЧЕТИ");
-                excelWorkbook.Worksheets.Worksheet(1).Cell("A2").SetValue($"по проектобюджета/тригодишните бюджетни прогнози за периода {ny}-{ny + 2} г.");
-                excelWorkbook.Worksheets.Worksheet(1).Cell("B4").SetValue(court?.Name ?? string.Empty);
-                excelWorkbook.Worksheets.Worksheet(1).Cell("G4").SetValue(court?.KontoCode ?? string.Empty);
-                excelWorkbook.Worksheets.Worksheet(1).Cell("D7").SetValue($"Бюджетна прогноза за {ny} г.");
-                excelWorkbook.Worksheets.Worksheet(1).Cell("E7").SetValue($"Бюджетна прогноза за {ny+1} г.");
-                excelWorkbook.Worksheets.Worksheet(1).Cell("F7").SetValue($"Бюджетна прогноза за {ny+2} г.");
+                excelWorkbook.Worksheets.Worksheet(1).Cell("A2").SetValue("РАЗЧЕТИ");
+                excelWorkbook.Worksheets.Worksheet(1).Cell("A3").SetValue($"по проектобюджета за {ny}г. и бюджетни прогнози за периода {ny + 1},{ny+2} и {ny+3} г.");
+                excelWorkbook.Worksheets.Worksheet(1).Cell("B5").SetValue(court?.Name ?? string.Empty);
+                excelWorkbook.Worksheets.Worksheet(1).Cell("H5").SetValue(court?.KontoCode ?? string.Empty);
+                excelWorkbook.Worksheets.Worksheet(1).Cell("D8").SetValue($"Бюджетна прогноза за {ny} г.");
+                excelWorkbook.Worksheets.Worksheet(1).Cell("E8").SetValue($"Бюджетна прогноза за {ny+1} г.");
+                excelWorkbook.Worksheets.Worksheet(1).Cell("F8").SetValue($"Бюджетна прогноза за {ny+2} г.");
+                excelWorkbook.Worksheets.Worksheet(1).Cell("G8").SetValue($"Бюджетна прогноза за {ny + 3} г.");
 
                 excelWorkbook.SaveAs(excelResultFilePath);
               
@@ -161,13 +162,14 @@ namespace CielaDocs.SjcWeb.Controllers
             using (var excelWorkbook = new XLWorkbook(excelFile))
             {
 
-                excelWorkbook.Worksheets.Worksheet(1).Cell("A1").SetValue("РАЗЧЕТИ");
-                excelWorkbook.Worksheets.Worksheet(1).Cell("A2").SetValue($"по проектобюджета/тригодишните бюджетни прогнози за периода {ny}-{ny + 2} г.");
-                excelWorkbook.Worksheets.Worksheet(1).Cell("B4").SetValue(court?.Name ?? string.Empty);
-                excelWorkbook.Worksheets.Worksheet(1).Cell("G4").SetValue(court?.Id.ToString());
-                excelWorkbook.Worksheets.Worksheet(1).Cell("D7").SetValue($"Бюджетна прогноза за {ny} г.");
-                excelWorkbook.Worksheets.Worksheet(1).Cell("E7").SetValue($"Бюджетна прогноза за {ny + 1} г.");
-                excelWorkbook.Worksheets.Worksheet(1).Cell("F7").SetValue($"Бюджетна прогноза за {ny + 2} г.");
+                excelWorkbook.Worksheets.Worksheet(1).Cell("A2").SetValue("РАЗЧЕТИ");
+                excelWorkbook.Worksheets.Worksheet(1).Cell("A3").SetValue($"по проектобюджета за {ny}г. и бюджетни прогнози за периода {ny + 1},{ny + 2} и {ny + 3} г.");
+                excelWorkbook.Worksheets.Worksheet(1).Cell("B5").SetValue(court?.Name ?? string.Empty);
+                excelWorkbook.Worksheets.Worksheet(1).Cell("H5").SetValue(court?.Id.ToString());
+                excelWorkbook.Worksheets.Worksheet(1).Cell("D8").SetValue($"Бюджетна прогноза за {ny} г.");
+                excelWorkbook.Worksheets.Worksheet(1).Cell("E8").SetValue($"Бюджетна прогноза за {ny + 1} г.");
+                excelWorkbook.Worksheets.Worksheet(1).Cell("F8").SetValue($"Бюджетна прогноза за {ny + 2} г.");
+                excelWorkbook.Worksheets.Worksheet(1).Cell("G8").SetValue($"Бюджетна прогноза за {ny + 3} г.");
 
                 excelWorkbook.SaveAs(excelResultFilePath);
 
@@ -183,8 +185,8 @@ namespace CielaDocs.SjcWeb.Controllers
             string kontoCode = string.Empty;
             using (var excelWorkbook = new XLWorkbook(excelFilePath))
             {
-              kontoCode =  excelWorkbook.Worksheets.Worksheet(1).Cell("G4").GetString();
-              string sy= excelWorkbook.Worksheets.Worksheet(1).Cell("D7").GetString();
+              kontoCode =  excelWorkbook.Worksheets.Worksheet(1).Cell("H5").GetString();
+              string sy= excelWorkbook.Worksheets.Worksheet(1).Cell("D8").GetString();
               int.TryParse(new String(sy.Where(Char.IsDigit).ToArray()), out ny);
             }
             return new (kontoCode,ny);
@@ -196,8 +198,8 @@ namespace CielaDocs.SjcWeb.Controllers
             string institutionTypeId = string.Empty;
             using (var excelWorkbook = new XLWorkbook(excelFilePath))
             {
-                institutionTypeId = excelWorkbook.Worksheets.Worksheet(1).Cell("G4").GetString();
-                string sy = excelWorkbook.Worksheets.Worksheet(1).Cell("D7").GetString();
+                institutionTypeId = excelWorkbook.Worksheets.Worksheet(1).Cell("H5").GetString();
+                string sy = excelWorkbook.Worksheets.Worksheet(1).Cell("D8").GetString();
                 int.TryParse(new String(sy.Where(Char.IsDigit).ToArray()), out ny);
             }
             return new(institutionTypeId, ny);
@@ -279,7 +281,7 @@ namespace CielaDocs.SjcWeb.Controllers
                         return Json(new { msg = $"Неоткрит код {excelHeaderData.Item1} на отчетна единица", success = false });
                     }
                     List<int> yearsLst = new List<int> {
-                    nYear, nYear+1, nYear+2
+                    nYear, nYear+1, nYear+2, nYear+3
                     };
 
 
@@ -297,14 +299,16 @@ namespace CielaDocs.SjcWeb.Controllers
                         var nonEmptyDataRows = excelWorkbook.Worksheet(1).RowsUsed();
                         var rowCount = excelWorkbook.Worksheet(1).LastRowUsed().RowNumber();
                         var columnCount = excelWorkbook.Worksheet(1).LastColumnUsed().ColumnNumber();
-                        int row = 8;
+                        int row = 9;
                         string code = string.Empty;
                         string value1 = string.Empty;
                         string value2 = string.Empty;
                         string value3 = string.Empty;
+                        string value4 = string.Empty;
                         decimal nv1 = 0;
                         decimal nv2 = 0;
                         decimal nv3 = 0;
+                        decimal nv4 = 0;
 
                         while (row <= rowCount)
                         {
@@ -312,13 +316,15 @@ namespace CielaDocs.SjcWeb.Controllers
                             value1 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 4).GetString();
                             value2 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 5).GetString();
                             value3 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 6).GetString();
-                            code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 7).GetString();
+                            value4 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 7).GetString();
+                            code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 8).GetString();
                             decimal.TryParse(value1, out nv1);
                             decimal.TryParse(value2, out nv2);
                             decimal.TryParse(value3, out nv3);
+                            decimal.TryParse(value4, out nv4);
                             if (!string.IsNullOrEmpty(code))
                             {
-                                dic.Add(new DraftBudgetRow { Id = row, Code = code, Value1 = nv1, Value2 = nv2, Value3 = nv3 });
+                                dic.Add(new DraftBudgetRow { Id = row, Code = code, Value1 = nv1, Value2 = nv2, Value3 = nv3, Value4=nv4 });
                             }
                             row++;
 
@@ -366,6 +372,9 @@ namespace CielaDocs.SjcWeb.Controllers
                                                 break;
                                             case 3:
                                                 { nval += dicFiltered.Sum(x => x.Value3); }
+                                                break;
+                                            case 4:
+                                                { nval += dicFiltered.Sum(x => x.Value4); }
                                                 break;
 
                                         }
@@ -442,28 +451,31 @@ namespace CielaDocs.SjcWeb.Controllers
                         var nonEmptyDataRows = excelWorkbook.Worksheet(1).RowsUsed();
                         var rowCount = excelWorkbook.Worksheet(1).LastRowUsed().RowNumber();
                         var columnCount = excelWorkbook.Worksheet(1).LastColumnUsed().ColumnNumber();
-                        int row = 8;
+                        int row = 9;
                         string code = string.Empty;
                         string value1 = string.Empty;
                         string value2 = string.Empty;
                         string value3 = string.Empty;
+                        string value4 = string.Empty;
                         decimal nv1 = 0;
                         decimal nv2 = 0;
                         decimal nv3 = 0;
-
+                        decimal nv4 = 0;
                         while (row <= rowCount)
                         {
 
                             value1 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 4).GetString();
                             value2 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 5).GetString();
                             value3 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 6).GetString();
-                            code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 7).GetString();
+                            value4 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 7).GetString();
+                            code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 8).GetString();
                             decimal.TryParse(value1, out nv1);
                             decimal.TryParse(value2, out nv2);
                             decimal.TryParse(value3, out nv3);
+                            decimal.TryParse(value4, out nv4);
                             if (!string.IsNullOrEmpty(code))
                             {
-                                dic.Add(new DraftBudgetRow { Id = row, Code = code, Value1 = nv1, Value2 = nv2, Value3 = nv3 });
+                                dic.Add(new DraftBudgetRow { Id = row, Code = code, Value1 = nv1, Value2 = nv2, Value3 = nv3 ,Value4=nv4});
                                 // s += $"Id={row},Code={code},values1={nv1},values2={nv2}, value3={nv3}" + Environment.NewLine;
                             }
                             row++;
@@ -518,6 +530,9 @@ namespace CielaDocs.SjcWeb.Controllers
                                                 break;
                                             case 3:
                                                 { nval += dicFiltered.Sum(x => x.Value3); }
+                                                break;
+                                            case 4:
+                                                { nval += dicFiltered.Sum(x => x.Value4); }
                                                 break;
 
                                         }

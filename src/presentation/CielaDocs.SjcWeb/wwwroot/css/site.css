@@ -628,3 +628,26 @@ img.note {
     display: inline;
     visibility: visible;
 }
+.container-flex {
+    display: flex;
+    justify-content: flex-end; /* Pushes the div to the right */
+    width: 100%;
+}
+
+.right-currency {
+    width: 100px;
+    margin-right: 20px;
+    font-weight: normal;
+    text-align: center;
+    font-size: 14px;
+    background-color: #ede7f6;
+    border-radius: 6px;
+    border: none;
+    padding: 6px;
+    outline: none;
+    color: #1d1d1d;
+}
+.dropdown-right {
+    margin-right: 20px;
+    width: 100px;
+}

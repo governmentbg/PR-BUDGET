@@ -3,12 +3,14 @@
 const selectBoxYearData = [{ id: 0, name: "Изберете година" }, { id: 2022, name: "2022" }, { id: 2023, name: "2023" }, { id: 2024, name: "2024" }, { id: 2025, name: "2025" }, { id: 2026, name: "2026" }, { id: 2027, name: "2027" },
     { id: 2028, name: "2028" }, { id: 2029, name: "2029" }, { id: 2030, name: "2030" }, { id: 2031, name: "2031" }, { id: 2032, name: "2032" }];
 const selectBoxQuarterData = [{ id: 0, name: "Изберете тримесечие" }, { id: 3, name: "Март" }, { id: 6, name: "Юни" }, { id: 9, name: "Септември" }, { id: 12, name: "Декември" }];
+const selectBoxCurrencyData = [{ id: 0, name:"BGN" }, { id: 1, name:"EUR" }];
 
 var loadingModal = $("#loadingModal");
 var selectedCardId = 0;
 var selectedEmplId = 0;
 var actionInProgress = false;
 var nextActionQueue = [];
+var officialCurrencyId = 0;
 
 function warn(s) {
     $.alert({

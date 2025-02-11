@@ -358,7 +358,7 @@ namespace CielaDocs.Shared.Repository
         }
 
         public async Task<IEnumerable<CourtInProgramVm>> GetCourtInProgramByCourtIdAsync(int? courtId) {
-            string sql = $@"SELECT  1 Id,CourtId,FunctionalSubAreaId  FROM dbo.CourtInProgram  where CourtId={courtId??0}";
+            string sql = $@"SELECT  Id,CourtId,FunctionalSubAreaId  FROM dbo.CourtInProgram  where CourtId={courtId??0}";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
@@ -367,7 +367,7 @@ namespace CielaDocs.Shared.Repository
         }
         public async Task<IEnumerable<InstitutionInProgramVm>> GetInstitutionInProgramByInstitutionTypeIdAsync(int? institutionTypeId)
         {
-            string sql = $@"SELECT  1 Id,InstitutionTypeId,FunctionalSubAreaId  FROM dbo.InstitutionInProgram  where InstitutionTypeId={institutionTypeId ?? 0}";
+            string sql = $@"SELECT Id,InstitutionTypeId,FunctionalSubAreaId  FROM dbo.InstitutionInProgram  where InstitutionTypeId={institutionTypeId ?? 0}";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
@@ -1320,6 +1320,48 @@ namespace CielaDocs.Shared.Repository
             var result = await connection.QueryAsync<ProgramDataCourtGridVm>(sql2);
             return result?.ToList();
         }
+        public async Task<IEnumerable<ProgramDataCourtGridVm>> GetProgramDataCourtGridByFilterCurrencyAsync(int? programDefNum, int? ny, int? rowNum)
+        {
+            string sql2 = $@"select p.Id,
+                    p.CourtId,
+	                p.ProgramDefNum,
+	                p.FunctionalAreaId,
+	                p.FunctionalSubAreaId,
+	                p.FunctionalActionId,
+	                p.RowNum,
+	                p.RowCode,
+	                p.PrnCode,
+	                p.Name,
+	                p.ParentRowNum,
+	                p.Nvalue,
+	                p.EnteredDate,
+	                p.CurrencyId,
+	                p.CurrencyMeasureId,
+	                p.Datum,
+	                p.ValueAllowed,
+	                p.PlannedYear,
+	                p.IsActive,
+	                p.OrderNum,
+	                p.ApprovedValue,
+	                p.CalculatedValue,
+                    p.IsCalculated,
+                    a.Name as FunctionalSubAreaName,
+                    c.Name as CurrencyName,
+                    m.Name as CurrencyMeasureName,
+                    s.Name as CourtName
+
+             from ProgramDataCourt p
+             left join FunctionalSubArea a on p.FunctionalSubAreaId=a.Id
+             left join Currency c on p.CurrencyId=c.Id
+             left join CurrencyMeasure m on p.CurrencyMeasureId=m.Id
+             left join Court s on p.CourtId=s.Id
+             where p.ProgramDefNum={programDefNum ?? 0} and p.PlannedYear={ny ?? 0} and p.RowNum={rowNum ?? 0}";
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<ProgramDataCourtGridVm>(sql2);
+            return result?.ToList();
+        }
         public async Task<IEnumerable<ProgramDataCourtGridVm>> GetProgramDataCourtGridByCourtIdsAsync(int? programDefNum, int? ny, IEnumerable<int> Ids)
         {
             string sql2 = $@"select p.Id,
@@ -1911,6 +1953,39 @@ namespace CielaDocs.Shared.Repository
 
             return (nSum != null) ? (decimal)nSum : 0;
         }
+        private async Task<decimal> GetKontoMonthDataValueCurrency(int functionalSubAreaId, int rowNum, int m1, int m2, int ny, int displayCurrencyId)
+        {
+
+            string sql = @"
+                SELECT 
+                    SUM(
+                        CASE 
+                            WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
+                            WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                            ELSE NValue 
+                        END
+                    ) AS TotalValue
+                FROM KontoMonthData
+                WHERE FunctionalSubAreaId = @FunctionalSubAreaId
+                AND RowNum = @RowNum
+                AND NMonth BETWEEN @M1 AND @M2
+                AND NYear = @NY";
+
+            var parameters = new
+            {
+                FunctionalSubAreaId = functionalSubAreaId,
+                RowNum = rowNum,
+                M1 = m1,
+                M2 = m2,
+                NY = ny,
+                DisplayCurrencyId = displayCurrencyId,
+                OfficialEuroRate= 1.95583
+            };
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            decimal? totalValue = await connection.QueryFirstOrDefaultAsync<decimal?>(sql, parameters);
+             return (totalValue != null) ? Math.Round((decimal)totalValue,2) : 0;
+        }
         private async Task<decimal> GetKontoMonthDataByCourtIdsValue(int functionalSubAreaId, int rowNum, int m1, int m2, int ny,IEnumerable<int> courtIds)
         {
             var sql = $@"Select Sum(Nvalue) from KontoMonthData where FunctionalSubAreaId={functionalSubAreaId} and [RowNum]={rowNum} and NMonth>={m1} and NMonth<={m2} and NYear={ny} and CourtId in({string.Join<int>(",", courtIds)})";
@@ -1921,7 +1996,7 @@ namespace CielaDocs.Shared.Repository
             return (nSum != null) ? (decimal)nSum : 0;
         }
 
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram1Async(int m1, int m2, int nyear) { 
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram1Async(int m1, int m2, int nyear, int? displayCurrencyId) { 
             var ret=new List<ProgramDataExecutionVm>();
             if(m1==0||m2==0||nyear==0) return new List<ProgramDataExecutionVm>();
             int nMonthNum=m2-m1;
@@ -1946,10 +2021,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(1, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(1, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId??0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId??0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId??0);
 
                     if (item.RowNum == 11) { 
                         nVal=Math.Round((nCalculatedValue-p7r6),2,MidpointRounding.AwayFromZero);
@@ -2052,7 +2127,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram2Async(int m1, int m2, int nyear)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram2Async(int m1, int m2, int nyear, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -2079,10 +2154,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(2, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(2, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId??0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId??0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId??0);
 
                     if (item.RowNum == 11)
                     {
@@ -2187,7 +2262,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram3Async(int m1, int m2, int nyear)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram3Async(int m1, int m2, int nyear, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -2214,10 +2289,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(3, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(3, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
 
                     if (item.RowNum == 11)
                     {
@@ -2324,7 +2399,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram4Async(int m1, int m2, int nyear)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram4Async(int m1, int m2, int nyear, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -2351,10 +2426,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(4, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(4, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
 
                     if (item.RowNum == 11)
                     {
@@ -2459,7 +2534,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram5Async(int m1, int m2, int nyear)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram5Async(int m1, int m2, int nyear, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -2486,10 +2561,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(5, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(5, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
 
                     if (item.RowNum == 11)
                     {
@@ -2591,7 +2666,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram6Async(int m1, int m2, int nyear)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram6Async(int m1, int m2, int nyear, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -2618,10 +2693,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(6, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(6, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
 
                     if (item.RowNum == 11)
                     {
@@ -2726,7 +2801,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram7Async(int m1, int m2, int nyear)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram7Async(int m1, int m2, int nyear, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -2739,7 +2814,7 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(7, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(7, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal=nCalculatedValue;
                    
                   
@@ -2775,7 +2850,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram8Async(int m1, int m2, int nyear)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram8Async(int m1, int m2, int nyear, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -2802,10 +2877,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(8, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(8, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
 
                   
                     if (item.RowNum == 7)
@@ -2886,7 +2961,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram9Async(int m1, int m2, int nyear)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataProgram9Async(int m1, int m2, int nyear, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
            
@@ -2897,7 +2972,7 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nVal = await GetKontoMonthDataValue(9, item?.RowNum ?? 0, m1, m2, nyear);
+                    nVal = await GetKontoMonthDataValueCurrency(9, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                    
 
 
@@ -2936,22 +3011,22 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        public async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataGridAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear) {
+        public async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataGridAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? displayCurrencyId) {
             switch (functionalSubAreaId) {
-                case 1:return await GetYearExecutionDataProgram1Async(m1??0, m2??0, nyear ?? 0);
-                case 2: return await GetYearExecutionDataProgram2Async(m1 ?? 0, m2 ?? 0, nyear ?? 0);
-                case 3: return await GetYearExecutionDataProgram3Async(m1 ?? 0, m2 ?? 0, nyear ?? 0);
-                case 4: return await GetYearExecutionDataProgram4Async(m1 ?? 0, m2 ?? 0, nyear ?? 0);
-                case 5: return await GetYearExecutionDataProgram5Async(m1 ?? 0, m2 ?? 0, nyear ?? 0);
-                case 6: return await GetYearExecutionDataProgram6Async(m1 ?? 0, m2 ?? 0, nyear ?? 0);
-                case 7: return await GetYearExecutionDataProgram7Async(m1 ?? 0, m2 ?? 0, nyear ?? 0);
-                case 8: return await GetYearExecutionDataProgram8Async(m1 ?? 0, m2 ?? 0, nyear ?? 0);
-                case 9: return await GetYearExecutionDataProgram9Async(m1 ?? 0, m2 ?? 0, nyear ?? 0);
+                case 1:return await GetYearExecutionDataProgram1Async(m1??0, m2??0, nyear ?? 0, displayCurrencyId ?? 0);
+                case 2: return await GetYearExecutionDataProgram2Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, displayCurrencyId ?? 0);
+                case 3: return await GetYearExecutionDataProgram3Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, displayCurrencyId ?? 0);
+                case 4: return await GetYearExecutionDataProgram4Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, displayCurrencyId ?? 0);
+                case 5: return await GetYearExecutionDataProgram5Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, displayCurrencyId ?? 0);
+                case 6: return await GetYearExecutionDataProgram6Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, displayCurrencyId ?? 0);
+                case 7: return await GetYearExecutionDataProgram7Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, displayCurrencyId ?? 0);
+                case 8: return await GetYearExecutionDataProgram8Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, displayCurrencyId ?? 0);
+                case 9: return await GetYearExecutionDataProgram9Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, displayCurrencyId ?? 0);
                 default:return new List<ProgramDataExecutionVm>();
             }
         }
 
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram1Async(int m1, int m2, int nyear, int rowNum)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram1Async(int m1, int m2, int nyear, int rowNum,int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -2978,10 +3053,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(1, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(1, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId??0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
 
                     if (item.RowNum == 11)
                     {
@@ -3087,7 +3162,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram2Async(int m1, int m2, int nyear, int rowNum)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram2Async(int m1, int m2, int nyear, int rowNum, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -3114,10 +3189,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(2, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(2, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
 
                     if (item.RowNum == 11)
                     {
@@ -3223,7 +3298,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram3Async(int m1, int m2, int nyear, int rowNum)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram3Async(int m1, int m2, int nyear, int rowNum, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -3250,10 +3325,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(3, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(3, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
 
                     if (item.RowNum == 11)
                     {
@@ -3361,7 +3436,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram4Async(int m1, int m2, int nyear, int rowNum)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram4Async(int m1, int m2, int nyear, int rowNum, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -3388,10 +3463,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(4, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(4, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
 
                     if (item.RowNum == 11)
                     {
@@ -3497,7 +3572,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram5Async(int m1, int m2, int nyear, int rowNum)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram5Async(int m1, int m2, int nyear, int rowNum, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -3524,10 +3599,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(5, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(5, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
 
                     if (item.RowNum == 11)
                     {
@@ -3630,7 +3705,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram6Async(int m1, int m2, int nyear, int rowNum)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram6Async(int m1, int m2, int nyear, int rowNum, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -3657,10 +3732,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(6, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(6, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
 
                     if (item.RowNum == 11)
                     {
@@ -3766,7 +3841,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram7Async(int m1, int m2, int nyear, int rowNum)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram7Async(int m1, int m2, int nyear, int rowNum, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -3779,7 +3854,7 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(7, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(7, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal = nCalculatedValue;
 
 
@@ -3816,7 +3891,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram8Async(int m1, int m2, int nyear, int rowNum)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram8Async(int m1, int m2, int nyear, int rowNum, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
@@ -3843,10 +3918,10 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValue(8, item?.RowNum ?? 0, m1, m2, nyear);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(8, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                     nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
+                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
+                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
 
 
                     if (item.RowNum == 7)
@@ -3928,7 +4003,7 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram9Async(int m1, int m2, int nyear, int rowNum)
+        private async Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataCourtRowProgram9Async(int m1, int m2, int nyear, int rowNum, int? displayCurrencyId)
         {
             var ret = new List<ProgramDataExecutionVm>();
 
@@ -3939,7 +4014,7 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                     nVal = 0;
-                    nVal = await GetKontoMonthDataValue(9, item?.RowNum ?? 0, m1, m2, nyear);
+                    nVal = await GetKontoMonthDataValueCurrency(9, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
 
 
 
@@ -3979,18 +4054,18 @@ namespace CielaDocs.Shared.Repository
             }
             return ret;
         }
-        public async Task<IEnumerable<ProgramDataExecutionVm>> GetProgramDataCourtGridByFilterAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? rowNum) {
+        public async Task<IEnumerable<ProgramDataExecutionVm>> GetProgramDataCourtGridByFilterAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? rowNum, int? displayCurrencyId) {
             switch (functionalSubAreaId)
             {
-                case 1: return await GetYearExecutionDataCourtRowProgram1Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0);
-                case 2: return await GetYearExecutionDataCourtRowProgram2Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0);
-                case 3: return await GetYearExecutionDataCourtRowProgram3Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0);
-                case 4: return await GetYearExecutionDataCourtRowProgram4Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0);
-                case 5: return await GetYearExecutionDataCourtRowProgram5Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0);
-                case 6: return await GetYearExecutionDataCourtRowProgram6Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0);
-                case 7: return await GetYearExecutionDataCourtRowProgram7Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0);
-                case 8: return await GetYearExecutionDataCourtRowProgram8Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0);
-                case 9: return await GetYearExecutionDataCourtRowProgram9Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0);
+                case 1: return await GetYearExecutionDataCourtRowProgram1Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0, displayCurrencyId);
+                case 2: return await GetYearExecutionDataCourtRowProgram2Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0, displayCurrencyId);
+                case 3: return await GetYearExecutionDataCourtRowProgram3Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0, displayCurrencyId);
+                case 4: return await GetYearExecutionDataCourtRowProgram4Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0, displayCurrencyId);
+                case 5: return await GetYearExecutionDataCourtRowProgram5Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0, displayCurrencyId);
+                case 6: return await GetYearExecutionDataCourtRowProgram6Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0, displayCurrencyId);
+                case 7: return await GetYearExecutionDataCourtRowProgram7Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0, displayCurrencyId);
+                case 8: return await GetYearExecutionDataCourtRowProgram8Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0, displayCurrencyId);
+                case 9: return await GetYearExecutionDataCourtRowProgram9Async(m1 ?? 0, m2 ?? 0, nyear ?? 0, rowNum ?? 0, displayCurrencyId);
                 default: return new List<ProgramDataExecutionVm>();
             }
         }

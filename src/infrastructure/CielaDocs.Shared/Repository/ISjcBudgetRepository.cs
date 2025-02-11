@@ -116,8 +116,8 @@ namespace CielaDocs.Shared.Repository
         Task<int?> sp_RecalculateProgramDataAsync(int? functionalSubAreaId, int? ny);
         Task<int?> sp_RecalculateProgramDataCourtAsync(int? functionalSubAreaId, int? ny, int? courtId);
         Task<int?> sp_UpdateProgramsByProgramDefAsync(int? Id);
-        Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataGridAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear);
-        Task<IEnumerable<ProgramDataExecutionVm>> GetProgramDataCourtGridByFilterAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? rowNum);
+        Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataGridAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? currencyId);
+        Task<IEnumerable<ProgramDataExecutionVm>> GetProgramDataCourtGridByFilterAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? rowNum,int? displayCurrencyId);
 
         Task<IEnumerable<string>> GetCourtNamesByIds(IEnumerable<int> ids);
         Task<IEnumerable<ProgramDataExecutionVm>> GetProgramDataCourtGridByIdsAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, IEnumerable<int> courtIds);

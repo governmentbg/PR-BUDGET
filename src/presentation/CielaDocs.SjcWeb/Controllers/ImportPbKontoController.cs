@@ -99,7 +99,7 @@ namespace CielaDocs.SjcWeb.Controllers
                 string kontoCode = par[2];
 
                 int.TryParse("20" + ny, out int nYear);
-                if ((nYear < 2022) && (nYear > 2040))
+                if ((nYear < 2022) && (nYear > 2049))
                 {
                     return Json(new { msg = $"Неразпозната година:{ny} от формата на файла", success = false });
                 }
@@ -109,7 +109,7 @@ namespace CielaDocs.SjcWeb.Controllers
                     return Json(new { msg = $"Неоткрит код {kontoCode} на отчетна единица", success = false });
                 }
                 List<int> yearsLst = new List<int> { 
-                    nYear, nYear+1, nYear+2
+                    nYear, nYear+1, nYear+2, nYear+3
                 };
                 //------check locked period------------
                 var checkLocked = await _sjcService.QueryRaw<KontoPbCourtLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbCourtLocked a where a.CourtId={court?.Id ?? 0} and a.Nyear={nYear}");
@@ -130,9 +130,11 @@ namespace CielaDocs.SjcWeb.Controllers
                     string value1 = string.Empty;
                     string value2 = string.Empty;
                     string value3 = string.Empty;
+                    string value4 = string.Empty;
                     decimal nv1 = 0;
                     decimal nv2 = 0;
                     decimal nv3 = 0;
+                    decimal nv4 = 0;
 
                     while (row <= rowCount)
                     {
@@ -140,11 +142,13 @@ namespace CielaDocs.SjcWeb.Controllers
                         value1 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 4).GetString();
                         value2 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 5).GetString();
                         value3 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 6).GetString();
-                        code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 7).GetString();
+                        value4 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 7).GetString();
+                        code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 8).GetString();
                         decimal.TryParse(value1, out nv1);
                         decimal.TryParse(value2, out nv2);
                         decimal.TryParse(value3, out nv3);
-                        dic.Add(new DraftBudgetRow { Id = row, Code = code, Value1 = nv1, Value2=nv2, Value3=nv3 });
+                        decimal.TryParse(value4, out nv4);
+                        dic.Add(new DraftBudgetRow { Id = row, Code = code, Value1 = nv1, Value2=nv2, Value3=nv3, Value4=nv4 });
                         row++;
 
                     }
@@ -191,8 +195,11 @@ namespace CielaDocs.SjcWeb.Controllers
                                                 case 3:
                                                     { nval += dicFiltered.Sum(x => x.Value3); }
                                                     break;
+                                                case 4:
+                                                    { nval += dicFiltered.Sum(x => x.Value4); }
+                                                    break;
 
-                                            }
+                                    }
 
                                             s += $"CourtId={item?.CourtId},FunctionalSubAreaId={prowDef?.FunctionalSubAreaId ?? 0},rowNum={prowDef?.RowNum},nYear={yearItem}, nval={nval}, progCode={progCode}" + Environment.NewLine;
                                             _ = await _sjcRepo.ProgramDataDraftBudgetCourtAsync(item?.CourtId, prowDef?.FunctionalSubAreaId ?? 0, prowDef?.RowNum, yearItem, nval);
@@ -265,7 +272,7 @@ namespace CielaDocs.SjcWeb.Controllers
                 string kontoCode = par[3];
                 int.TryParse(nm, out int nMonth);
                 int.TryParse("20" + ny, out int nYear);
-                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2040))
+                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2049))
                 {
                     return (0, 0);
                 }

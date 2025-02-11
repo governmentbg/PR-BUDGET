@@ -70,7 +70,7 @@
                     }),
                 }),
                 paging: {
-                    pageSize: 10,
+                    pageSize: 100,
                 },
                 pager: {
                     visible: true,
@@ -281,7 +281,8 @@
                                     store: new DevExpress.data.CustomStore({
                                         key: 'Id',
                                         load() {
-                                            return sendRequest(Ciela.baseUrl + "Reports/GetCourtsByProgramExecutionDataId", 'Get', { programDataId: options.key });
+                                            return sendRequest(Ciela.baseUrl + "Reports/GetCourtsByProgramExecutionDataId", 'Get', { programDataId: options.key,
+                                           displayCurrencyId:window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId });
                                         },
                                     }),
                                 }),
@@ -347,20 +348,20 @@
         const menuData = [{
             id: '1',
             name: 'Начало',
-            icon: '../images/back.png',
+            icon: Ciela.baseUrl+'images/back.png',
 
 
         },
         {
             id: '6_1',
             name: 'Експорт',
-            icon: '../images/exporter.svg',
+            icon:  Ciela.baseUrl+'images/exporter.svg',
 
 
         }, {
             id: '4',
             name: 'Обнови',
-            icon: '../images/refresh.png',
+            icon:  Ciela.baseUrl+'images/refresh.png',
 
         }];
         const dxMenu = $('#menu').dxMenu({

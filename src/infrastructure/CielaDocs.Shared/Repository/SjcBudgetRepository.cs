@@ -989,6 +989,63 @@ namespace CielaDocs.Shared.Repository
             var result = await connection.QueryAsync<ProgramDataGridVm>(sql2);
             return result?.ToList();
         }
+        public async Task<IEnumerable<ProgramDataGridVm>> GetProgramDataGridByFilterCurrencyAsync(int functionalSubAreaId, int ny, int displayCurrencyId)
+        {
+
+            string sql2 = @"
+                        SELECT 
+                            p.Id,
+                            p.ProgramDefNum,
+                            p.FunctionalAreaId,
+                            p.FunctionalSubAreaId,
+                            p.FunctionalActionId,
+                            p.RowNum,
+                            p.RowCode,
+                            p.PrnCode,
+                            p.Name,
+                            p.ParentRowNum,
+                            -- Преобразуване на NValue спрямо DisplayCurrencyId
+                            ROUND(
+                                CASE 
+                                    WHEN @DisplayCurrencyId = 0 AND p.CurrencyId = 1 THEN p.NValue * @OfficialEuroRate  -- EUR → BGN
+                                    WHEN @DisplayCurrencyId = 1 AND p.CurrencyId = 0 THEN p.NValue / @OfficialEuroRate  -- BGN → EUR
+                                    ELSE p.NValue 
+                                END, 2) AS NValue, 
+                            p.EnteredDate,
+                            p.CurrencyId,
+                            p.CurrencyMeasureId,
+                            p.Datum,
+                            p.ValueAllowed,
+                            p.PlannedYear,
+                            p.IsActive,
+                            p.OrderNum,
+                            p.ApprovedValue,
+                            p.CalculatedValue,
+                            p.IsCalculated,
+                            a.Name AS FunctionalSubAreaName,
+                            c.Name AS CurrencyName,
+                            m.Name AS CurrencyMeasureName
+                        FROM ProgramData p
+                        LEFT JOIN FunctionalSubArea a ON p.FunctionalSubAreaId = a.Id
+                        LEFT JOIN Currency c ON p.CurrencyId = c.Id
+                        LEFT JOIN CurrencyMeasure m ON p.CurrencyMeasureId = m.Id
+                        WHERE p.FunctionalSubAreaId = @FunctionalSubAreaId
+                        AND p.PlannedYear = @NY
+                        AND p.IsActive = 1;";
+
+            var parameters = new
+            {
+                FunctionalSubAreaId = functionalSubAreaId,
+                NY = ny,
+                DisplayCurrencyId = displayCurrencyId, // 0 = BGN, 1 = EUR
+                OfficialEuroRate = 1.95583
+            };
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<ProgramDataGridVm>(sql2,parameters);
+            return result?.ToList();
+        }
         public async Task<IEnumerable<ProgramData3Y>> GetProgramData3YAsync(int functionalSubAreaId, int ny) {
             string sql2 = $@"select a.Id,a.FunctionalSubAreaId,a.RowNum,a.PlannedYear,a.PrnCode,a.Name,a.ValueAllowed,a.Nvalue as nval1,b.nvalue as nval2,c.Nvalue as nval3,d.Nvalue as nval4
 	              from ProgramData a 
@@ -1076,6 +1133,81 @@ namespace CielaDocs.Shared.Repository
             var result = await connection.QueryAsync<ProgramDef3Y>(sql2);
             return result?.ToList();
         }
+        public async Task<IEnumerable<ProgramDef3Y>> GetProgramDataCourt3YCommonCurrencyAsync(int? programDefNum, int? ny, int displayCurrencyId)
+        {
+            string sql2 = @"select a.Id,a.FunctionalSubAreaId,a.RowNum,a.PrnCode,a.Name,t1.Nval1, t2.Nval2,t3.Nval3,t4.Nval4 
+	             from ProgramDef a 
+                 left join    (
+                                  select  FunctionalSubAreaId,RowNum,PlannedYear,SUM(
+                 CASE 
+                     WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
+                     WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                     ELSE NValue 
+                 END
+             ) as Nval1
+                                  from    ProgramDataCourt
+                                  group by
+                                          FunctionalSubAreaId,RowNum,PlannedYear
+                                  ) t1
+                          on      t1.FunctionalSubAreaId=a.FunctionalSubAreaId and t1.RowNum=a.RowNum and t1.PlannedYear=@NY
+
+				  left join    (
+                                  select  FunctionalSubAreaId,RowNum,PlannedYear,SUM(
+                 CASE 
+                     WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
+                     WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                     ELSE NValue 
+                 END
+             ) as Nval2
+                                  from    ProgramDataCourt
+                                  group by
+                                          FunctionalSubAreaId,RowNum,PlannedYear
+                                  ) t2
+                          on      t2.FunctionalSubAreaId=a.FunctionalSubAreaId and t2.RowNum=a.RowNum and t2.PlannedYear=@NY1
+				  left join    (
+                                  select  FunctionalSubAreaId,RowNum,PlannedYear,SUM(
+                 CASE 
+                     WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
+                     WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                     ELSE NValue 
+                 END
+             ) as Nval3
+                                  from    ProgramDataCourt
+                                  group by
+                                          FunctionalSubAreaId,RowNum,PlannedYear
+                                  ) t3
+                          on      t3.FunctionalSubAreaId=a.FunctionalSubAreaId and t3.RowNum=a.RowNum and t3.PlannedYear=@NY2
+                left join    (
+                                  select  FunctionalSubAreaId,RowNum,PlannedYear,SUM(
+                 CASE 
+                     WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
+                     WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                     ELSE NValue 
+                 END
+             ) as Nval4
+                                  from    ProgramDataCourt
+                                  group by
+                                          FunctionalSubAreaId,RowNum,PlannedYear
+                                  ) t4
+                          on      t4.FunctionalSubAreaId=a.FunctionalSubAreaId and t4.RowNum=a.RowNum and t4.PlannedYear=@NY
+
+	              where a.FunctionalSubAreaId=@ProgramDefNum  and a.IsActive=1";
+            var parameters = new
+            {
+                ProgramDefNum = programDefNum,
+
+                NY = ny,
+                NY1 = ny + 1,
+                NY2 = ny + 2,
+                NY3 = ny + 3,
+                DisplayCurrencyId = displayCurrencyId,
+                OfficialEuroRate = 1.95583
+            };
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<ProgramDef3Y>(sql2,parameters);
+            return result?.ToList();
+        }
         public async Task<IEnumerable<ProgramDef3Y>> GetProgramDataInstitution3YCommonAsync(int? programDefNum, int? ny)
         {
             string sql2 = $@"select a.Id,a.FunctionalSubAreaId,a.RowNum,a.PrnCode,a.Name,t1.Nval1, t2.Nval2,t3.Nval3,t4.Nval4  
@@ -1117,6 +1249,83 @@ namespace CielaDocs.Shared.Repository
             var result = await connection.QueryAsync<ProgramDef3Y>(sql2);
             return result?.ToList();
         }
+        public async Task<IEnumerable<ProgramDef3Y>> GetProgramDataInstitution3YCommonCurrencyAsync(int? programDefNum, int? ny,int displayCurrencyId)
+        {
+            string sql2 = @"select a.Id,a.FunctionalSubAreaId,a.RowNum,a.PrnCode,a.Name,t1.Nval1, t2.Nval2,t3.Nval3,t4.Nval4  
+	             from ProgramDef a 
+                 left join    (
+                                  select  FunctionalSubAreaId,RowNum,PlannedYear, SUM(
+                                     CASE 
+                                         WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
+                                         WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                                         ELSE NValue 
+                                     END
+                                 ) as Nval1
+                                  from   ProgramDataInstitution
+                                  group by
+                                          FunctionalSubAreaId,RowNum,PlannedYear
+                                  ) t1
+                          on      t1.FunctionalSubAreaId=a.FunctionalSubAreaId and t1.RowNum=a.RowNum and t1.PlannedYear=@NY
+
+				  left join    (
+                                  select  FunctionalSubAreaId,RowNum,PlannedYear,SUM(
+                                     CASE 
+                                         WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
+                                         WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                                         ELSE NValue 
+                                     END
+                                 )  as Nval2
+                                  from    ProgramDataInstitution
+                                  group by
+                                          FunctionalSubAreaId,RowNum,PlannedYear
+                                  ) t2
+                          on      t2.FunctionalSubAreaId=a.FunctionalSubAreaId and t2.RowNum=a.RowNum and t2.PlannedYear=@NY1
+				  left join    (
+                                  select  FunctionalSubAreaId,RowNum,PlannedYear,SUM(
+                                     CASE 
+                                         WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
+                                         WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                                         ELSE NValue 
+                                     END
+                                 )  as Nval3
+                                  from    ProgramDataInstitution
+                                  group by
+                                          FunctionalSubAreaId,RowNum,PlannedYear
+                                  ) t3
+                          on      t3.FunctionalSubAreaId=a.FunctionalSubAreaId and t3.RowNum=a.RowNum and t3.PlannedYear=@NY2
+                left join    (
+                                  select  FunctionalSubAreaId,RowNum,PlannedYear,SUM(
+                                     CASE 
+                                         WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
+                                         WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                                         ELSE NValue 
+                                     END
+                                 )  as Nval4
+                                  from    ProgramDataInstitution
+                                  group by
+                                          FunctionalSubAreaId,RowNum,PlannedYear
+                                  ) t4
+                          on      t4.FunctionalSubAreaId=a.FunctionalSubAreaId and t4.RowNum=a.RowNum and t4.PlannedYear=@NY3
+
+	              where a.FunctionalSubAreaId=@ProgramDefNum  and a.IsActive=1";
+
+
+            var parameters = new
+            {
+                ProgramDefNum = programDefNum,
+
+                NY = ny,
+                NY1=ny+1,
+                NY2=ny+2,
+                NY3=ny+3,
+                DisplayCurrencyId = displayCurrencyId,
+                OfficialEuroRate = 1.95583
+            };
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<ProgramDef3Y>(sql2,parameters);
+            return result?.ToList();
+        }
         public async Task<IEnumerable<ProgramDataInstitution3Y>> GetProgramDataInstitution3YByInstitutionTypeIdAsync(int? programDefNum, int? ny, int? institutionTypeId)
         {
             string sql2 = $@"select a.Id,a.InstitutionTypeId,a.FunctionalSubAreaId,a.RowNum,a.PlannedYear,a.PrnCode,a.Name,a.ValueAllowed,a.Nvalue as nval1,b.nvalue as nval2,c.Nvalue as nval3, co.Name as CourtName
@@ -1131,6 +1340,78 @@ namespace CielaDocs.Shared.Repository
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             var result = await connection.QueryAsync<ProgramDataInstitution3Y>(sql2);
+            return result?.ToList();
+        }
+        public async Task<IEnumerable<ProgramDataInstitution3Y>> GetProgramDataInstitution3YByInstitutionTypeIdCurrencyAsync(int? programDefNum, int? ny, int? institutionTypeId, int displayCurrencyId)
+        {
+            string sql2 = @"
+                            SELECT 
+                                a.Id,
+                                a.InstitutionTypeId,
+                                a.FunctionalSubAreaId,
+                                a.RowNum,
+                                a.PlannedYear,
+                                a.PrnCode,
+                                a.Name,
+                                a.ValueAllowed,
+                                -- Преобразуване на NValue за nval1, nval2 и nval3 спрямо DisplayCurrencyId
+                                ROUND(
+                                    CASE 
+                                        WHEN @DisplayCurrencyId = 0 AND a.CurrencyId = 1 THEN a.NValue * @OfficialEuroRate  -- EUR → BGN
+                                        WHEN @DisplayCurrencyId = 1 AND a.CurrencyId = 0 THEN a.NValue / @OfficialEuroRate  -- BGN → EUR
+                                        ELSE a.NValue 
+                                    END, 2) AS Nval1,
+                                ROUND(
+                                    CASE 
+                                        WHEN @DisplayCurrencyId = 0 AND b.CurrencyId = 1 THEN b.NValue * @OfficialEuroRate  -- EUR → BGN
+                                        WHEN @DisplayCurrencyId = 1 AND b.CurrencyId = 0 THEN b.NValue / @OfficialEuroRate  -- BGN → EUR
+                                        ELSE b.NValue 
+                                    END, 2) AS Nval2,
+                                ROUND(
+                                    CASE 
+                                        WHEN @DisplayCurrencyId = 0 AND c.CurrencyId = 1 THEN c.NValue * @OfficialEuroRate  -- EUR → BGN
+                                        WHEN @DisplayCurrencyId = 1 AND c.CurrencyId = 0 THEN c.NValue / @OfficialEuroRate  -- BGN → EUR
+                                        ELSE c.NValue 
+                                    END, 2) AS Nval3,
+,
+                                ROUND(
+                                    CASE 
+                                        WHEN @DisplayCurrencyId = 0 AND d.CurrencyId = 1 THEN d.NValue * @OfficialEuroRate  -- EUR → BGN
+                                        WHEN @DisplayCurrencyId = 1 AND d.CurrencyId = 0 THEN d.NValue / @OfficialEuroRate  -- BGN → EUR
+                                        ELSE d.NValue 
+                                    END, 2) AS Nval4,
+                                co.Name AS CourtName
+                            FROM ProgramDataInstitution a 
+                            LEFT JOIN ProgramDataInstitution b ON a.FunctionalSubAreaId = b.FunctionalSubAreaId 
+                                AND a.RowNum = b.RowNum 
+                                AND a.InstitutionTypeId = b.InstitutionTypeId 
+                                AND b.PlannedYear = a.PlannedYear + 1
+                            LEFT JOIN ProgramDataInstitution c ON a.FunctionalSubAreaId = c.FunctionalSubAreaId 
+                                AND a.RowNum = c.RowNum 
+                                AND a.InstitutionTypeId = c.InstitutionTypeId 
+                                AND c.PlannedYear = a.PlannedYear + 2
+                            LEFT JOIN ProgramDataInstitution d ON a.FunctionalSubAreaId = d.FunctionalSubAreaId 
+                                AND a.RowNum = d.RowNum 
+                                AND a.InstitutionTypeId = d.InstitutionTypeId 
+                                AND d.PlannedYear = a.PlannedYear + 3
+                            LEFT JOIN InstitutionType co ON a.InstitutionTypeId = co.Id
+                            WHERE a.FunctionalSubAreaId = @ProgramDefNum 
+                            AND a.PlannedYear = @NY 
+                            AND a.InstitutionTypeId = @InstitutionTypeId 
+                            AND a.IsActive = 1";
+
+                                    var parameters = new
+                                    {
+                                        ProgramDefNum = programDefNum ?? 0,
+                                        NY = ny ?? 0,
+                                        InstitutionTypeId = institutionTypeId ?? 0,
+                                        DisplayCurrencyId = displayCurrencyId, // 0 = BGN, 1 = EUR
+                                        OfficialEuroRate = 1.95583
+                                    };
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<ProgramDataInstitution3Y>(sql2,parameters);
             return result?.ToList();
         }
         private async Task<decimal> GetTotalNvalue(int? functionalSubAreaId, int? rowNum, int? institutionTypeId, int? plannedYear) {
@@ -1160,6 +1441,56 @@ namespace CielaDocs.Shared.Repository
             }
 
           
+            return res;
+        }
+        private async Task<decimal> GetTotalCurrencyNvalue(int? functionalSubAreaId, int? rowNum, int? institutionTypeId, int? plannedYear, int displayCurrencyId)
+        {
+            string sql = $@"select  SUM(
+            CASE 
+                WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
+                WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                ELSE NValue 
+            END
+        ) AS TotalValue from ProgramDataCourt where  FunctionalSubAreaId=@FunctionalSubAreaId and RowNum=@RowNum and CourtId in(select Id from court where courtTypeId in(select Id from courtType where InstitutionTypeId=@institutionTypeId
+            and PlannedYear=@PlannedYear";
+
+
+            var parameters = new
+            {
+                FunctionalSubAreaId = functionalSubAreaId,
+                RowNum = rowNum,
+                InstitutionTypeId=institutionTypeId,
+                PlannedYear=plannedYear,
+                DisplayCurrencyId = displayCurrencyId, // 0 = BGN, 1 = EUR
+                OfficialEuroRate = 1.95583
+            };
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            decimal? totalValue = await connection.QueryFirstOrDefaultAsync<decimal?>(sql, parameters);
+            return (totalValue != null) ? Math.Round((decimal)totalValue, 2) : 0;
+
+        }
+        public async Task<IEnumerable<ProgramData3Y>> GetProgramData3YTotalCurrencyAsync(int? programDefNum, int? ny, int? institutionTypeId,int displayCurrencyId)
+        {
+
+            List<ProgramData3Y> res = new();
+
+            var pdef = await GetProgramDefByProgramIdAsync(programDefNum ?? 0);
+            foreach (var item in pdef)
+            {
+                ProgramData3Y obj = new ProgramData3Y();
+                obj.FunctionalSubAreaId = item.FunctionalSubAreaId;
+                obj.RowNum = item.RowNum;
+                obj.PrnCode = item.PrnCode;
+                obj.Name = item.Name;
+                obj.Nval1 = await GetTotalCurrencyNvalue(item.FunctionalSubAreaId, item.RowNum, institutionTypeId, ny, displayCurrencyId);
+                obj.Nval2 = await GetTotalCurrencyNvalue(item.FunctionalSubAreaId, item.RowNum, institutionTypeId, ny + 1, displayCurrencyId);
+                obj.Nval3 = await GetTotalCurrencyNvalue(item.FunctionalSubAreaId, item.RowNum, institutionTypeId, ny + 2, displayCurrencyId);
+                obj.Nval4 = await GetTotalCurrencyNvalue(item.FunctionalSubAreaId, item.RowNum, institutionTypeId, ny + 3, displayCurrencyId);
+                res.Add(obj);
+            }
+
+
             return res;
         }
         public async Task<ProgramDataGridVm> GetProgramDataByIdAsync(int? id){
@@ -1318,6 +1649,62 @@ namespace CielaDocs.Shared.Repository
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             var result = await connection.QueryAsync<ProgramDataCourtGridVm>(sql2);
+            return result?.ToList();
+        }
+        public async Task<IEnumerable<ProgramDataCourtGridVm>> GetProgramDataCourtGridByFilterCurrencyAsync(int? programDefNum, int? ny, int? rowNum, int displayCurrencyId)
+        {
+            string sql2 = @"select p.Id,
+                    p.CourtId,
+	                p.ProgramDefNum,
+	                p.FunctionalAreaId,
+	                p.FunctionalSubAreaId,
+	                p.FunctionalActionId,
+	                p.RowNum,
+	                p.RowCode,
+	                p.PrnCode,
+	                p.Name,
+	                p.ParentRowNum,
+	               -- Преобразуване на NValue спрямо DisplayCurrencyId
+                    ROUND(
+                      CASE 
+                          WHEN @DisplayCurrencyId = 0 AND p.CurrencyId = 1 THEN p.NValue * @OfficialEuroRate  -- EUR → BGN
+                          WHEN @DisplayCurrencyId = 1 AND p.CurrencyId = 0 THEN p.NValue / @OfficialEuroRate  -- BGN → EUR
+                          ELSE p.NValue 
+                      END, 2) AS NValue, 
+	                p.EnteredDate,
+	                p.CurrencyId,
+	                p.CurrencyMeasureId,
+	                p.Datum,
+	                p.ValueAllowed,
+	                p.PlannedYear,
+	                p.IsActive,
+	                p.OrderNum,
+	                p.ApprovedValue,
+	                p.CalculatedValue,
+                    p.IsCalculated,
+                    a.Name as FunctionalSubAreaName,
+                    c.Name as CurrencyName,
+                    m.Name as CurrencyMeasureName,
+                    s.Name as CourtName
+
+             from ProgramDataCourt p
+             left join FunctionalSubArea a on p.FunctionalSubAreaId=a.Id
+             left join Currency c on p.CurrencyId=c.Id
+             left join CurrencyMeasure m on p.CurrencyMeasureId=m.Id
+             left join Court s on p.CourtId=s.Id
+             where p.ProgramDefNum=@ProgramDefNum and p.PlannedYear=@Ny and p.RowNum=@RowNum";
+            var parameters = new
+            {
+                ProgramDefNum = programDefNum,
+                NY = ny,
+                RowNum=rowNum,
+                DisplayCurrencyId = displayCurrencyId, // 0 = BGN, 1 = EUR
+                OfficialEuroRate = 1.95583
+            };
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<ProgramDataCourtGridVm>(sql2,parameters);
             return result?.ToList();
         }
         public async Task<IEnumerable<ProgramDataCourtGridVm>> GetProgramDataCourtGridByFilterCurrencyAsync(int? programDefNum, int? ny, int? rowNum)
@@ -1855,6 +2242,83 @@ namespace CielaDocs.Shared.Repository
 
 
           
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<KontoCourtsYearVm>(sql);
+            return result?.ToList();
+        }
+        public async Task<IEnumerable<KontoCourtsYearVm>> GetKontoCourtsYearCurrencyAsync(int? institutionTypeId, int? courtTypeId, int? courtId, int? ny, int? nmonth, int? reportTypeId,int displayCurrencyId)
+        {
+            string sql = string.Empty;
+
+            if (reportTypeId == 1)
+            {
+                sql = $@"select ROW_NUMBER() OVER(ORDER BY (SELECT NULL)) as id, {nmonth} as Nmonth, k.NYear,-- Преобразуване на NValue спрямо DisplayCurrencyId
+                        ROUND(
+                            CASE 
+                                WHEN {displayCurrencyId} = 0 AND k.CurrencyId = 1 THEN SUM(k.NValue) * 1.95583  -- EUR → BGN
+                                WHEN {displayCurrencyId} = 1 AND k.CurrencyId = 0 THEN SUM(k.NValue) / 1.95583  -- BGN → EUR
+                                ELSE SUM(k.NValue) 
+                            END, 2) AS NValue,  c.Name as CourtName,f.Name as ProgramName, p.NAme as RowName
+                                      from    KontoMonthData k 
+									   left join Court c on k.CourtId=c.Id
+                          left join FunctionalSubArea f on k.FunctionalSubAreaId=f.id
+                          left join ProgramDef p on k.FunctionalSubAreaId=p.FunctionalSubAreaId and k.RowNum=p.RowNum
+						  where k.NYear={ny ?? 0} and k.NMonth<={nmonth ?? 0} and c.courtTypeId in( select distinct Id from courtType where InstitutionTypeId={institutionTypeId ?? 0}) ";
+
+
+                if (courtId > 0)
+                {
+                    sql += $" and k.CourtId={courtId ?? 0} ";
+                }
+                sql += " group by  k.CourtId,k.FunctionalSubAreaId,k.RowNum,k.NYear,c.Name,f.Name,p.Name ";
+
+
+            }
+            else if (reportTypeId == 2)
+            {
+                sql = $@"select k.Id,k.Nmonth,k.Nyear, -- Преобразуване на NValue спрямо DisplayCurrencyId
+                  ROUND(
+                      CASE 
+                          WHEN {displayCurrencyId} = 0 AND k.CurrencyId = 1 THEN k.NValue * 1.95583  -- EUR → BGN
+                          WHEN {displayCurrencyId} = 1 AND k.CurrencyId = 0 THEN k.NValue / 1.95583  -- BGN → EUR
+                          ELSE k.NValue 
+                      END, 2) AS NValue, c.Name as CourtName,f.Name as ProgramName, p.NAme as RowName
+                          from KontoMonthData k
+                          left join Court c on k.CourtId=c.Id
+                          left join FunctionalSubArea f on k.FunctionalSubAreaId=f.id
+                          left join ProgramDef p on k.FunctionalSubAreaId=p.FunctionalSubAreaId and k.RowNum=p.RowNum
+                          where k.NYear={ny ?? 0} and c.courtTypeId in( select distinct Id from courtType where InstitutionTypeId={institutionTypeId ?? 0})";
+                if (courtId > 0)
+                {
+                    sql += $" and k.CourtId={courtId ?? 0} ";
+                }
+
+            }
+            else
+            {
+                sql = $@"select k.Id,k.Nmonth,k.Nyear,-- Преобразуване на NValue спрямо DisplayCurrencyId
+                  ROUND(
+                      CASE 
+                          WHEN {displayCurrencyId} = 0 AND k.CurrencyId = 1 THEN k.NValue * 1.95583  -- EUR → BGN
+                          WHEN {displayCurrencyId} = 1 AND k.CurrencyId = 0 THEN k.NValue / 1.95583  -- BGN → EUR
+                          ELSE k.NValue 
+                      END, 2) AS NValue,c.Name as CourtName,f.Name as ProgramName, p.NAme as RowName
+                          from KontoMonthData k
+                          left join Court c on k.CourtId=c.Id
+                          left join FunctionalSubArea f on k.FunctionalSubAreaId=f.id
+                          left join ProgramDef p on k.FunctionalSubAreaId=p.FunctionalSubAreaId and k.RowNum=p.RowNum
+                          where k.NYear={ny ?? 0} and c.courtTypeId in( select distinct Id from courtType where InstitutionTypeId={institutionTypeId ?? 0}) ";
+                if (courtId > 0)
+                {
+                    sql += $" and k.CourtId={courtId ?? 0} ";
+                }
+                if (nmonth > 0)
+                {
+                    sql += $" and k.Nmonth={nmonth ?? 0} ";
+                }
+            }
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();

@@ -310,7 +310,7 @@ else
         }).dxPopup('instance');
 
        function applyCourtYearFilter(e) {
-                 redirectme1("@Url.Action("KontoReport", "Reports")","par",e);
+                  redirectme2("@Url.Action("KontoReport", "Reports")","par",e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
         }
         function applyProgramDataFilter(e) {
              redirectme2("@Url.Action("ProgramExecutionReport", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
@@ -319,10 +319,10 @@ else
              redirectme2("@Url.Action("YearExecutionReport", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
         }
         function applyInstitutionTypeYearExecutionFilter(e) {
-            redirectme1("@Url.Action("InstitutionTypeYearExecutionReport", "Reports")", "par", e);
+             redirectme2("@Url.Action("InstitutionTypeYearExecutionReport", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
         }
         function applyProgramNumYear(e) {
-            redirectme1("@Url.Action("FunctionalSubAreaNumYearReport", "Reports")", "par", e);
+             redirectme2("@Url.Action("FunctionalSubAreaNumYearReport", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
         }
     </script>
 }

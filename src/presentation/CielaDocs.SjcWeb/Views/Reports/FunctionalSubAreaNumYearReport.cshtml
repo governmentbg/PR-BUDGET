@@ -27,7 +27,11 @@
 <h4>Програма:@ViewBag.ProgramName</h4>
 <h4>Вид анализ за отчета:@ViewBag.ReportTypeName</h4>
 <h5>Валута:@ViewBag.CurrencyName, Мярка:@ViewBag.CurrencyMeasureName</h5>
-<div class="spacer_5"></div>
+<div class="container-flex">
+    <div class="right-currency">
+        <label for="currency" style="color:darkred;font-size:medium;">Валута:@ViewBag.Currency</label>
+    </div>
+</div>
 <div style="display:inline-block;padding-left:10px;" id="menu"></div>
 <div class="spacer_5"></div>
 <div id="image-indicator"></div>
@@ -69,12 +73,13 @@
                     store: new DevExpress.data.CustomStore({
                         key: 'Id',
                         load() {
-                            return sendRequest(Ciela.baseUrl + "Reports/GetProgramNumDataGrid", 'Get', { functionalSubAreaId: $("#ProgramNum").val(), reportTypeId: $("#ReportTypeId").val(), ny: selectedYear })
+                            return sendRequest(Ciela.baseUrl + "Reports/GetProgramNumDataGrid", 'Get', { functionalSubAreaId: $("#ProgramNum").val(), reportTypeId: $("#ReportTypeId").val(), ny: selectedYear,
+                            displayCurrencyId:window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId  })
                         }
                     }),
                 }),
                 paging: {
-                    pageSize: 50,
+                    pageSize: 100,
                 },
                 pager: {
                     visible: true,
@@ -112,18 +117,17 @@
                         width: "60%",
                         caption: "Наименование"
                     },
-                    {
+                   {
                         dataField: "Nval1",
                         width: "10%",
                         caption: selectedYear,
                         alllowEditing: true,
-                        valueFormat: '#0.00',
+                         valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nval1 = value.toFixed(2);
+                            },
 
                     },
                     {
@@ -131,26 +135,37 @@
                         width: "10%",
                         caption: selectedYear + 1,
                         alllowEditing: true,
-                        valueFormat: '#0.00',
+                         valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nval2 = value.toFixed(2);
+                            },
 
                     }, {
                         dataField: "Nval3",
                         width: "10%",
                         caption: selectedYear + 2,
                         alllowEditing: true,
-                        valueFormat: '#0.00',
+                        valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nval3 = value.toFixed(2);
+                            },
+
+                    },
+                     {
+                        dataField: "Nval4",
+                        width: "10%",
+                        caption: selectedYear + 2,
+                        alllowEditing: true,
+                        valueFormat: '0.00',
+                        dataType: 'number',
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nval4 = value.toFixed(2);
+                            },
 
                     },
                 ],
@@ -178,7 +193,7 @@
                 },
                 onEditorPreparing: function (e) {
                     if (e.dataField === "PrnCode" || e.dataField === "Name") e.editorOptions.disabled = true
-                    if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3") && e.parentType === "dataRow") {
+                    if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3" || e.dataField === "Nval4") && e.parentType === "dataRow") {
                         const defaultValueChangeHandler = e.editorOptions.onValueChanged;
                         e.editorOptions.onValueChanged = function (args) {
                             defaultValueChangeHandler(args);
@@ -206,7 +221,7 @@
                     }
                 },
                 onRowUpdated() {
-                    recalculateGrid();
+                    //recalculateGrid();
                 },
 
             });
@@ -222,20 +237,20 @@
         const menuData = [{
             id: '1',
             name: 'Затвори',
-            icon: '../images/close.png',
+            icon:  Ciela.baseUrl+'images/close.png',
 
 
         },
         {
             id: '6_1',
             name: 'Експорт',
-            icon: '../images/exporter.svg',
+            icon:  Ciela.baseUrl+'images/exporter.svg',
 
 
         }, {
             id: '4',
             name: 'Обнови',
-            icon: '../images/refresh.png',
+            icon:  Ciela.baseUrl+'images/refresh.png',
 
         }];
         const dxMenu = $('#menu').dxMenu({

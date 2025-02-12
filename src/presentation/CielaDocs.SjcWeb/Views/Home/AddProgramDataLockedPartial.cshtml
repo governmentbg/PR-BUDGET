@@ -39,14 +39,14 @@
 
     $(()=>{
 
-        $('#yearName').text(nSelectedYear ?? new Date().getFullYear());
+        $('#yearName').text(activeYear ?? new Date().getFullYear());
 
         $('#gridProgramData').dxDataGrid({
             dataSource: new DevExpress.data.DataSource({
                 store: new DevExpress.data.CustomStore({
                     key: 'Id',
                     load() {
-                        return sendRequest(Ciela.baseUrl + "Noms/ShowProgramDataLocked", 'Get', { ny: nSelectedYear ?? new Date().getFullYear() });
+                        return sendRequest(Ciela.baseUrl + "Noms/ShowProgramDataLocked", 'Get', { ny: activeYear ?? new Date().getFullYear() });
                     }
                 }),
             }),

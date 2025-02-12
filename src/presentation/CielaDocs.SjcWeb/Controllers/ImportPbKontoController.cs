@@ -38,12 +38,13 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
         private readonly ISjcService _sjcService;
+        private readonly ISjcServiceV2 _sjcServiceV2;
         private FilterMainDataVm? FilterData = null;
 
         public ImportPbKontoController(ILogger<MainDataController> logger, IConfiguration configuration, ISendGridMailer emailSender,
                         IMediator mediator, IHttpContextAccessor httpContextAccessor, 
                         ILogRepository logRepo, ISjcBudgetRepository sjcRepo, 
-                        IWebHostEnvironment env, ISjcService sjcService)
+                        IWebHostEnvironment env, ISjcService sjcService, ISjcServiceV2 sjcServiceV2)
         {
             _logger = logger;
             _mediator = mediator;
@@ -53,9 +54,12 @@ namespace CielaDocs.SjcWeb.Controllers
             _sjcRepo = sjcRepo;
             _env = env;
             _sjcService=sjcService;
+            _sjcServiceV2 = sjcServiceV2;
         }
         public async Task<IActionResult> Index()
         {
+            ViewData["ActivePeriod"] = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+            ViewData["Cfg"] = await _sjcRepo.GetCfgAsync();
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
             var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
             string logmsg = $"Достъп до импорт на данни проектобюджет от {User?.Identity?.Name}";
@@ -111,6 +115,14 @@ namespace CielaDocs.SjcWeb.Controllers
                 List<int> yearsLst = new List<int> { 
                     nYear, nYear+1, nYear+2, nYear+3
                 };
+
+
+                //===========check active period restriction========================
+                var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                if ((nYear < actuvePeriod.Y1) || (nYear > actuvePeriod.Y4))
+                {
+                    return Json(new { msg = $"Година {nYear} е извън обхвата на активния период! Моля проверете!", success = false });
+                }
                 //------check locked period------------
                 var checkLocked = await _sjcService.QueryRaw<KontoPbCourtLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbCourtLocked a where a.CourtId={court?.Id ?? 0} and a.Nyear={nYear}");
                
@@ -278,6 +290,12 @@ namespace CielaDocs.SjcWeb.Controllers
                 }
                 var court = await _sjcRepo.GetCourtByKontoCodeAsync(kontoCode);
                 if (court == null)
+                {
+                    return (0, 0);
+                }
+                //===========check active period restriction========================
+                var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                if ((nYear < actuvePeriod.Y1) || (nYear > actuvePeriod.Y4))
                 {
                     return (0, 0);
                 }

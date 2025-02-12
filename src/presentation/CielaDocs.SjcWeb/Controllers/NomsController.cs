@@ -33,8 +33,11 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ISjcService _sjcService;
+        private readonly ISjcServiceV2 _sjcServiceV2;
 
-        public NomsController(IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor,ISjcService sjcService)
+        public NomsController(IMediator mediator, IMapper mapper, ILogRepository logRepo, 
+            ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor,
+            ISjcService sjcService,ISjcServiceV2 sjcServiceV2)
         {
             _mediator = mediator;
             _mapper = mapper;
@@ -42,6 +45,39 @@ namespace CielaDocs.SjcWeb.Controllers
             _sjcRepo = sjcRepo;
             _httpContextAccessor = httpContextAccessor;
             _sjcService= sjcService;
+            _sjcServiceV2= sjcServiceV2;
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetActivePeriodYear() {
+            try
+            {
+                var data = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                var items = new List<IdNames>() { 
+                    new IdNames() { Id=data.Y1??0, Name=data?.Y1.ToString() },
+                    new IdNames() { Id=data.Y2??0, Name=data?.Y2.ToString() },
+                    new IdNames() { Id=data.Y3??0, Name=data?.Y3.ToString() },
+                    new IdNames() { Id=data.Y4??0, Name=data?.Y4.ToString() },
+                };
+                
+                return Json(items);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetActiveBudgetPeriod()
+        {
+            try
+            {
+                var data = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                return Json(data);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<BudgetPeriodVm>());
+            }
         }
         [HttpGet]
         public async Task<JsonResult> GetInstitutionTypes()

@@ -29,7 +29,8 @@ namespace CielaDocs.Shared
             services.AddSingleton<SjcBudgetContext>();
             services.AddScoped<ISjcBudgetRepository, SjcBudgetRepository>();
             services.AddScoped<ISjcService, SjcService>();
-
+            services.AddScoped<ISjcBudgetRepositoryV2, SjcBudgetRepositoryV2>();
+            services.AddScoped<ISjcServiceV2, SjcServiceV2>();
             return services;
         }
     }

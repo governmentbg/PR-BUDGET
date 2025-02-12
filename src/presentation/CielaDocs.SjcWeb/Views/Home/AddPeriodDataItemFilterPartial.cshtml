@@ -13,6 +13,15 @@
 
         <div class="container-fluid">
             <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <div class="lock-container">
+                            <input type="text" readonly id="aciveperiodparams" class="lock-result">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
                         <label for="cbCourtType">Вид</label>
@@ -63,13 +72,14 @@
     </div>
 </form>
 <script>
-    let courtTypeId = 0;
-        let courtId = 0;
-        let nm = 0;
-        let ny = 0;
+ 
 
     $(() => {
         
+        let courtTypeId = 0;
+        let courtId = 0;
+        let nm = 0;
+        let ny = 0;
 
          const buttonView = $("#btnLockedView").dxButton({
         visible: true,
@@ -148,7 +158,15 @@
                 button.option('visible', condition);
                 button.option('icon',Ciela.baseUrl+'images/lock-open.svg')
             }
-
+    let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
+             .then(data =>{
+                if(!isEmpty(data)){
+                    $('#aciveperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
+                }
+                else {
+                      $('#aciveperiodparams').val('');
+                }
+             });
     // Initialize the Context Menu
         $("#selectBoxMonth").dxSelectBox({
             dataSource: selectBoxQuarterData,
@@ -160,11 +178,19 @@
 
         });
         $("#selectBoxYear").dxSelectBox({
-            dataSource: selectBoxYearData,
-            valueExpr: 'id',
-            displayExpr: 'name',
+            dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
+                    }
+                }),
+            }),
+            valueExpr: 'Id',
+            displayExpr: 'Name',
             onValueChanged: function (e) {
                 ny = e.value;
+                 nSelectedYear=ny;
             }
 
         });
@@ -273,8 +299,9 @@
              
                nm=$("#selectBoxMonth").dxSelectBox("option", "value");
                ny=$("#selectBoxYear").dxSelectBox("option", "value");
+                nSelectedYear=ny;
                 // Trigger your custom logic here
-                let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod8Locked", { courtId: courtId,nm:nm, ny: ny })
+                let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod8Locked", { courtId: courtId,nm:nm, ny: nSelectedYear })
                  .then(data =>{
                         if(!isEmpty(data)){
                         $('#lock-result').val('Заключен период от '+data?.LockedByUserName);

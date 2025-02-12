@@ -35,11 +35,12 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
         private readonly ISjcService _sjcService;
+        private readonly ISjcServiceV2 _sjcServiceV2;
         private FilterMainDataVm? FilterData = null;
 
         public MainPeriodItmController(ILogger<MainDataController> logger, IConfiguration configuration, ISendGridMailer emailSender,
                         IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo,
-                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env,ISjcService sjcService)
+                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env,ISjcService sjcService, ISjcServiceV2 sjcServiceV2)
         {
             _logger = logger;
             _mediator = mediator;
@@ -49,6 +50,7 @@ namespace CielaDocs.SjcWeb.Controllers
             _sjcRepo = sjcRepo;
             _env = env;
             _sjcService= sjcService;
+            _sjcServiceV2 = sjcServiceV2;
         }
         public async Task<IActionResult> Index()
         {

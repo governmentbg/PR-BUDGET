@@ -63,7 +63,7 @@
     $(()=>{
          let nm;
          let ny;
-         ny=ny ?? new Date().getFullYear();
+       
          $("#selectBoxMonth").dxSelectBox({
             dataSource: selectBoxMonthData,
             valueExpr: 'id',
@@ -75,26 +75,35 @@
 
         });
          $("#selectBoxYear").dxSelectBox({
-            dataSource: selectBoxYearData,
-            valueExpr: 'id',
-            displayExpr: 'name',
-            value:new Date().getFullYear(),
+            dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
+                    }
+                }),
+            }),
+            valueExpr: 'Id',
+            displayExpr: 'Name',
             onValueChanged: function (e) {
                 ny = e.value;
-                $('#selectedYear').text(`За ${ny}г.`);
+                $('#selectedYear').text(`За ${ny??'неизбрана'} г.`);
                 $("#gridKontoItem").dxDataGrid("instance").refresh();
             }
 
         });
         
-       $('#selectedYear').text(`За ${ny}г.`);
+       $('#selectedYear').text(`За ${ny??'неизбрана'} г.`);
 
        $("#btnLockKonto").dxButton({
         hint:'Заключи периода',
-        icon:'./images/lock-open.svg',
+        icon:Ciela.baseUrl+'images/lock-open.svg',
             onClick: function () {
               nm=nm ?? 1;
-              ny=ny ?? new Date().getFullYear();
+             if(!ny){
+                  DevExpress.ui.dialog.alert("Изберете година", "Вниимание");
+                 return;
+             }
               var result = DevExpress.ui.dialog.confirm(`Потвърдете заключването на периода месец: ${nm}, година ${ny}?`, "Потвърждение");
                              result.done(function (dialogResult) {
                                  if (dialogResult === true) {
@@ -119,7 +128,7 @@
                 store: new DevExpress.data.CustomStore({
                     key: 'Id',
                     load() {
-                        return sendRequest(Ciela.baseUrl + "Noms/ShowImportKontoLocked", 'Get', { ny: ny ?? new Date().getFullYear() });
+                        return sendRequest(Ciela.baseUrl + "Noms/ShowImportKontoLocked", 'Get', { ny: ny ?? 0 });
                     }
                 }),
             }),

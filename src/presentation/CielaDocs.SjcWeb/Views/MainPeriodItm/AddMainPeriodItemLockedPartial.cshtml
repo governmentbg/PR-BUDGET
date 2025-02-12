@@ -39,14 +39,12 @@
 
     $(()=>{
 
-
-
         $('#gridMainItem').dxDataGrid({
             dataSource: new DevExpress.data.DataSource({
                 store: new DevExpress.data.CustomStore({
                     key: 'Id',
                     load() {
-                        return sendRequest(Ciela.baseUrl + "Noms/ShowMainPeriodItemLocked", 'Get', { ny: ny??new Date().getFullYear() });
+                        return sendRequest(Ciela.baseUrl + "Noms/ShowMainPeriodItemLocked", 'Get', { ny: nSelectedYear??0 });
                     }
                 }),
             }),

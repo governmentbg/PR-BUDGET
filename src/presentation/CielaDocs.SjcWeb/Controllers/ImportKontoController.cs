@@ -11,6 +11,7 @@ using ClosedXML.Excel;
 
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Vml;
+using DocumentFormat.OpenXml.Vml.Office;
 
 
 using MediatR;
@@ -38,11 +39,12 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
         private readonly ISjcService _sjcService;
+        private readonly ISjcServiceV2 _sjcServiceV2;
         private FilterMainDataVm? FilterData = null;
 
         public ImportKontoController(ILogger<MainDataController> logger, IConfiguration configuration, ISendGridMailer emailSender,
                         IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo,
-                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env,ISjcService sjcService)
+                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env,ISjcService sjcService, ISjcServiceV2 sjcServiceV2)
         {
             _logger = logger;
             _mediator = mediator;
@@ -52,9 +54,12 @@ namespace CielaDocs.SjcWeb.Controllers
             _sjcRepo = sjcRepo;
             _env = env;
             _sjcService= sjcService;
+            _sjcServiceV2 = sjcServiceV2;
         }
         public async Task<IActionResult> Index()
         {
+            ViewData["ActivePeriod"] = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+            ViewData["Cfg"] = await _sjcRepo.GetCfgAsync();
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
             var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
             string logmsg = $"Достъп до импорт на данни от Конто от {User?.Identity?.Name}";
@@ -104,6 +109,12 @@ namespace CielaDocs.SjcWeb.Controllers
                 var court = await _sjcRepo.GetCourtByKontoCodeAsync(kontoCode);
                 if (court == null) {
                     return Json(new { msg = $"Неоткрит код {kontoCode} на отчетна единица", success = false });
+                }
+                //===========check active period restriction========================
+                var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                if ((nYear < actuvePeriod.Y1) || (nYear > actuvePeriod.Y4))
+                {
+                    return Json(new { msg = $"Година {nYear} е извън обхвата на активния период! Моля проверете!", success = false });
                 }
                 //------check locked period------------
                 var checkLocked = await _sjcService.QueryRaw<KontoMonthDataLockedVm>($@"SELECT TOP 1 a.Id,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName 
@@ -230,6 +241,12 @@ namespace CielaDocs.SjcWeb.Controllers
                 int.TryParse(nm, out int nMonth);
                 int.TryParse("20" + ny, out int nYear);
                 if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2040))
+                {
+                    return (0, 0);
+                }
+                //===========check active period restriction========================
+                var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                if ((nYear < actuvePeriod.Y1) || (nYear > actuvePeriod.Y4))
                 {
                     return (0, 0);
                 }

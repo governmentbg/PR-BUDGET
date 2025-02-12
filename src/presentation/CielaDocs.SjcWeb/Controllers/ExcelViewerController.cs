@@ -38,10 +38,11 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IMediator _mediator;
         private readonly ISjcService _sjcService;
+        private readonly ISjcServiceV2 _sjcServiceV2;
         private Dictionary<string, string> repl_values = new Dictionary<string, string>();
         private static bool addToProgramData = false;
         public ExcelViewerController(IWebHostEnvironment env, ISjcBudgetRepository sjcRepo, ILogRepository logRepo,
-            IHttpContextAccessor httpContextAccessor, IMediator mediator, ISjcService sjcService)
+            IHttpContextAccessor httpContextAccessor, IMediator mediator, ISjcService sjcService, ISjcServiceV2 sjcServiceV2)
         {
             _env = env;
             _sjcRepo= sjcRepo;
@@ -49,6 +50,7 @@ namespace CielaDocs.SjcWeb.Controllers
             _httpContextAccessor = httpContextAccessor;
             _mediator=mediator;
             _sjcService= sjcService;
+            _sjcServiceV2 = sjcServiceV2;
         }
         public static Stream GetDocumentContentStream(string file)
         {
@@ -283,7 +285,12 @@ namespace CielaDocs.SjcWeb.Controllers
                     List<int> yearsLst = new List<int> {
                     nYear, nYear+1, nYear+2, nYear+3
                     };
-
+                    //===========check active period restriction========================
+                    var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                    if ((nYear < actuvePeriod.Y1) || (nYear > actuvePeriod.Y4))
+                    {
+                        return Json(new { msg = $"Година {nYear} е извън обхвата на активния период! Моля проверете!", success = false });
+                    }
 
                     //------check locked period------------
                     var checkLocked = await _sjcService.QueryRaw<KontoPbCourtLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbCourtLocked a where a.CourtId={court?.Id ?? 0} and a.Nyear={nYear}");
@@ -436,7 +443,12 @@ namespace CielaDocs.SjcWeb.Controllers
                     List<int> yearsLst = new List<int> {
                     nYear, nYear+1, nYear+2
                     };
-
+                    //===========check active period restriction========================
+                    var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                    if ((nYear < actuvePeriod.Y1) || (nYear > actuvePeriod.Y4))
+                    {
+                        return Json(new { msg = $"Година {nYear} е извън обхвата на активния период! Моля проверете!", success = false });
+                    }
                     //------check locked period------------
                     var checkLocked = await _sjcService.QueryRaw<KontoPbInstitutionTypeLockedVm>($@"SELECT TOP 1 a.Id,a.InstitutionTypeId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbInstitutionTypeLocked a where a.CourtId={inst?.Id ?? 0} and a.Nyear={nYear}");
 

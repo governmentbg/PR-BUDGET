@@ -1,22 +1,27 @@
 ﻿@using System.Security.Principal
+@using CielaDocs.Application.Models
 @using Microsoft.AspNetCore.Antiforgery
 @inject IAntiforgery antiforgery
 @{
     var tokenSet = antiforgery.GetAndStoreTokens(Context);
     ViewData["Title"] = "Home Page";
+    var cfg = ViewData["Cfg"] as CfgVm;
+    var activePeriod = ViewData["ActivePeriod"] as BudgetPeriodVm;
 }
 @if (User?.Identity?.IsAuthenticated ?? false)
 {
 
     @await Html.PartialAsync("_ModalDialogPartial")
     <div id="popup"></div>
+    <div style="display:inline-block;padding-left:10px;" id="reportmenu"></div>
     <div class="container">
 
         <div class="spacer_10"></div>
         <div class="container-flex">
-            <div class="dropdown-right">
+            <div class="activeperiod-right" style="display:inline-block;padding-left:10px;">
+                <label for="currency" style="color:darkred;font-size:medium;">Активен период:@activePeriod?.Y1 г.(@cfg.OfficialCurrencyCode)</label>
                 <label for="selectBoxCurrency">Вид валута</label>
-                <div id="selectBoxCurrency" ></div>
+                <div style="display:inline-block;padding-left:10px;width:120px;"  id="selectBoxCurrency"></div>
             </div>
         </div>
         <div class="spacer_40"></div>
@@ -83,9 +88,6 @@
                 </div>
             </div>
       </div>
-      
-
-
     </div>
 
 }
@@ -348,5 +350,35 @@ else
           function  applyCommonBudget(e){
               redirectme2("@Url.Action("Index", "CommonBudget")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
           }
+        const reportmenuData = [{
+                   id: '1',
+                   name: 'Начало',
+                   icon:Ciela.baseUrl+'images/back.png',
+                   }
+                  ];
+               const dxMenu = $('#reportmenu').dxMenu({
+                   dataSource: reportmenuData,
+                   hideSubmenuOnMouseLeave: false,
+                   displayExpr: 'name',
+                   onItemClick(data) {
+                       const item = data.itemData;
+                       if (item.id) {
+
+                           switch (item.id) {
+                               case '1':
+                                   window.location.href = Ciela.baseUrl;
+                                   break;
+                           }
+                       }
+                   },
+               }).dxMenu('instance');
+
+               const showSubmenuModes = [{
+                   name: 'onHover',
+                   delay: { show: 0, hide: 500 },
+               }, {
+                   name: 'onClick',
+                   delay: { show: 0, hide: 300 },
+               }];
     </script>
 }

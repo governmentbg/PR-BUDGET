@@ -12,6 +12,7 @@ var actionInProgress = false;
 var nextActionQueue = [];
 var officialCurrencyId = 0;
 var activeYear = 0;
+let nSelectedYear;
 function warn(s) {
     $.alert({
         boxWidth: '30%',

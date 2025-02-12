@@ -57,10 +57,11 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
-
+        private readonly ISjcServiceV2 _sjcServiceV2;
 
         public ReportsController(ILogger<HomeController> logger, IConfiguration configuration, ISendGridMailer emailSender,
-                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IWebHostEnvironment env)
+                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, 
+                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env, ISjcServiceV2 sjcServiceV2)
         {
             _logger = logger;
             _mediator = mediator;
@@ -69,12 +70,15 @@ namespace CielaDocs.SjcWeb.Controllers
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _env = env;
+            _sjcServiceV2 = sjcServiceV2;
 
         }
 
 
         public async Task<IActionResult> Index()
         {
+            ViewData["ActivePeriod"] = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+            ViewData["Cfg"] = await _sjcRepo.GetCfgAsync();
             var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
             var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
             string logmsg = $"Достъп до справки и отчети от {User?.Identity?.Name}";

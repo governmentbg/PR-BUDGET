@@ -48,7 +48,27 @@ namespace CielaDocs.SjcWeb.Controllers
             _sjcServiceV2= sjcServiceV2;
         }
         [HttpGet]
-        public async Task<JsonResult> GetActiveBudgetPeriod() {
+        public async Task<JsonResult> GetActivePeriodYear() {
+            try
+            {
+                var data = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                var items = new List<IdNames>() { 
+                    new IdNames() { Id=data.Y1??0, Name=data?.Y1.ToString() },
+                    new IdNames() { Id=data.Y2??0, Name=data?.Y2.ToString() },
+                    new IdNames() { Id=data.Y3??0, Name=data?.Y3.ToString() },
+                    new IdNames() { Id=data.Y4??0, Name=data?.Y4.ToString() },
+                };
+                
+                return Json(items);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetActiveBudgetPeriod()
+        {
             try
             {
                 var data = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
@@ -59,7 +79,6 @@ namespace CielaDocs.SjcWeb.Controllers
                 return Json(new List<BudgetPeriodVm>());
             }
         }
-
         [HttpGet]
         public async Task<JsonResult> GetInstitutionTypes()
         {

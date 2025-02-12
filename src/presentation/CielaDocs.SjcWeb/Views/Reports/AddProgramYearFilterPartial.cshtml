@@ -14,6 +14,15 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-12">
+                    <div class="form-group">
+                        <div class="lock-container">
+                            <input type="text" readonly id="aciveperiodparams" class="lock-result">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
                 <div class="dx-field">
                     <div class="dx-field-label">Справка за</div>
                     <div class="dx-field-value">
@@ -67,15 +76,30 @@
         }).dxRadioGroup('instance');
 
         $("#selectBoxYear").dxSelectBox({
-            dataSource: selectBoxYearData,
-            valueExpr: 'id',
-            displayExpr: 'name',
+           dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
+                    }
+                }),
+            }),
+            valueExpr: 'Id',
+            displayExpr: 'Name',
             onValueChanged: function (e) {
                 ny = e.value;
             }
 
         });
-
+             let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
+             .then(data =>{
+                if(!isEmpty(data)){
+                    $('#aciveperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
+                }
+                else {
+                      $('#aciveperiodparams').val('');
+                }
+             });
        
         $("#selectProgram").select2({
             placeholder: "",

@@ -441,7 +441,7 @@ namespace CielaDocs.SjcWeb.Controllers
                     }
                    
                     List<int> yearsLst = new List<int> {
-                    nYear, nYear+1, nYear+2
+                    nYear, nYear+1, nYear+2, nYear+3
                     };
                     //===========check active period restriction========================
                     var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();

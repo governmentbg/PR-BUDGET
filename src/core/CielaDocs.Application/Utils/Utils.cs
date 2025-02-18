@@ -1,15 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.Mvc.ViewEngines;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.AspNetCore.Mvc;
-
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
-namespace CielaDocs.AdminPanel.Models
+namespace CielaDocs.Application.Utils
 {
-    public class Toolbox
+   public class Utils
     {
         private static Random random = new Random();
         public const string EmailStandard = @"^[a-zA-Z0-9._-]+@([a-zA-Z0-9.-]+\.)+[a-zA-Z0-9.-]{2,4}$";
@@ -22,7 +21,7 @@ namespace CielaDocs.AdminPanel.Models
         }
         public static string GetBGDateTime(DateTime? aDateTime, int aReturnType)
         {
-            if(aDateTime==null) return string.Empty;
+            if (aDateTime == null) return string.Empty;
             if (aReturnType == 0) { return String.Format("{0:dd.MM.yyyy HH:mm:ss}", aDateTime); }
             else
                 if (aReturnType == 1) { return String.Format("{0:dd.MM.yyyy}", aDateTime); }

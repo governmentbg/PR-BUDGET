@@ -6,7 +6,7 @@ using CielaDocs.Application.Dtos;
 using CielaDocs.Shared.Repository;
 using CielaDocs.AdminPanel.Extensions;
 using CielaDocs.AdminPanel.Models;
-
+using CielaDocs.Application.Utils;
 
 
 
@@ -23,6 +23,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using CielaDocs.Application.Models;
 using CielaDocs.Shared.Services;
+using CielaDocs.Domain.Entities.v2;
+using CielaDocs.Domain.Entities;
+using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Office2010.Excel;
 
 namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
 {
@@ -36,8 +41,9 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ISjcService _sjcService;
+        private readonly ISjcServiceV2 _sjcServiceV2;
 
-        public HomeController( ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor,ISjcService sjcService)
+        public HomeController( ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor,ISjcService sjcService,ISjcServiceV2 sjcServiceV2)
         {
 
             
@@ -45,6 +51,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             _sjcRepo = sjcRepo;
             _httpContextAccessor = httpContextAccessor;
             _sjcService= sjcService;
+            _sjcServiceV2 = sjcServiceV2;
         }
 
         public async Task<IActionResult> Index()
@@ -133,6 +140,138 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                 }
             }
             return Json(new { msg = $"Годишната инициализация на програми за  {id} година завърши", success = true });
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetBudgetPeriods()
+        {
+            try
+            {
+                var data = await _sjcServiceV2.GetBudgetPeriodsAsync();
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<BudgetPeriodVm>());
+            }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> EndActivePeriodById(int? id) {
+            var empl = await Mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if ((!empl.CanAdd) && (!empl.CanUpdate))
+            {
+                return Json(new { msg = "Нямате предоставени права да добавяте/редактирате данни ", success = false, id = 0 });
+            }
+            var data = await _sjcServiceV2.GetActiveBudgetPeriodByIdAsync(id??0);
+            if (data?.IsActive != true) {
+                return Json(new { msg = "Избраният период не е активен!", success = false, id = 0 });
+            }
+            try
+            {
+                var pdhinput = await _sjcServiceV2.GetProgramDataForEndingPeriod(id ?? 0);
+                bool itemExists = false;
+                if (pdhinput.Any())
+                {
+                    foreach (var item in pdhinput)
+                    {
+                        itemExists = await _sjcServiceV2.GetProgramDataHExistsAsync(id, item?.FunctionalSubAreaId, item?.RowNum, item?.PlannedYear1);
+                        if (!itemExists)
+                        {
+                            _ = await _sjcServiceV2.InsertIntoProgramDataHAsync(item, id ?? 0);
+                        }
+                    }
+                }
+                var pdchInput = await _sjcServiceV2.GetProgramDataCourtForEndingPeriod(id ?? 0);
+                if (pdchInput.Any())
+                {
+                    foreach (var item in pdchInput)
+                    {
+                        itemExists = await _sjcServiceV2.GetProgramDataCourtHExistsAsync(id, item?.CourtId ?? 0, item?.FunctionalSubAreaId, item?.RowNum, item?.PlannedYear1);
+                        if (!itemExists)
+                        {
+                            _ = await _sjcServiceV2.InsertIntoProgramDataCourtHAsync(item, id ?? 0);
+                        }
+                    }
+                }
+                var pdihInput = await _sjcServiceV2.GetProgramDataInstitutionForEndingPeriod(id ?? 0);
+                if (pdihInput.Any())
+                {
+                    foreach (var item in pdihInput)
+                    {
+                        itemExists = await _sjcServiceV2.GetProgramDataInstitutionHExistsAsync(id, item?.InstitutionTypeId ?? 0, item?.FunctionalSubAreaId, item?.RowNum, item?.PlannedYear1);
+                        if (!itemExists)
+                        {
+                            _ = await _sjcServiceV2.InsertIntoProgramDataInstitutionHAsync(item, id ?? 0);
+                        }
+                    }
+                }
+                _ = await _sjcServiceV2.SpDeleteEndPeriodDataAsync(id ?? 0);
+                return Json(new { msg = $"Приключването на бюджетния период завърши! Изберете следващ активен бюджетен период", success = true });
+            }
+            catch (Exception ex) {
+                return Json(new { msg = $"Грешка при приключване на бюджетен период {ex?.Message}", success = false });
+            }
+            
+        }
+
+        public PartialViewResult AddBudgetPeriodPartial() => PartialView("AddBudgetPeriodPartial");
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> AddNewActivePeriod(int ny)
+        {
+            var empl = await Mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if ((!empl.CanAdd) && (!empl.CanUpdate))
+            {
+                return Json(new { msg = "Нямате предоставени права да добавяте/редактирате данни ", success = false, id = 0 });
+            }
+            List<int> years = new List<int> { ny, ny+1, ny+2, ny+3 };
+            try
+            {
+                foreach (int year in years)
+                {
+                 
+
+                    for (int i = 1; i <= 9; i++)
+                    {
+                        
+                           _ = await _sjcRepo.Sp_InitProgramDataAsync(i, year);
+                           _ = await _sjcRepo.Sp_InitProgramDataCourtAsync(i, year);
+                           _ = await _sjcRepo.Sp_InitProgramDataInstitutionAsync(i, year);
+                      
+                    }
+                    for (int i = 1; i <= 9; i++)
+                    {
+                      
+                          _ = await _sjcRepo.Sp_UpdateProgramDataAsync(i, year);
+                          _ = await _sjcRepo.Sp_UpdateProgramDataCourtAsync(i, year);
+                          _ = await _sjcRepo.Sp_UpdateProgramDataInstitutionAsync(i, year);
+                      
+                    }
+                }
+                _ = await _sjcService.ExecuteRawSql($@"INSERT INTO BudgetPeriod
+                           ([Y1]
+                           ,[Y2]
+                           ,[Y3]
+                           ,[Y4]
+                           ,[IsActive]
+                           ,[IsUsable]
+                           ,[ActiveFrom]
+                           )
+                     VALUES
+                           ({ny}
+                           ,{ny+1}
+                           ,{ny+2}
+                           ,{ny+3}
+                           ,{1}
+                           ,{1}
+                           ,'{CielaDocs.Application.Utils.Utils.GetSqlDateTime(DateTime.Now, 0)}')");
+
+                return Json(new { msg = $"Създаването на новия активен бюджетен период завърши", success = true });
+
+            }
+            catch (Exception ex) {
+                return Json(new { msg = $"Създаването на новия активен бюджетен период завърши с грешка {ex?.Message} ", success = false });
+            }
         }
     }
 }

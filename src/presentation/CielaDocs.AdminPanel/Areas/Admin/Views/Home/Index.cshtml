@@ -6,149 +6,261 @@
 }
 
 <div class="spacer_20"></div>
-<h3>Администриране и конфигуриране на системата</h3>
+<h3>Администриране и конфигуриране на системата. Бюджетни периоди,Официална Валута:@ViewBag.OfficialCurrencyCode</h3>
 <div class="spacer_5"></div>
-<h4>Официална Валута:@ViewBag.OfficialCurrencyCode</h4>
+<div class="container-flex">
+    <input type="text" readonly id="activeperiodparams" class="lock-result">
+</div>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
 <div class="spacer_5"></div>
-<div id="cbFinYear" style="width:180px;display:inline-block;padding-left:5px;"></div>&nbsp;&nbsp;<div style="display:inline-block;padding-left:10px;" id="btnSet"></div>
-<div class="spacer_5"></div>
-<div id="btnInitpd"></div>
-<div id="btnUpdateProgram"></div>
 <div id="image-indicator"></div>
+<div id="grid"></div>
 <script>
     $('#image-indicator').dxLoadIndicator({
         indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
     });
     $(() => {
-        let ny = 0;
-        let progNum = 0;
+        let selectedId = 0;
+       let hasActivePeriod=0;
         loadIndicator = $('#image-indicator').dxLoadIndicator({
             visible: false,
         }).dxLoadIndicator('instance');
         loadIndicator.option('visible', false);
-        $('#cbFinYear').dxSelectBox({
-            dataSource: selectBoxYearData,
-            valueExpr: 'id',
+        
+          let activePeriod= fetchDataAsync(EduDl.baseUrl + "Noms/GetActiveBudgetPeriod", { })
+             .then(data =>{
+                if(!isEmpty(data)){
+                    hasActivePeriod=data?.Y1 ? Number(data?.Y1) :0;
+                    $('#activeperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
+                }
+                else {
+                      $('#activeperiodparams').val('');
+                }
+             });
+        $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(EduDl.baseUrl + "Home/GetBudgetPeriods", 'Get', { });
+                        }
+                    }),
+                }),
+                paging: {
+                    pageSize: 10,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                columns: [
+
+                    {
+                        dataField: "Y1",
+                        width: "10%",
+                        caption: "Активна година"
+                    },
+                    {
+                        dataField: "Y2",
+                        width: "10%",
+                        caption: "година"
+                    },
+                     {
+                        dataField: "Y3",
+                        width: "10%",
+                        caption: "година"
+                    },
+                     {
+                        dataField: "Y4",
+                        width: "10%",
+                        caption: "година"
+                    },
+                    {
+                        dataField: "IsActive",
+                        caption: "Активен",
+                        dataType: "boolean",
+                        lookup: {
+                            dataSource: [
+                                { value: true, text: "ДА" },
+                                { value: false, text: "НЕ" }
+                            ],
+                            valueExpr: "value",
+                            displayExpr: "text"
+                        }
+                    },
+                    {
+                        dataField: "ActiveFrom",
+                        width: "10%",
+                        caption: "Активен от",
+                        alllowEditing: false,
+                        valueFormat: 'dd.MM.yyyy',
+                        dataType: 'date',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                    {
+                       dataField: "ActiveTo",
+                        width: "10%",
+                        caption: "Активен до",
+                        alllowEditing: false,
+                        valueFormat: 'dd.MM.yyyy',
+                        dataType: 'date',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+
+                    {
+                        dataField: "Note",
+                        width: "20%",
+                        caption: "Забележка"
+                    },
+                    {
+                        type: 'buttons',
+                        width: 96,
+                        buttons: [{
+                            hint: 'Приключване',
+                            icon: 'edit',
+
+                            onClick(e) {
+                                endActivePeriod(e.row.data.Id)
+                                e.component.refresh(true);
+                                e.event.preventDefault();
+                            },
+                        }
+                        ],
+                    }
+                ],
+
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                onSelectionChanged: function (items) {
+                    if (items.selectedRowsData[0]) {
+                        selectedId = items.selectedRowsData[0].Id;
+                    }
+                },
+                focusedRowEnabled: true,
+                onFocusedRowChanged(e) {
+                    if (e) {
+                       // getExtraDataItem(e.row);
+                    }
+                },
+            });
+
+              const menuData = [{
+            id: '1',
+            name: 'Добави',
+            icon: EduDl.rootUrl+'images/add.png',
+
+
+        },
+           ];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
             displayExpr: 'name',
-            value: 0,
-            label: "Финансова година",
-            labelMode: "floating",
-            stylingMode: "underlined",
-            onValueChanged(e) {
-                ny = e.value;
-            },
-        });
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
 
+                    switch (item.id) {
 
-
-
-        $('#btnSet').dxButton({
-            stylingMode: 'contained',
-            text: 'Годишна инициализация на данни за показатели',
-            type: 'normal',
-            onClick() {
-                var result = DevExpress.ui.dialog.confirm("<i>Сигурни ли сте в действието? Изчакайте търпеливо процедурата да завърши.</i>", "Потвърждение");
-                result.done(function (dialogResult) {
-                    if (dialogResult) {
-                        loadIndicator.option('visible', true);
-                        $.ajax({
-                            beforeSend: function (request) {
-                                request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
-                            },
-                            url: "@Url.Action("InitFinYear", "Home",new {area="Admin"})", method: 'POST', data: { id: ny }
-
-                        })
-                            .done(function (result) {
-                                loadIndicator.option('visible', false);
-                                if (result.success === true) {
-                                    DevExpress.ui.dialog.alert(result.msg, 'Внимание');
-
-                                }
-                                else {
-                                    DevExpress.ui.dialog.alert(result.msg, 'Внимание');
-                                }
-
-                            })
-                            .fail(function (e) {
-                                loadIndicator.option('visible', false);
-                                DevExpress.ui.dialog.alert('Грешка при годишна инициализация на данни ' + e, 'Грешка при изпълнение');
-                            });
+                          case '1':
+                           addNewBudgetPeriod();
+                            break;
+                       
                     }
-                });
+                }
             },
-        });
-        $('#btnInitpd').dxButton({
-            stylingMode: 'contained',
-            text: 'Инициализация на бюджетни програми за година',
-            type: 'normal',
-            onClick() {
-                var result = DevExpress.ui.dialog.confirm("<i>Сигурни ли сте в действието? Изчакайте търпеливо процедурата да завърши.</i>", "Потвърждение");
-                result.done(function (dialogResult) {
-                    if (dialogResult) {
-                        loadIndicator.option('visible', true);
-                        $.ajax({
-                            beforeSend: function (request) {
-                                request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
-                            },
-                            url: "@Url.Action("InitProgramData", "Home",new {area="Admin"})", method: 'POST', data: { id: ny }
+        }).dxMenu('instance');
 
-                        })
-                            .done(function (result) {
-                                loadIndicator.option('visible', false);
-                                if (result.success === true) {
-                                    DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
 
-                                }
-                                else {
-                                    DevExpress.ui.dialog.alert(result.msg, 'Внимание');
-                                }
 
-                            })
-                            .fail(function (e) {
-                                loadIndicator.option('visible', false);
-                                DevExpress.ui.dialog.alert('Грешка при годишна инициализация на бюджетни програми ' + e, 'Грешка при изпълнение');
-                            });
-                    }
-                });
-            },
-        });
+         function  addNewBudgetPeriod(){
+             if(hasActivePeriod>0){
+                 DevExpress.ui.dialog.alert(`Има вече текущ активен период ${hasActivePeriod}! Приключете го за да добавите нов активен период.`); return;
+             }
+              mainPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(EduDl.baseUrl + "Home/AddBudgetPeriodPartial", { }),
+                height: 400,
+                width: 600,
+                title: 'Нов Бюджетен активен период',
+            });
+            mainPopup.show();
+        }
+        function endActivePeriod(id){
+             let activePeriod= fetchDataAsync(EduDl.baseUrl + "Noms/GetActiveBudgetPeriodById", {id:id })
+             .then(data =>{
+                if(!isEmpty(data)){
+                    hasActivePeriod=data?.IsActive ? Boolean(data?.IsActive) :false;
+                    console.log(hasActivePeriod);
+                   if(hasActivePeriod==false){
+                        DevExpress.ui.dialog.alert(`Избраният от Вас период не е активен. Селектирайте реда с активен период и кликнете върху линк Приключване`); return;
+                   }
+                   else{
+                       endActiveBudgetPeriod(id);
+                   }
+                }
+                else {
+                     DevExpress.ui.dialog.alert(`Не бе открит активен период за приключване. Селектирайте реда с активен период и кликнете върху линк Приключване`); return;
+                }
+             });
+        }
+        function endActiveBudgetPeriod(id){
+              var result = DevExpress.ui.dialog.confirm("Потвърдете Приключването на избрания активен бюджетен период? Действието е необратимо!!! Ще бъдат занулени всички работни данни за периода. Добре е да имате изготвен архив на базата данни", "Потвърждение");
+                             result.done(function (dialogResult) {
+                                 if (dialogResult === true) {
+                                       loadIndicator.option('visible', true);
+                                     $.ajax({
+                                         beforeSend: function (request) {
+                                         request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                                         },
+                                         url: EduDl.baseUrl + "Home/EndActivePeriodById", data: {id:id }, method: 'POST'
+                                     })
+                                         .done(function (result) {
+                                              loadIndicator.option('visible', false);
+                                              $("#grid").dxDataGrid("instance").refresh();
+                                             DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                              loadIndicator.option('visible', false);
+                                             DevExpress.ui.notify('Грешка при приключване на период.');
+                                         });
+                                 }
+                             });
+        }
+    });
+
+       
 
         
 
-        $('#btnUpdateProgram').dxButton({
-            stylingMode: 'contained',
-            text: 'Актуализация(Update IsActive,IsCalculated) на бюджетни програми за година',
-            type: 'normal',
-            onClick() {
-                var result = DevExpress.ui.dialog.confirm("<i>Сигурни ли сте в действието? Изчакайте търпеливо процедурата да завърши.</i>", "Потвърждение");
-                result.done(function (dialogResult) {
-                    if (dialogResult) {
-                        loadIndicator.option('visible', true);
-                        $.ajax({
-                            beforeSend: function (request) {
-                                request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
-                            },
-                            url: "@Url.Action("UpdateProgramData", "Home", new { area = "Admin" })", method: 'POST', data: { id: ny }
-
-                        })
-                            .done(function (result) {
-                                loadIndicator.option('visible', false);
-                                if (result.success === true) {
-                                    DevExpress.ui.dialog.alert(result.msg, 'Внимание');
-
-                                }
-                                else {
-                                    DevExpress.ui.dialog.alert(result.msg, 'Внимание');
-                                }
-
-                            })
-                            .fail(function (e) {
-                                loadIndicator.option('visible', false);
-                                DevExpress.ui.dialog.alert('Грешка при годишна инициализация на бюджетни програми ' + e, 'Грешка при изпълнение');
-                            });
-                    }
-                });
-            },
-        });
-    });
 </script>

@@ -1189,7 +1189,7 @@ namespace CielaDocs.Shared.Repository
                                   group by
                                           FunctionalSubAreaId,RowNum,PlannedYear
                                   ) t4
-                          on      t4.FunctionalSubAreaId=a.FunctionalSubAreaId and t4.RowNum=a.RowNum and t4.PlannedYear=@NY
+                          on      t4.FunctionalSubAreaId=a.FunctionalSubAreaId and t4.RowNum=a.RowNum and t4.PlannedYear=@NY3
 
 	              where a.FunctionalSubAreaId=@ProgramDefNum  and a.IsActive=1";
             var parameters = new

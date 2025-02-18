@@ -3,14 +3,16 @@
 const selectBoxYearData = [{ id: 0, name: "Изберете година" }, { id: 2022, name: "2022" }, { id: 2023, name: "2023" }, { id: 2024, name: "2024" }, { id: 2025, name: "2025" }, { id: 2026, name: "2026" }, { id: 2027, name: "2027" },
     { id: 2028, name: "2028" }, { id: 2029, name: "2029" }, { id: 2030, name: "2030" }, { id: 2031, name: "2031" }, { id: 2032, name: "2032" }, { id: 2033, name: "2033" }, { id: 2034, name: "2034" }, { id: 2035, name: "2035" },
     { id: 2036, name: "2036" }, { id: 2037, name: "2037" }, { id: 2038, name: "2038" }, { id: 2039, name: "2039" }, { id: 2040, name: "2040" }];
-
+const selectBoxCurrencyData = [{ id: 0, name: "BGN" }, { id: 1, name: "EUR" }];
 var loadingModal = $("#loadingModal");
 
 var selectedCardId = 0;
 var selectedEmplId = 0;
 var actionInProgress = false;
 var nextActionQueue = [];
-
+var officialCurrencyId = 0;
+var activeYear = 0;
+let nSelectedYear;
 function warn(s) {
     $.alert({
         boxWidth: '30%',
@@ -328,4 +330,47 @@ function parseCyrilicDate(s) {
 }
 function truncateString(str, length) {
     return str.length > length ? str.substring(0, length - 3) + '...' : str
+}
+function validateDigits(evt) {
+    var theEvent = evt || window.event;
+
+
+    // Handle key press
+    var key = theEvent.keyCode || theEvent.which;
+    key = String.fromCharCode(key);
+
+    var regex = /[0-9]|\./;
+    if (!regex.test(key)) {
+        theEvent.returnValue = false;
+        if (theEvent.preventDefault) theEvent.preventDefault();
+    }
+}
+async function fetchDataAsync(url, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${url}?${queryString}`);
+    return response.json();
+}
+//example call
+//fetchData('https://api.example.com/data', { id: 123, type: 'user', status: 'active' })
+//    .then(data => console.log(data));
+function checkValuesAndAct(action, ...values) {
+    const allHaveValues = values.every(value => value !== null && value !== undefined && value !== '');
+    if (allHaveValues) {
+        action(); // Trigger the provided action
+    }
+}
+//example call
+//let a = 'Hello';
+//let b = 42;
+//let c = 'World';
+
+//checkValuesAndAct(() => {
+//    console.log('All variables have values!');
+//}, a, b, c);  // ✅ This will log because all variables have values
+
+function checkIntValuesAndAct(action, ...values) {
+    const allHaveValues = values.every(value => value !== null && value !== undefined && value !== '' && parseInt(value) > 0);
+    if (allHaveValues) {
+        action(); // Trigger the provided action
+    }
 }

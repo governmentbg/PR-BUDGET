@@ -593,3 +593,73 @@ img.note {
         padding: 100px 0 20px 0;
     }
 }
+.lock-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.lock-result {
+    font-weight: normal;
+    text-align: center;
+    font-size: 14px;
+    background-color: #ede7f6;
+    border-radius: 6px;
+    border: none;
+    padding: 6px;
+    outline: none;
+    color: #1d1d1d;
+    width: 100%;
+}
+
+#lock-result {
+    font-weight: normal;
+    text-align: center;
+    font-size: 14px;
+    background-color: #ede7f6;
+    border-radius: 6px;
+    border: none;
+    padding: 6px;
+    outline: none;
+    color: #1d1d1d;
+    width: 100%;
+}
+
+.hideme {
+    display: none;
+    visibility: hidden;
+}
+
+.showme {
+    display: inline;
+    visibility: visible;
+}
+.container-flex {
+    display: flex;
+    justify-content: flex-end; /* Pushes the div to the right */
+    width: 100%;
+}
+
+.right-currency {
+    width: 100px;
+    margin-right: 20px;
+    font-weight: normal;
+    text-align: center;
+    font-size: 14px;
+    background-color: #ede7f6;
+    border-radius: 6px;
+    border: none;
+    padding: 6px;
+    outline: none;
+    color: #1d1d1d;
+}
+
+.dropdown-right {
+    margin-right: 20px;
+    width: 100px;
+}
+
+.activeperiod-right {
+    margin-right: 20px;
+    right: 0;
+}

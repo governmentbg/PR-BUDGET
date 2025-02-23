@@ -37,11 +37,13 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
+        private readonly ISjcService _sjcService;
+        private readonly ISjcServiceV2 _sjcServiceV2;
 
         private FilterMainDataVm? FilterData = null;
 
         public MainDataItmController(ILogger<MainDataController> logger, IConfiguration configuration, ISendGridMailer emailSender,
-                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IWebHostEnvironment env)
+                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IWebHostEnvironment env, ISjcService sjcService, ISjcServiceV2 sjcServiceV2)
         {
             _logger = logger;
             _mediator = mediator;
@@ -50,6 +52,8 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _env = env;
+            _sjcService = sjcService;
+            _sjcServiceV2 = sjcServiceV2;
         }
         public async Task<IActionResult> Index()
         {
@@ -60,6 +64,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             ViewData["court"] = court;
             ViewBag.Month = FilterData?.Nmonth;
             ViewBag.Year = FilterData?.Nyear;
+            ViewBag.IsLocked = FilterData?.IsLocked ?? false;
             return View();
         }
         [HttpGet]
@@ -128,6 +133,8 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             // string result=string.Empty;
             foreach (var (key, value) in dic)
             {
+                if (key is null) continue;
+                if (value is null) continue;
                 int Place = Source.IndexOf(key);
                 Source = Source.Remove(Place, key.Length).Insert(Place, value);
             }
@@ -224,6 +231,17 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                 var court = await _mediator.Send(new GetCourtByIdQuery { Id = empl?.CourtId ?? 0 });
                 FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm();
                 var dbdata = await _sjcRepo.GetMainDataItemsGridByFilterAsync(court?.Id ?? 0, FilterData?.Nmonth ?? 0, FilterData?.Nyear ?? 0);
+                //------check locked period------------
+                var checkLocked = await _sjcService.QueryRaw<MainDataItemLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName 
+                    FROM MainDataItemLocked a
+                    left join users u on a.LockedBy=u.id
+                    where a.CourtId={FilterData?.CourtId ?? 0} and a.Nmonth={FilterData?.Nmonth ?? 0} and a.Nyear={FilterData?.Nyear ?? 0} ");
+                if (checkLocked != null)
+                {
+                    return Json(new { msg = $"Този период е заключен! Моля проверете!", success = false });
+                }
+                //-------end check locked period------------------------
+
                 var data = Toolbox.ExcelToDataTable(file);
                 int nCnt = 0;
                 foreach (DataTable thisTable in data.Tables)

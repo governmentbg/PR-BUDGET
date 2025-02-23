@@ -1,10 +1,13 @@
 ﻿@using System.Security.Principal
+@using CielaDocs.Application.Models
 @using Microsoft.AspNetCore.Antiforgery
 @inject IAntiforgery antiforgery
 @{
     var tokenSet = antiforgery.GetAndStoreTokens(Context);
     ViewData["Title"] = "Home Page";
     Layout = "~/Areas/CourtUser/Views/Shared/_Layout.cshtml";
+    var cfg = ViewData["Cfg"] as CfgVm;
+    var activePeriod = ViewData["ActivePeriod"] as BudgetPeriodVm;
 }
 @if (User?.Identity?.IsAuthenticated ?? false)
 {
@@ -14,11 +17,16 @@
     @await Html.PartialAsync("_ModalDialogPartial")
     <div id="popup"></div>
     <div class="container">
-        <div class="spacer_20"></div>
-        <h3 style="color:red;">@ViewBag.AppMode</h3>
-        <div class="spacer_20"></div>
-        <h4>Отчетна единица: @ViewBag.CourtName</h4>
 
+        <h4>Отчетна единица: @ViewBag.CourtName</h4>
+        <div class="spacer_10"></div>
+        <h3 style="color:red;">@ViewBag.AppMode</h3>
+        <div class="container-flex">
+            <div class="activeperiod-right">
+                <label for="currency" style="color:darkred;font-size:medium;">Активен период:@activePeriod?.Y1 г.(@cfg.OfficialCurrencyCode)</label>
+            </div>
+        </div>
+        <div class="spacer_10"></div>
         <div class="row">
 
             <div class="col-md-3">
@@ -65,16 +73,6 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-3" id="admin">
-                <div class="capsule-at">
-
-                    <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Setting_2-WF.png")" alt="." />
-                    <p class="button_text-at">Администратор</p>
-                    <p>Администриране и конфигуриране на системата...</p>
-
-                </div>
-
-            </div>
             <div class="col-md-3" id="help">
                 <div class="capsule-at">
                     <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Question.png")" alt="." />
@@ -159,7 +157,11 @@ else
             window.localStorage.setItem('UserId', $('#UserId').val());
             window.localStorage.setItem('CourtName', $('#CourtName').val());
             window.localStorage.removeItem('cardfilter');
-
+            window.localStorage.setItem('OfficialCurrencyId', @cfg.OfficialCurrencyId);
+            window.localStorage.setItem('ActiveYear', @activePeriod?.Y1);
+            //global vars
+            officialCurrencyId = window.localStorage.getItem('OfficialCurrencyId') ? Number(window.localStorage.getItem('OfficialCurrencyId')) : 0;
+            activeYear = window.localStorage.getItem('ActiveYear') ? Number(window.localStorage.getItem('ActiveYear')) : 0;
               $("#programFilter").on("click", function () {
                 popup.option({
                     contentTemplate: () => popupContentTemplate(3)
@@ -167,14 +169,11 @@ else
                 popup.show();
         });
             $("#importPbKonto").on("click", function () {
-                redirectme("@Url.Action("Index", "ImportPbKonto")");
+                redirectme("@Url.Action("Index", "ImportPbKonto", new { area = "CourtUser" })");
             });
 
 
-            $("#admin").on("click", function () {
-                redirectme("@Url.Action("Index", "Home", new { area = "Admin" })");
-            });
-
+          
            
             $("#help").on("click", function () {
                 redirectme("@Url.Action("Index", "Help", new { area = ""})");
@@ -284,7 +283,7 @@ else
                     request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
                 },
 
-                url: "@Url.Action("SetProgramDataFilter", "Home", new { area = "CourtUser" })", method: 'POST', data: { functionalSubAreaId: itm[0], ny: itm[1], currencyId: itm[2], currencyMeasureId: itm[3] }
+                url: "@Url.Action("SetProgramDataFilter", "Home", new { area = "CourtUser" })", method: 'POST', data: { functionalSubAreaId: itm[0], ny: itm[1], currencyId: itm[2], currencyMeasureId: itm[3],isLocked:itm[4] }
 
             }).done(function (result) {
                 if (result.success === true) {
@@ -359,7 +358,7 @@ else
                     request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
                 },
 
-                url: "@Url.Action("SetMainDataFilter", "Home", new {area="CourtUser"})", method: 'POST', data: { functionalSubAreaId: itm[0], courtId: $('#CourtId').val(), nm: itm[1], ny: itm[2] }
+                url: "@Url.Action("SetMainDataFilter", "Home", new { area = "CourtUser" })", method: 'POST', data: { functionalSubAreaId: itm[0], courtId: $('#CourtId').val(), nm: itm[1], ny: itm[2],isLocked:itm[4] }
 
             }).done(function (result) {
                 if (result.success === true) {
@@ -380,7 +379,7 @@ else
                     request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
                 },
 
-                url: "@Url.Action("SetMainDataItemFilter", "Home", new {area="CourtUser"})", method: 'POST', data: { courtId: $('#CourtId').val(), nm: itm[0], ny: itm[1] }
+                url: "@Url.Action("SetMainDataItemFilter", "Home", new { area = "CourtUser" })", method: 'POST', data: { courtId: $('#CourtId').val(), nm: itm[0], ny: itm[1],isLocked:itm[2] }
 
             }).done(function (result) {
                 if (result.success === true) {

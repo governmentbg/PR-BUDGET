@@ -134,11 +134,10 @@
                         alllowEditing: true,
                         valueFormat: '#0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nval1 = value.toFixed(2);
+                            },
 
                     },
                     {
@@ -148,11 +147,10 @@
                         alllowEditing: true,
                         valueFormat: '#0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nval2 = value.toFixed(2);
+                            },
 
                     }, {
                         dataField: "Nval3",
@@ -161,11 +159,22 @@
                         alllowEditing: true,
                         valueFormat: '#0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nval3 = value.toFixed(2);
+                            },
+
+                    }, {
+                        dataField: "Nval4",
+                        width: "10%",
+                        caption: selectedYear + 3,
+                        alllowEditing: true,
+                         valueFormat: '#0.00',
+                        dataType: 'number',
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nval4 = value.toFixed(2);
+                            },
 
                     },
                 ],
@@ -193,7 +202,7 @@
                 },
                 onEditorPreparing: function (e) {
                     if (e.dataField === "PrnCode" || e.dataField === "Name") e.editorOptions.disabled = true
-                    if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3") && e.parentType === "dataRow") {
+                    if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3"|| e.dataField === "Nval4") && e.parentType === "dataRow") {
                         const defaultValueChangeHandler = e.editorOptions.onValueChanged;
                         e.editorOptions.onValueChanged = function (args) {
                             defaultValueChangeHandler(args);
@@ -237,20 +246,20 @@
         const menuData = [{
             id: '1',
             name: 'Затвори',
-            icon: '../images/close.png',
+            icon:Ciela.rootUrl+'images/close.png',
 
 
         },
         {
             id: '6_1',
             name: 'Експорт',
-            icon: '../images/exporter.svg',
+            icon: Ciela.rootUrl+'images/exporter.svg',
 
 
         }, {
             id: '4',
             name: 'Обнови',
-            icon: '../images/refresh.png',
+            icon: Ciela.rootUrl+'images/refresh.png',
 
         }];
         const dxMenu = $('#menu').dxMenu({

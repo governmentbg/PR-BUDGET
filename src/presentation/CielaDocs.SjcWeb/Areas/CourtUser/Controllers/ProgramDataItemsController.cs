@@ -40,11 +40,12 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
-
+        private readonly ISjcService _sjcService;
         private FilterMainDataVm? FilterData = null;
 
         public ProgramDataItemsController(ILogger<MainDataController> logger, IConfiguration configuration, ISendGridMailer emailSender,
-                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IWebHostEnvironment env)
+                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IWebHostEnvironment env,
+                        ISjcService sjcService)
         {
             _logger = logger;
             _mediator = mediator;
@@ -53,6 +54,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _env = env;
+            _sjcService = sjcService;
         }
         public async Task<IActionResult> Index()
         {
@@ -73,6 +75,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             ViewBag.Year = FilterData?.Nyear;
             ViewBag.ProgramName = prog?.Name ?? string.Empty;
             ViewBag.FunctionalSubAreaId = FilterData?.FunctionalSubAreaId ?? 0;
+            ViewBag.IsLocked = FilterData?.IsLocked ?? false;
             return View();
         }
         [HttpGet]
@@ -115,6 +118,8 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             // string result=string.Empty;
             foreach (var (key, value) in dic)
             {
+                if (key is null) continue;
+                if (value is null) continue;
                 int Place = Source.IndexOf(key);
                 Source = Source.Remove(Place, key.Length).Insert(Place, value);
             }

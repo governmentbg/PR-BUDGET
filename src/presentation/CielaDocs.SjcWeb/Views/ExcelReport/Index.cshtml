@@ -3,7 +3,7 @@
 @using DevExpress.AspNetCore
 @using DevExpress.Spreadsheet;
 @{
-     Layout = "~/Areas/CourtUser/Views/Shared/_LayoutViewer.cshtml";
+    Layout = "~/Views/Shared/_LayoutViewer.cshtml";
     var importto = @ViewBag.Import;
 }
 <div class="button-container">
@@ -17,7 +17,6 @@
         <div id="button-download-xlsx"></div>
         <div id="button-download-html"></div>
         <div id="button-print"></div>
-        <div id="button-import"></div>
     </form>
 </div>
 <script type="text/javascript">
@@ -56,40 +55,7 @@
                 spreadsheet.print("_blank");
             }
         });
-        $("#button-import").dxButton({
-            icon: "import",
-            type: "normal",
-            text: "Импорт",
-            onClick: function (e) {
-                var result = DevExpress.ui.dialog.confirm("<i>Данните ще припокрият съществуващите</i>", "Потвърдете");
-                result.done(function (dialogResult) {
-                    if (dialogResult == true) {
-                        var spreadsheetState = spreadsheet.getSpreadsheetState();
-                        $('#divUploading').show();
-                        $.ajax({
-                            type: 'POST',
-                            url: '@Url.Action("LoadExcelFileToTable", "ExcelViewer", new { area = "CourtUser" })',
-                            data: { spreadsheetState: spreadsheetState, importType: $('#ImportType').val(), fileName: $('#FileName').val() },
-                            success: function (result) {
-                                $('#divUploading').hide();
-                                if (result.success != true) {
-                                    DevExpress.ui.dialog.alert(result.msg, 'Внимание');
-                                }
-                                else {
-                                    DevExpress.ui.dialog.alert('Данните бяха заредени', 'Информация');
-                                }
-                            },
-                            error: function (xhr, status, p3, p4) {
-                                $('#divUploading').hide();
-                                DevExpress.ui.dialog.alert('Something is going to wrong please try agan!', 'Грешка');
-                            }
-                        });
-                    }
-                });
-
-
-            }
-        });
+       
     });
 </script>
 
@@ -97,21 +63,21 @@
 
     if (Model != null)
     {
-    @(Html.DevExpress()
+        @(Html.DevExpress()
                   .Spreadsheet("spreadsheet")
                     .Height("800px")
                     .Width("100%")
                     // .FullscreenMode(true)
                     .ConfirmOnLosingChanges(confirm => confirm.Enabled(false))
-                            .DocumentRequestHandlerUrl(Url.Action("DxDocRequest", "ExcelViewer", new { area = "CourtUser" }))
+                    .DocumentRequestHandlerUrl(Url.Action("DxDocRequest", "ExcelViewer"))
                     .Open(Model.DocumentId, DocumentFormat.Xlsx, @Model.ContentAccessorByStream)
 
-    )
+            )
     }
     else
     {
-    @(Html.DevExpress()
+        @(Html.DevExpress()
                   .Spreadsheet("spreadsheet")
-                          .DocumentRequestHandlerUrl(Url.Action("DxDocRequest", "ExcelViewer", new { area = "CourtUser" })))
+                  .DocumentRequestHandlerUrl(Url.Action("DxDocRequest")))
     }
 } 

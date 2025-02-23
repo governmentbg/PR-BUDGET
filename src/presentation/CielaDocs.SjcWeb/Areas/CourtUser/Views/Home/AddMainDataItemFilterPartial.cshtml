@@ -13,6 +13,15 @@
 
         <div class="container-fluid">
             <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <div class="lock-container">
+                            <input type="text" readonly id="aciveperiodparams" class="lock-result">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
                 <div class="col-4">
                     <div class="form-group">
                         <label for="nmonth">За месец</label>
@@ -26,9 +35,17 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="lock-container">
+                        <input type="text" readonly id="lock-result">
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="spacer_10"></div>
         <div style="float:right;margin-right:10px;margin-bottom:10px;">
+            <div id="btnLockedView"></div>
         <div id="okFilterItemBtn"></div>
         <div id="closeFilterItemBtn"></div>
         </div>
@@ -38,7 +55,26 @@
     $(() => {
         let nm = 0;
         let ny = 0;
+         let isLocked=false;
+        $('#lock-result').val('');
+        $('#lock-result').addClass("hideme")
 
+             const buttonView = $("#btnLockedView").dxButton({
+        visible: true,
+        icon:Ciela.rootUrl+'images/lock-closed.svg',
+        hint:'Заключени периоди',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Home/AddMainDataItemLockedPartial", { }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Заключени периоди',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+
+       checkData();
         $("#selectBoxMonth").dxSelectBox({
             dataSource: selectBoxMonthData,
             valueExpr: 'id',
@@ -48,12 +84,20 @@
             }
            
         });
-        $("#selectBoxYear").dxSelectBox({
-            dataSource: selectBoxYearData,
-            valueExpr: 'id',
-            displayExpr: 'name',
+       $("#selectBoxYear").dxSelectBox({
+            dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
+                    }
+                }),
+            }),
+            valueExpr: 'Id',
+            displayExpr: 'Name',
             onValueChanged: function (e) {
                ny=e.value;
+               nSelectedYear=ny;
             }
 
         });
@@ -70,7 +114,7 @@
                     DevExpress.ui.dialog.alert('Изберете задължително месец и година','Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('mainDataItemFilterOk', ''.concat(nm, "|", ny));
+                window.parent.OnClosePopupEventHandlerEx('mainDataItemFilterOk', ''.concat(nm, "|",nSelectedYear,"|",isLocked));
             },
         });
         $('#closeFilterItemBtn').dxButton({
@@ -82,6 +126,31 @@
                 popup.hide();
             },
         });
+        async function checkData(){
+            let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
+             .then(data =>{
+                if(!isEmpty(data)){
+                    $('#aciveperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
+                }
+                else {
+                      $('#aciveperiodparams').val('');
+                }
+             });
+      // Trigger your custom logic here
+                let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod2Locked", { courtId: courtId,nm:nm, ny: ny })
+                 .then(data =>{
+                        if(!isEmpty(data)){
+                        $('#lock-result').val('Заключен период от '+data?.LockedByUserName);
+                        $('#lock-result').removeClass("hideme");
+                        isLocked=true;
+                    }
+                    else {
+                          $('#lock-result').val('');
+                        $('#lock-result').addClass("hideme");
+                        isLocked=false;
+                    }
+                 });
+        }
     });
    
 </script>

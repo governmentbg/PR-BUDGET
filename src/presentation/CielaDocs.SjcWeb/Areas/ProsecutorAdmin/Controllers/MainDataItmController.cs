@@ -128,6 +128,8 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
             // string result=string.Empty;
             foreach (var (key, value) in dic)
             {
+                if (key is null) continue;
+                if (value is null) continue;
                 int Place = Source.IndexOf(key);
                 Source = Source.Remove(Place, key.Length).Insert(Place, value);
             }

@@ -1,16 +1,25 @@
 ﻿@using System.Linq
+@using CielaDocs.Application.Models
 @using Microsoft.AspNetCore.Antiforgery
 @inject IAntiforgery antiforgery
 @{
     var tokenSet = antiforgery.GetAndStoreTokens(Context);
     Layout = "~/Areas/CourtUser/Views/Shared/_Layout.cshtml";
+    var cfg = ViewData["Cfg"] as CfgVm;
+    var activePeriod = ViewData["ActivePeriod"] as BudgetPeriodVm;
 }
 @Html.Hidden("CourtId", (int)ViewBag.CourtId)
 @Html.Hidden("UserId", (int)ViewBag.UserId)
 @Html.Hidden("CourtName", (string)ViewBag.CourtName)
-<div class="spacer_20"></div>
+<div class="spacer_5"></div>
+<div style="display:inline-block;" id="menu"></div>
+<div class="spacer_5"></div>
 <h4>Импорт на данни за проектобюджет: @ViewBag.CourtName</h4>
-
+<div class="container-flex">
+    <div class="activeperiod-right">
+        <label for="currency" style="color:darkred;font-size:medium;">Активен период:@activePeriod?.Y1 г.(@cfg.OfficialCurrencyCode)</label>
+    </div>
+</div>
     <div class="modal-body form-horizontal">
 
         <div class="container-fluid">
@@ -54,7 +63,7 @@
                        
                         <div id="buttonExcelViewer"></div>
                         <div id="buttonGridCourtViewer"></div>
-
+                <div id="btnLockedView"></div>
                 
 
                     
@@ -79,16 +88,37 @@
         $("#divProcessing").hide();
         $('#divUploading').hide();
 
-        // const addToProgramData = $('#cbAddToProgramData').dxCheckBox({
-        //     value: false,
-        //     text: 'Добави към общите данни',
-        // }).dxCheckBox('instance');
-        
+      const buttonView = $("#btnLockedView").dxButton({
+        visible: true,
+        icon:Ciela.rootUrl+'images/lock-closed.svg',
+        hint:'Заключени периоди',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "ImportPbKonto/AddImportPbKontoLockedPartial", { }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Заключени периоди',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+       let isLocked=false;
+        $('#lock-result').val('');
+        $('#lock-result').addClass("hideme")
 
-        $("#selectBoxYear").dxSelectBox({
-            dataSource: selectBoxYearData,
-            valueExpr: 'id',
-            displayExpr: 'name',
+
+
+         $("#selectBoxYear").dxSelectBox({
+           dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
+                    }
+                }),
+            }),
+            valueExpr: 'Id',
+            displayExpr: 'Name',
             onValueChanged: function (e) {
                 ny = e.value;
             }
@@ -154,10 +184,41 @@
             },
         });
         function viewExcelFile(courtId, ny) {
-            redirectme1New("@Url.Action("Index", "ExcelViewer", new { area = "CourtUser" })", "id", ''.concat("", "|", courtId, "|", ny, "|", 0, "|", 0, "|", 0));
+            redirectme1New("@Url.Action("Index", "ExcelViewer", new { area = "" })", "id", ''.concat("", "|", courtId, "|", ny, "|", 0, "|", 0, "|", 0));
            
         }
+         const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: Ciela.rootUrl+'images/back.png',
 
+
+        }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+                          case '1':
+                            window.location.href = Ciela.baseUrl;
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
     });
    
 

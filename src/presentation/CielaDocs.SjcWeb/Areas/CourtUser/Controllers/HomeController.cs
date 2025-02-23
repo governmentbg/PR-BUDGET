@@ -3,6 +3,7 @@
 using CielaDocs.Application;
 using CielaDocs.Application.Models;
 using CielaDocs.Shared.Repository;
+using CielaDocs.Shared.Services;
 using CielaDocs.SjcWeb.Extensions;
 using CielaDocs.SjcWeb.Helper;
 
@@ -24,8 +25,10 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IWebHostEnvironment _env;
         private readonly ISjcBudgetRepository _sjcRepo;
+        private readonly ISjcServiceV2 _sjcServiceV2;
 
-        public HomeController(IMediator mediator, IMapper mapper, ILogRepository logRepo,  IHttpContextAccessor httpContextAccessor, IWebHostEnvironment env, ISjcBudgetRepository sjcRepo)
+        public HomeController(IMediator mediator, IMapper mapper, ILogRepository logRepo,  
+            IHttpContextAccessor httpContextAccessor, IWebHostEnvironment env, ISjcBudgetRepository sjcRepo, ISjcServiceV2 sjcServiceV2)
         {
             _mediator = mediator;
             _mapper = mapper;
@@ -33,6 +36,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             _httpContextAccessor = httpContextAccessor;
             _env = env;
             _sjcRepo = sjcRepo;
+            _sjcServiceV2 = sjcServiceV2;
 
         }
         public object GetUserId()
@@ -55,10 +59,12 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             var court = await _mediator.Send(new GetCourtByIdQuery { Id = empl?.CourtId??0 });
             string? appMode = GlobalConfig.GetValue("ApplicationMode:AppMode");
             ViewBag.AppMode = (appMode?.ToLower() == "demo") ? "ДЕМО версия" : string.Empty;
+            ViewData["ActivePeriod"] = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+            ViewData["Cfg"] = await _sjcRepo.GetCfgAsync();
 
             ViewBag.CourtName = court?.Name ?? string.Empty;
-             ViewBag.CourtId= court?.Id??0;
-             ViewBag.UserId=empl?.Id??0;
+            ViewBag.CourtId= court?.Id??0;
+            ViewBag.UserId=empl?.Id??0;
             return  View() ;
         }
         public IActionResult AddMainDataFilterPartial() => PartialView(nameof(AddMainDataFilterPartial));
@@ -69,7 +75,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             return  PartialView(nameof(AddProgramDataFilterPartial));
         }
         [HttpPost]
-        public async Task<JsonResult> SetMainDataFilter(int? functionalSubAreaId, int? courtId, int? nm, int? ny)
+        public async Task<JsonResult> SetMainDataFilter(int? functionalSubAreaId, int? courtId, int? nm, int? ny, bool? isLocked)
         {
             try
             {
@@ -88,7 +94,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                     _ = await _sjcRepo.SpLoadMainDataItemsByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
                 }
                 HttpContext.Session.Remove("FilterMainDataSess");
-                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0 });
+                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0, IsLocked = isLocked ?? false });
                 return Json(new { success = true, msg = "Ok" });
             }
             catch (Exception ex)
@@ -97,7 +103,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             }
         }
         [HttpPost]
-        public async Task<JsonResult> SetMainDataItemFilter(int? courtId, int? nm, int? ny)
+        public async Task<JsonResult> SetMainDataItemFilter(int? courtId, int? nm, int? ny, bool? isLocked)
         {
             try
             {
@@ -116,7 +122,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                     _ = await _sjcRepo.SpLoadMainDataItemsByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
                 }
                 HttpContext.Session.Remove("FilterMainDataSess");
-                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = 0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0 });
+                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = 0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0, IsLocked = isLocked ?? false });
                 return Json(new { success = true, msg = "Ok" });
             }
             catch (Exception ex)
@@ -125,7 +131,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
             }
         }
         [HttpPost]
-        public async Task<JsonResult> SetProgramDataFilter(int? functionalSubAreaId, int? ny, int? currencyId, int? currencyMeasureId)
+        public async Task<JsonResult> SetProgramDataFilter(int? functionalSubAreaId, int? ny, int? currencyId, int? currencyMeasureId, bool? isLocked)
         {
             try
             {
@@ -140,7 +146,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                 var court = await _mediator.Send(new GetCourtByIdQuery { Id = empl?.CourtId ?? 0 });
 
                 HttpContext.Session.Remove("FilterMainDataSess");
-                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0, Nyear = ny ?? 0, CurrencyId = currencyId ?? 0, CurrencyMeasureId = currencyMeasureId ?? 0 });
+                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0, Nyear = ny ?? 0, CurrencyId = currencyId ?? 0, CurrencyMeasureId = currencyMeasureId ?? 0, IsLocked = isLocked ?? false });
                 _ = await _sjcRepo.Sp_InitProgramDataCourtByIdAsync(functionalSubAreaId ?? 0,court?.Id??0, ny ?? 0);
                 var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
                 string logmsg = $"Филтър по програми {User?.Identity?.Name}";
@@ -152,5 +158,10 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                 return Json(new { success = false, msg = "Грешка: " + ex?.Message });
             }
         }
+        public PartialViewResult AddProgramDataLockedPartial() => PartialView("AddProgramDataLockedPartial");
+        public PartialViewResult AddMainDataItemLockedPartial() => PartialView("AddMainDataItemLockedPartial");
+        public PartialViewResult AddMainDataLockedPartial() => PartialView("AddMainDataLockedPartial");
+        public PartialViewResult AddMainDataPeriodLockedPartial() => PartialView("AddMainDataPeriodLockedPartial");
+     
     }
 }

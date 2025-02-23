@@ -163,6 +163,9 @@ namespace CielaDocs.AdminPanel.Controllers
                         case 3:
                             claimsIdentity.AddClaim(new Claim("User", "User"));
                             break;
+                        case 5:
+                            claimsIdentity.AddClaim(new Claim("ProsecutorAdmin", "ProsecutorAdmin"));
+                            break;
                         default:break;
                     }
                     claimsIdentity.AddClaim(new Claim("EmplId", (empl?.Id??0).ToString()));

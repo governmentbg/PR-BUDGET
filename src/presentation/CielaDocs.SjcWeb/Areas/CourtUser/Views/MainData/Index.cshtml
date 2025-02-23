@@ -17,6 +17,13 @@
 <h3>@mainSubArea</h3>
 <div class="spacer_5"></div>
 <h4>@title</h4>
+<div class="row">
+    <div class="col-3">
+        <div class="lock-container">
+            <input type="text" readonly id="lock-result">
+        </div>
+    </div>
+</div>
 <div class="spacer_5"></div>
 <div id="typeOfIndicatorFilter" style="width:180px;display:inline-block;padding-left:5px;"></div><div style="display:inline-block;padding-left:10px;" id="menu"></div>
 <div class="spacer_5"></div>
@@ -109,6 +116,13 @@
         };
        
         $(() => {
+             let bIsLocked = '@(ViewBag.IsLocked ?? "false")'.toLowerCase() === 'true';
+
+             $('#lock-result').addClass("hideme");
+             if(bIsLocked){
+                  $('#lock-result').val('Заключен период');
+                  $('#lock-result').toggleClass("hideme showme");
+             }
 
             $('#typeOfIndicatorFilter').dxSelectBox({
                 dataSource: new DevExpress.data.DataSource({
@@ -195,13 +209,13 @@
                         width: "10%",
                         caption: "Изчислена С-т",
                         alllowEditing: false,
-                        valueFormat: '#0.00',
+                       valueFormat: '0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nvalue = value.toFixed(2);
+                            },
+
 
                     },
                     {
@@ -219,17 +233,17 @@
 
                     },
                     {
-                        dataField: "EnteredValue",
+                       dataField: "EnteredValue",
                         width: "10%",
                         caption: "Въведена С-т",
                         alllowEditing: true,
                         valueFormat: '#0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.EnteredValue = value.toFixed(2);
+                            },
+
 
                     },
 
@@ -252,7 +266,7 @@
                 ],
                 editing: {
                     mode: 'cell',
-                    allowUpdating: true,
+                    allowUpdating: !bIsLocked,
                     allowDeleting: false,
                     allowAdding: false,
                 },
@@ -317,18 +331,18 @@
             {
                 id: '6_1',
                 name: 'Експорт',
-                icon: '../images/exporter.svg',
+                icon: Ciela.rootUrl+'images/exporter.svg',
 
 
             }, {
                 id: '3',
                 name: 'Изчисли',
-                icon: '../images/calculator.png',
+                icon: Ciela.rootUrl+'images/calculator.png',
 
             }, {
                 id: '4',
                 name: 'Обнови',
-                icon: '../images/refresh.png',
+                icon: Ciela.rootUrl+'images/refresh.png',
 
             }];
         const dxMenu = $('#menu').dxMenu({

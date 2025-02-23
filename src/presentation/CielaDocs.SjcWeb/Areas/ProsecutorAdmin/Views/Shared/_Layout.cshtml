@@ -1,0 +1,260 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ВСС Програмно бюджетиране</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/jqueryui/jquery-ui.min.css" />
+    <link rel="stylesheet" href="~/lib/jquery-confirm/jquery-confirm.min.css" />
+    <link rel="stylesheet" href="~/js/select2/css/select2.min.css" />
+    <link rel="stylesheet" href="~/css/devexbundle.css" />
+    <link rel="stylesheet" href="~/css/common.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/jqueryui/jquery-ui.min.js"></script>
+    <script src="~/lib/gijgo/modular/js/core.js"></script>
+    <script src="~/lib/gijgo/modular/js/grid.js"></script>
+    <link rel="stylesheet" href="~/lib/gijgo/modular/css/core.css" />
+    <link rel="stylesheet" href="~/lib/gijgo/modular/css/grid.css" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" type="text/css" />
+    <script src="~/js/jquery-confirm/jquery-confirm.min.js" asp-append-version="true"></script>
+    <script src="~/js/select2/js/select2.min.js"></script>
+    <script src="~/js/print-js/print.min.js" asp-append-version="true"></script>
+    <script src="~/js/notify.js" asp-append-version="true"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.5.2/flatpickr.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.5.2/flatpickr.min.js"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/bg.js"></script>
+    <script src="https://cdn3.devexpress.com/jslib/22.2.4/js/dx-quill.min.js"></script>
+    <script src="~/js/devexbundle.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        Ciela = window.Ciela || {};
+        Ciela.baseUrl = "@Url.Content("~/ProsecutorAdmin/")";
+        Ciela.rootUrl = "@Url.Content("~/")";
+    </script>
+    @RenderSection("DevEx", false)
+    <style type="text/css">
+
+        .row-me {
+            display: flex;
+            margin-top:10px;
+        }
+
+        .column-img {
+            width: 20%;
+        }
+
+        .column-text {
+            width: 59%;
+        }
+        .column-me {
+            width: 33%;
+        }
+
+        #footer:hover {
+            bottom: 0;
+        }
+
+        .expandableCollapsibleDiv img {
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 5px;
+            padding-left: 10px;
+            float: left;
+        }
+    </style>
+</head>
+<body class="dx-viewport">
+    <header>
+        <nav class="navbar navbar-expand-md navbar-toggleable-md navbar-light bg-white border-bottom  mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-area="ProsecutorAdmin" asp-controller="Home" asp-action="Index" style="cursor:pointer;">
+                    <img src="~/images/logo.png" alt="Logo">&nbsp;&nbsp;  @ViewBag.OnrName
+                </a>
+                <h2>Прокуратура на Р.България</h2>
+                @await Html.PartialAsync("~/Views/Shared/_LoginPartial.cshtml")
+            </div>
+        </nav>
+
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+    <div id="main-popup"></div>
+    <div id="add-main-popup"></div>
+    <div id="right-readonly-popup"></div>
+    <div class="expandableCollapsibleDiv">
+        <img id="arrowimg" src="~/images/Swap-Right.png" style="padding-left:20px;z-index: 100;padding-bottom:10px;" />
+        <footer id="footer" class="border-top" style="position:absolute;bottom: 0;width: 100%; height: 6.5rem;">
+
+            <div class="container">
+                <div class="row-me">
+                    <div class="column-img">
+                        <img src="@Url.Content("~/images/eu.png")" alt="..." style="float:left;" />
+                    </div>
+                    <div class="column-text">
+                        <p style="font-size:13px;font-style:italic;">
+                            Проект № BG05SFOP001-3.004-0001 „Въвеждане на програмно бюджетиране в органите на съдебната власт“ по Административен договор № BG05SFOP001-3.004-0001-C01 за предоставяне на безвъзмездна финансова помощ по оперативна програма „Добро управление“, съфинансирана от Европейския социален фонд (ЕСФ).
+                        </p>
+                    </div>
+                    <div class="column-img">
+                        <img src="@Url.Content("~/images/eu2.png")" alt="..." style="float:right;vertical-align:top;" />
+                    </div>
+                </div>
+            </div>
+
+        </footer>
+
+    </div>
+
+    <script>
+        $("#emplactionid").on("click", function () {
+             let any_url = "@Url.Action("GetEmplLogReportFilter", "Home", new { area = "" })";
+                  anyContent.empty();
+                  anyContent.html('<p>Зареждам данни…</p>')
+                  $.ajax({
+                      type: 'Get',
+                      url: any_url,
+                              data: {},
+                              success: function (data) {
+                                 anyContent.html(data);
+                              }
+                          });
+                          anyTitle.html('Условия за справка')
+                          anyModal.modal("show");
+          });
+        $(() => {
+            let footerstate = localStorage.getItem("footerstate") || "opened";
+              const ftbtn = document.getElementById('arrowimg');
+               ftbtn.style.position = 'absolute';
+                ftbtn.style.bottom = 0;
+              $('.expandableCollapsibleDiv > img').click(function (e) {
+                  var showElementDescription = $(this).parents('.expandableCollapsibleDiv').find('footer');
+
+                  if ($(showElementDescription).is(':visible')) {
+                      showElementDescription.hide("fast", "swing");
+                      $(this).attr("src", "images/Swap-Down.png");
+                      window.localStorage.setItem("footerstate", 'closed');
+
+                  } else {
+                      showElementDescription.show("fast", "swing");
+                      $(this).attr("src", "images/Swap-Right.png");
+                      window.localStorage.setItem("footerstate", 'opened');
+
+                  }
+              });
+              if (footerstate == 'closed') {
+                  var showElementDescription = $('#footer');
+                  showElementDescription.hide();
+              }
+        });
+          const mainPopup = $("#main-popup").dxPopup({
+                visible: false,
+                width: 600,
+                height: "auto",
+                showTitle: true,
+                showCloseButton: true,
+                dragEnabled: true,
+                hideOnOutsideClick: true,
+                position: {
+                    at: 'center',
+                    my: 'center',
+                    of: window,
+
+                    collision: {
+                        x: 'none',
+                        y: 'flip'
+                    },
+                    offset: '0 0'
+                },
+
+            }).dxPopup('instance');
+
+            const mainAddPopup = $("#add-main-popup").dxPopup({
+                visible: false,
+                width: 600,
+                height: "auto",
+                showTitle: true,
+                showCloseButton: true,
+                dragEnabled: true,
+                hideOnOutsideClick: true,
+                position: {
+                    at: 'center',
+                    my: 'center',
+                    of: window,
+
+                    collision: {
+                        x: 'none',
+                        y: 'flip'
+                    },
+                    offset: '0 0'
+                },
+
+            }).dxPopup('instance');
+
+            const mainRightReadOnlyPopup = $("#right-readonly-popup").dxPopup({
+                visible: false,
+                width: 800,
+                height: "auto",
+                showTitle: true,
+                showCloseButton: true,
+                dragEnabled: true,
+                hideOnOutsideClick: false,
+                resizeEnabled: true,
+                animation: null,
+                position: {
+                    at: 'right',
+                    my: 'right',
+                    of: window,
+
+                    collision: {
+                        x: 'none',
+                        y: 'flip'
+                    },
+                    offset: '0 0'
+                },
+                toolbarItems: [{
+                    widget: 'dxButton',
+                    toolbar: 'bottom',
+                    location: 'after',
+                    options: {
+                        stylingMode: 'text',
+                        text: 'Затвори',
+                        type: 'normal',
+                        icon: 'close',
+                        width: 120,
+                        onClick() {
+                            mainRightReadOnlyPopup.hide();
+                        },
+                    },
+                }],
+            }).dxPopup('instance');
+            const layoutPopupContentTemplateByName = function (url, arg) {
+                const scrollView = $('<div />');
+
+                $.ajax({ url: url, data: arg, method: 'Get', async: true, dataType: "html" })
+                    .done(function (result) {
+
+                        scrollView.append($('<div id="emplr" />').html(result));
+                        scrollView.dxScrollView({
+                            width: '100%',
+                            height: '100%',
+                        });
+                    })
+                    .fail(function (xhr) {
+                        alert('Грешка при зареждане на данни.' + xhr.status + ' -' + xhr.statusText + ' -' + xhr.responseText);
+                    });
+                return scrollView;
+            };
+
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

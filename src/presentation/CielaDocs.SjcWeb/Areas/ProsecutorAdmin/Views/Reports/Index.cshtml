@@ -1,0 +1,385 @@
+﻿@using System.Security.Principal
+@using CielaDocs.Application.Models
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    ViewData["Title"] = "Home Page";
+    var cfg = ViewData["Cfg"] as CfgVm;
+    var activePeriod = ViewData["ActivePeriod"] as BudgetPeriodVm;
+    Layout = "~/Areas/ProsecutorAdmin/Views/Shared/_Layout.cshtml";
+}
+@if (User?.Identity?.IsAuthenticated ?? false)
+{
+
+    @await Html.PartialAsync("_ModalDialogPartial")
+    <div id="popup"></div>
+    <div style="display:inline-block;padding-left:10px;" id="reportmenu"></div>
+    <div class="container">
+
+        <div class="spacer_10"></div>
+        <div class="container-flex">
+            <div class="activeperiod-right" style="display:inline-block;padding-left:10px;">
+                <label for="currency" style="color:darkred;font-size:medium;">Активен период:@activePeriod?.Y1 г.(@cfg.OfficialCurrencyCode)</label>
+                <label for="selectBoxCurrency">Вид валута</label>
+                <div style="display:inline-block;padding-left:10px;width:120px;" id="selectBoxCurrency"></div>
+            </div>
+        </div>
+        <div class="spacer_40"></div>
+
+
+        <div class="row">
+
+            <div class="col-md-3">
+
+                <div class="capsule-at">
+                    <span id="cntExpiredCardMsg" class="badge badge-pill badge-info" title="Изпълнение на бюджета" style="cursor:pointer;"></span>
+                    <div id="reportBudget" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/DateTime.png")" alt="." />
+                        <p class="button_text-at">Изпълнение на бюджета</p>
+                        <p>Отчет по изпълнение на бюджета</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="capsule-at">
+                    <div id="reportProgram" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/DateTime_01.png")" alt="." />
+                        <p class="button_text-at">Изпълнение на бюджетни програми</p>
+                        <p>Отчет за изпълнение по бюджетни програми...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="capsule-at">
+                    <div id="reportKonto" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Data-Import.png")" alt="." />
+                        <p class="button_text-at">Импортирани данни от Конто</p>
+                        <p>Отчет за импортирани данни от Конто...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="capsule-at">
+                    <div id="reportKontoPb" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/ExcelOnline.png")" alt="." />
+                        <p class="button_text-at">Резултати от проектобюджети</p>
+                        <p>Сумарен отчет за резултати от проектобюджети...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="capsule-at">
+                    <div id="reportProgramNum" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Graph-03.png")" alt="." />
+                        <p class="button_text-at">Резултати от проектобюджети по програми</p>
+                        <p>Сумарен отчет за резултати от проектобюджети по програми...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="capsule-at">
+                    <div id="reportCommonBudget" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Graph-03.png")" alt="." />
+                        <p class="button_text-at">Изпълнение на бюджета</p>
+                        <p>Отчет по изпълнение на бюджета</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}
+else
+{
+
+    <section id="intro" class="clearfix">
+        <div class="container">
+
+            <div class="intro-img">
+                <img src=@Url.Content("~/images/intro-img.svg") alt="" class="img-fluid">
+            </div>
+
+            <div class="intro-info">
+                <h2>Висш съдебен съвет</h2>
+                <h4>Програмно бюджетиране</h4>
+                <h3>&nbsp;</h3>
+                <div>
+                    <a asp-area="" asp-controller="Account" asp-action="Login" class="btn-services">Влез ></a>
+                    <a asp-area="" asp-controller="Auth" asp-action="Login" class="btn-services">Влез с КЕП ></a>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+}
+@await Html.PartialAsync("_CommonDialogPartial")
+@section scripts {
+    <script>
+         var anyModal = $('#anyModal');
+         var anyTitle = $('#anyTitle');
+         var anyContent = $('#anyContent');
+         const commonModal = $('#commonModal');
+         const commonContent = $('#commonContent');
+         const commonTitle = $('#titleLabel');
+
+         function addCourtYearFilter() {
+             let spurl = Ciela.baseUrl + "Reports/AddCourtYearFilterPartial";
+             anyContent.empty();
+             anyTitle.text('Условия');
+             anyContent.html('<p>Зареждам данни…</p>')
+             $.ajax({
+                 type: 'Get',
+                 url: spurl,
+                 data: {},
+                 success: function (data) {
+                     anyContent.html(data);
+                 }
+             });
+
+             anyModal.modal('show');
+         }
+         function addMainDataItemFilter() {
+             let spurl = Ciela.baseUrl + "Home/AddMainDataItemFilterPartial";
+             anyContent.empty();
+             anyTitle.text('Условия');
+             anyContent.html('<p>Зареждам данни…</p>')
+             $.ajax({
+                 type: 'Get',
+                 url: spurl,
+                 data: {},
+                 success: function (data) {
+                     anyContent.html(data);
+                 }
+             });
+
+             anyModal.modal('show');
+         }
+         function addProgramDataFilter() {
+             let spurl = Ciela.baseUrl + "Home/AddProgramDataFilterPartial";
+             anyContent.empty();
+             anyTitle.text('Условия');
+             anyContent.html('<p>Зареждам данни…</p>')
+             $.ajax({
+                 type: 'Get',
+                 url: spurl,
+                 data: {},
+                 success: function (data) {
+                     anyContent.html(data);
+                 }
+             });
+
+             anyModal.modal('show');
+         }
+         $(function () {
+
+              $("#selectBoxCurrency").dxSelectBox({
+              dataSource: selectBoxCurrencyData,
+              value: window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId,
+              valueExpr: 'id',
+              displayExpr: 'name',
+              onValueChanged: function (e) {
+                     window.localStorage.setItem('CurrencyId', e.value);
+              }
+
+          });
+
+             $("#reportBudget").on("click", function () {
+                 popup.option({
+                     contentTemplate: () => popupContentTemplate(1)
+                 });
+                 popup.show();
+             });
+
+             $("#reportProgram").on("click", function () {
+                 popup.option({
+                     contentTemplate: () => popupContentTemplate(2)
+                 });
+                 popup.show();
+             });
+             $("#reportKonto").on("click", function () {
+                 popup.option({
+                     contentTemplate: () => popupContentTemplate(3)
+                 });
+                 popup.show();
+             });
+
+             $("#reportKontoPb").on("click", function () {
+                 popup.option({
+                     contentTemplate: () => popupContentTemplate(5)
+                 });
+                 popup.show();
+             });
+
+             $("#reportProgramNum").on("click", function () {
+                 popup.option({
+                     contentTemplate: () => popupContentTemplate(6)
+                 });
+                 popup.show();
+             });
+                $("#reportCommonBudget").on("click", function () {
+                  popup.option({
+                      contentTemplate: () => popupContentTemplate(7)
+                  });
+                  popup.show();
+              });
+         });
+
+
+
+
+         function OnClosePopupEventHandlerEx(arg, e) {
+             switch (arg) {
+                 case 'popUpOk':
+                     commonModal.modal('hide');
+                     break;
+                 case 'popUpClose':
+                     commonModal.modal('hide');
+                     break;
+
+                 case 'mainDataItemFilterOk':
+                     popup.hide();
+                     applyMainDataItemFilter(e);
+                     break;
+                 case 'programDataFilterOk':
+                     popup.hide();
+                     applyProgramDataFilter(e);
+                     break;
+                 case 'courtYearFilterOk':
+                     popup.hide();
+                     applyCourtYearFilter(e);
+                     break;
+                 case 'yearExecutionFilterOk':
+                     popup.hide();
+                     applyYearExecutionFilter(e);
+                     break;
+                 case 'institutionTypeYearFilterOk':
+                     popup.hide();
+                     applyInstitutionTypeYearExecutionFilter(e);
+                     break;
+                 case 'programNumYearFilterOk':
+                     popup.hide();
+                     applyProgramNumYear(e);
+                     break;
+                      case 'commonBudgetFilterOk':
+                       popup.hide();
+                       applyCommonBudget(e);
+                      break;
+             }
+         }
+         const popupContentTemplate = function (id) {
+             let cnturl;
+             switch (id) {
+                 case 1: cnturl = "@Url.Action("AddYearExecutionFilterPartial", "Reports", new { area = "ProsecutorAdmin" })";
+                     break;
+                 case 2: cnturl = "@Url.Action("AddProgramDataFilterPartial", "Reports", new { area = "ProsecutorAdmin" })";
+                     break;
+                 case 3: cnturl = "@Url.Action("AddCourtYearFilterPartial", "Reports", new { area = "ProsecutorAdmin" })";
+                     break;
+                 case 4: cnturl = "@Url.Action("AddPeriodDataItemFilterPartial", "Home", new { area = "ProsecutorAdmin" })";
+                     break;
+                 case 5: cnturl = "@Url.Action("AddInstitutionYearFilterPartial", "Reports", new { area = "ProsecutorAdmin" })";
+                     break;
+                 case 6: cnturl = "@Url.Action("AddProgramYearFilterPartial", "Reports", new { area = "ProsecutorAdmin" })";
+                     break;
+                 case 7: cnturl = "@Url.Action("AddCommonBudgetFilterPartial", "Reports", new { area = "ProsecutorAdmin" })";
+                      break;
+
+             }
+
+             const scrollView = $('<div />');
+
+             $.ajax({ url: cnturl, data: {}, method: 'Get', async: true, dataType: "html" })
+                 .done(function (result) {
+
+                     scrollView.append($('<div id="emplr" />').html(result));
+                     scrollView.dxScrollView({
+                         width: '100%',
+                         height: '100%',
+                     });
+                 })
+                 .fail(function (xhr) {
+                     alert('Грешка при зареждане на данни.' + xhr.status + ' -' + xhr.statusText + ' -' + xhr.responseText);
+                 });
+             return scrollView;
+         };
+         const popup = $('#popup').dxPopup({
+             contentTemplate: popupContentTemplate,
+             width: 640,
+             height: 'auto',
+
+             container: '.dx-viewport',
+
+             showTitle: true,
+             title: 'Данни',
+             visible: false,
+             dragEnabled: true,
+             hideOnOutsideClick: true,
+             showCloseButton: true,
+             position: {
+                 at: 'center',
+                 my: 'center',
+                 of: window,
+
+                 collision: {
+                     x: 'none',
+                     y: 'flip'
+                 },
+                 offset: '0 0'
+             },
+
+         }).dxPopup('instance');
+
+        function applyCourtYearFilter(e) {
+                   redirectme2("@Url.Action("KontoReport", "Reports", new { area = "ProsecutorAdmin" })","par",e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
+         }
+         function applyProgramDataFilter(e) {
+              redirectme2("@Url.Action("ProgramExecutionReport", "Reports", new { area = "ProsecutorAdmin" })", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
+         }
+         function applyYearExecutionFilter(e) {
+              redirectme2("@Url.Action("YearExecutionReport", "Reports", new { area = "ProsecutorAdmin" })", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
+         }
+         function applyInstitutionTypeYearExecutionFilter(e) {
+              redirectme2("@Url.Action("InstitutionTypeYearExecutionReport", "Reports", new { area = "ProsecutorAdmin" })", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
+         }
+         function applyProgramNumYear(e) {
+              redirectme2("@Url.Action("FunctionalSubAreaNumYearReport", "Reports", new { area = "ProsecutorAdmin" })", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
+         }
+           function  applyCommonBudget(e){
+               redirectme2("@Url.Action("Index", "CommonBudget", new { area = "ProsecutorAdmin" })", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
+           }
+         const reportmenuData = [{
+                    id: '1',
+                    name: 'Начало',
+                    icon:Ciela.rootUrl+'images/back.png',
+                    }
+                   ];
+                const dxMenu = $('#reportmenu').dxMenu({
+                    dataSource: reportmenuData,
+                    hideSubmenuOnMouseLeave: false,
+                    displayExpr: 'name',
+                    onItemClick(data) {
+                        const item = data.itemData;
+                        if (item.id) {
+
+                            switch (item.id) {
+                                case '1':
+                                    window.location.href = Ciela.baseUrl;
+                                    break;
+                            }
+                        }
+                    },
+                }).dxMenu('instance');
+
+                const showSubmenuModes = [{
+                    name: 'onHover',
+                    delay: { show: 0, hide: 500 },
+                }, {
+                    name: 'onClick',
+                    delay: { show: 0, hide: 300 },
+                }];
+    </script>
+}

@@ -1,0 +1,38 @@
+﻿@model UserDto
+@using Newtonsoft.Json.Linq
+@using CielaDocs.Application.Dtos
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery 
+@{
+     var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    ViewData["Title"] = "User Profile";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<br />
+
+<div class="html-editor"></div>
+<div class="spacer_15"></div>
+@Html.ActionLink("Смяна на парола","ForgotPassword","Account")
+<script>
+$(function() {
+     $("#loadingPanelMsg").hide();
+    $("#success-alert").hide();
+        var editor = $('.html-editor').dxHtmlEditor({
+            mediaResizing: {
+                enabled: true,
+            },
+        }).dxHtmlEditor('instance');
+
+        let cardhomeurl = "@Url.Action("GetUserProfileAsString", "CardData" )";
+        editor.option("value", "");
+        $.ajax({
+            type: 'Get',
+            url: cardhomeurl,
+            data: { emplId: @Model.Id },
+            success: function (data) {
+                editor.option("value", data);
+            }
+        });
+});
+     
+</script>

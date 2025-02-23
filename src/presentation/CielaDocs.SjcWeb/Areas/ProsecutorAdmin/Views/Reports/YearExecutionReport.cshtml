@@ -1,0 +1,189 @@
+﻿@using CielaDocs.Application.Dtos
+@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    Layout = "~/Areas/ProsecutorAdmin/Views/Shared/_LayoutMax.cshtml";
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+
+}
+<style>
+    .select2-dropdown {
+        z-index: 10001;
+    }
+
+    .disabledRow {
+        color: silver;
+        font-weight: 600;
+    }
+
+        .disabledRow.dx-state-hover td {
+            color: silver !important;
+            font-weight: 600;
+        }
+</style>
+<div class="spacer_5"></div>
+<h4>От месец: @ViewBag.M1 до месец: @ViewBag.M2 год.:@ViewBag.Year</h4>
+<div class="container-flex">
+    <div class="right-currency">
+        <label for="currency" style="color:darkred;font-size:medium;">Валута:@ViewBag.Currency</label>
+ </div>
+</div>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+@Html.Hidden("m1", (int)ViewBag.M1)
+@Html.Hidden("m2", (int)ViewBag.M2)
+@Html.Hidden("ny", (int)ViewBag.Year)
+@await Html.PartialAsync("_ModalDialogPartial")
+@await Html.PartialAsync("_CommonDialogPartial")
+<section id="tabs" class="project-tab">
+
+    <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+            <a class="nav-item nav-link active" id="nav-6-tab" data-toggle="tab" href="#nav-6" role="tab" aria-controls="nav-6" aria-selected="true">Програма 6</a>
+            <a class="nav-item nav-link" id="nav-7-tab" data-toggle="tab" href="#nav-7" role="tab" aria-controls="nav-7" aria-selected="false">Програма 7</a>
+            <a class="nav-item nav-link" id="nav-9-tab" data-toggle="tab" href="#nav-9" role="tab" aria-controls="nav-9" aria-selected="false">Програма 9</a>
+        </div>
+    </nav>
+    <div class="spacer_15"></div>
+    <div class="tab-content" id="nav-tabContent">
+       
+        <div class="tab-pane fade show active" id="nav-6" role="tabpanel" aria-labelledby="nav-6-tab">
+        </div>
+        <div class="tab-pane fade" id="nav-7" role="tabpanel" aria-labelledby="nav-7-tab">
+        </div>
+        <div class="tab-pane fade" id="nav-8" role="tabpanel" aria-labelledby="nav-8-tab">
+        </div>
+        <div class="tab-pane fade" id="nav-9" role="tabpanel" aria-labelledby="nav-9-tab">
+        </div>
+    </div>
+</section>
+<script>
+    let selectedM1 = parseInt($('#m1').val(), 10);
+    let selectedM2 = parseInt($('#m2').val(), 10);
+    let selectedYear = parseInt($('#ny').val(), 10);
+    let selectedProgramNum = 6;
+    const anyModal = $('#anyModal');
+    const anyContent = $('#anyContent');
+    const anyTitle = $('#anyTitle');
+    const commonModal = $('#commonModal');
+    const commonContent = $('#commonContent');
+    const commonTitle = $('#titleLabel');
+    $(function () {
+        $('a[href="#nav-6"]').click();
+    });
+
+    $('#tabs a').click(function (e) {
+        e.preventDefault()
+        var tabID = $(this).attr("href").substr(1);
+ 
+        selectedProgramNum = tabID.split('-')[1];
+        $(".tab-pane").each(function () {
+            $(this).empty();
+        });
+        let dataUrl = "@Url.Action("YearExecutionPartialView", "Reports", new { area = "ProsecutorAdmin" })";
+            $.ajax({
+                type: 'Get',
+                url: dataUrl,
+            data: { functionalSubAreaId: selectedProgramNum },
+                success: function (data) {
+                    $("#" + tabID).html(data);
+                }
+            });
+        
+       
+        $(this).tab('show')
+
+    });
+    function getCourtFromGrid() {
+
+        let surl = Ciela.baseUrl + "Reports/CourtsInProgram";
+        commonContent.empty();
+        commonTitle.text('Избери отчетна единица');
+        commonContent.html('<p>Зареждам данни…</p>')
+        $.ajax({
+            type: 'Get',
+            url: surl,
+            data: { functionalSubAreaId: selectedProgramNum },
+            success: function (data) {
+                commonContent.html(data);
+            }
+        });
+
+        commonModal.modal('show');
+    }
+    function OnClosePopupEventHandlerEx(arg, e) {
+        switch (arg) {
+            case 'popUpOk':
+                commonModal.modal('hide');
+                var par = e.split('|');
+                redirectme5New("@Url.Action("Index", "YearExecutionDataCourtItems", new { area = "ProsecutorAdmin" })", "programNum", par[0], "courtIds", par[1], "nyear", selectedYear, "m1", selectedM1, "m2", selectedM2)
+                break;
+            case 'popUpClose':
+                commonModal.modal('hide');
+                break;
+
+        }
+    }
+     const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: Ciela.rootUrl+'images/back.png',
+
+
+        },
+        {
+            id: '6_1',
+            name: 'Експорт',
+            icon:  Ciela.rootUrl+'images/exporter.svg',
+
+
+        }, {
+            id: '4',
+            name: 'Обнови',
+            icon:  Ciela.rootUrl+'images/refresh.png',
+
+        },
+        ];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+                        case '1':
+                            window.location.href = Ciela.baseUrl+"Reports/index";
+                            break;
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("ProgramBudget");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "ProgramBudget.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+</script>

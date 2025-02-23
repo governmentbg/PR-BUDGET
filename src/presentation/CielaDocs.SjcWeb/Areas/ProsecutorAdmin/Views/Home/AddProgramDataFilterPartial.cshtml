@@ -1,0 +1,204 @@
+﻿@{
+    ViewData["Title"] = "Index";
+
+}
+<style>
+    .select2-container--open {
+        z-index: 99999999
+    }
+
+  
+</style>
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <div class="lock-container">
+                            <input type="text" readonly id="aciveperiodparams" class="lock-result">
+                        </div>
+                    </div>
+                 </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="cbFunctionalArea">Функционална област</label>
+                        <select class="form-control" style="width:100%" id="cbFunctionalArea">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="cbFunctionalSubArea">Бюджетна програма</label>
+                        <select class="form-control" style="width:100%" id="cbFunctionalSubArea">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="lock-container">
+                        <input type="text" readonly id="lock-result">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="spacer_10"></div>
+        <div style="float:right;margin-right:10px;margin-bottom:10px;">
+
+            <div id="btnLockedView"></div>
+            <div id="okFilterBtn"></div>
+            <div id="closeFilterBtn"></div>
+        </div>
+    </div>
+</form>
+<script>
+   
+    $(() => {
+        let functionalAreaId = 0;
+        let functionalSubAreaId = 0;
+
+
+        const buttonView = $("#btnLockedView").dxButton({
+        visible: true,
+        icon: Ciela.rootUrl+'images/lock-closed.svg',
+        hint:'Заключени периоди',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Home/AddProgramDataLockedPartial", { }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Заключени периоди',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+
+        let isLocked=false;
+        $('#lock-result').val('');
+        $('#lock-result').addClass("hideme")
+
+             checkData();
+       
+        $("#cbFunctionalArea").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url:Ciela.baseUrl + "Noms/GetFunctionalAreas",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            functionalAreaId = $(e.currentTarget).val();
+        });
+        $("#cbFunctionalSubArea").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: Ciela.baseUrl + "Noms/GetFunctionalSubAreaByAreaId",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        id: functionalAreaId,
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            functionalSubAreaId = $(e.currentTarget).val();
+        });
+
+        //-------------buttons--------------
+        $('#okFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                if ((functionalSubAreaId == 0)  || (activeYear == 0)) {
+                    DevExpress.ui.dialog.alert('Изберете задължително бюджетна програма и година', 'Внимание');
+                    return;
+                }
+                window.parent.OnClosePopupEventHandlerEx('programDataFilterOk', ''.concat(functionalSubAreaId, "|",activeYear,"|",officialCurrencyId,"|",0,"|",isLocked));
+            },
+        });
+        $('#closeFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                popup.hide();
+            },
+        });
+         async function checkData(){
+            let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
+             .then(data =>{
+                if(!isEmpty(data)){
+                    $('#aciveperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
+                }
+                else {
+                      $('#aciveperiodparams').val('');
+                }
+             });
+      // Trigger your custom logic here
+              let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod1Locked", { programId: functionalSubAreaId, ny: activeYear })
+                 .then(data =>{
+                        if(!isEmpty(data)){
+                        $('#lock-result').val('Заключен период от '+data?.LockedByUserName);
+                        $('#lock-result').removeClass("hideme");
+                        isLocked=true;
+                    }
+                    else {
+                        $('#lock-result').val('');
+                        $('#lock-result').addClass("hideme");
+                        isLocked=false;
+                    }
+                 });
+        }
+    });
+
+</script>

@@ -1,0 +1,263 @@
+﻿@using System.Linq
+@using CielaDocs.Application.Models
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    var cfg = ViewData["Cfg"] as CfgVm;
+    var activePeriod = ViewData["ActivePeriod"] as BudgetPeriodVm;
+    Layout = "~/Areas/ProsecutorAdmin/Views/Shared/_Layout.cshtml";
+}
+<style type="text/css">
+    .header-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+</style>
+<div class="spacer_5"></div>
+<div style="display:inline-block;" id="menu"></div>
+<div class="spacer_5"></div>
+<h4>Импорт на данни за проектобюджет</h4>
+<div class="container-flex">
+    <div class="activeperiod-right">
+        <label for="currency" style="color:darkred;font-size:medium;">Активен период:@activePeriod?.Y1 г.(@cfg.OfficialCurrencyCode)</label>
+    </div>
+</div>
+<div class="modal-body form-horizontal">
+
+    <div class="row">
+
+        <label>
+            &nbsp; <input type="radio" name="ImportType" value="0">
+            &nbsp;За отчетна единица
+        </label>
+    </div>
+
+    <div id="UserContainer"></div>
+
+
+    <div class="row">
+        <div class="col-3">
+            <div class="form-group">
+                <label for="nyear">Начална година</label>
+                <div id="selectBoxYear"></div>
+            </div>
+        </div>
+
+        @*  <div class="col-3">
+                    <div style="margin-bottom:20px;" id="cbAddToProgramData"></div>
+                </div> *@
+        <div class="col-9">
+            <label for="selectProgram">Програма</label>
+            <select class="form-control" id="selectProgram">
+                <option> </option>
+            </select>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="lock-container">
+                <input type="text" readonly id="lock-result">
+            </div>
+        </div>
+    </div>
+    <div id="divUploading">
+        <p>Моля изчакайте . . . <img src="@Url.Content("~/images/ajax_loader.gif")"></p>
+    </div>
+    <div class="header-container">
+        <div id="buttonExcelViewer"></div>
+        <div id="buttonGridCourtViewer"></div>
+        <div id="btnLockedView"></div>
+    </div>
+
+
+
+
+</div>
+<div class="spacer_20"></div>
+
+<div id="divProcessing">
+    <p>Моля изчакайте . . . <img src="@Url.Content("~/Images/ajax_loader.gif")"></p>
+</div>
+
+<script>
+    let importType = 0;
+    let institutionTypeId = 0;
+    let courtTypeId = 0;
+    let courtId = 0;
+    let ny=0;
+
+    $(() => {
+
+
+
+        let selectedFnSubAreaId = 0;
+        $("#divProcessing").hide();
+        $("input[name=ImportType][value=" + importType + "]").prop('checked', true);
+        ImportTypeChanged(importType);
+        $('[name=ImportType]').click(function () { ImportTypeChanged(this.value); });
+        $('#divUploading').hide();
+
+         const buttonView = $("#btnLockedView").dxButton({
+        visible: true,
+        icon:Ciela.rootUrl+'images/lock-closed.svg',
+        hint:'Заключени периоди',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "ImportPbKonto/AddImportPbKontoLockedPartial", { }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Заключени периоди',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+       let isLocked=false;
+        $('#lock-result').val('');
+        $('#lock-result').addClass("hideme")
+       
+
+        $("#selectBoxYear").dxSelectBox({
+           dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
+                    }
+                }),
+            }),
+            valueExpr: 'Id',
+            displayExpr: 'Name',
+            onValueChanged: function (e) {
+                ny = e.value;
+            }
+
+        });
+
+        $("#selectProgram").select2({
+            placeholder: "",
+            allowClear: true,
+            ajax: {
+                url: Ciela.baseUrl + "Noms/GetFunctionalSubAreaByCourtId",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        importType: importType,
+                        courtId: courtId,
+                        institutionTypeId: institutionTypeId,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+            selectedFnSubAreaId = $(e.currentTarget).val();
+        });
+
+
+        $('#buttonExcelViewer').dxButton({
+            text: 'Въвеждане на данни',
+            type: 'success',
+            onClick() {
+                if (importType == 0) {
+                    if ((courtId == 0) || (ny == 0)) {
+                        DevExpress.ui.dialog.alert('Изберете задължително отчетна единица, и начална година', 'Внимание');
+                        return;
+                    }
+                }
+                if (importType == 1) {
+                    if ((institutionTypeId == 0) || (ny == 0)) {
+                        DevExpress.ui.dialog.alert('Изберете задължително институция и начална година', 'Внимание');
+                        return;
+                    }
+                }
+
+                viewExcelFile(courtId, ny, importType, institutionTypeId);
+            },
+        });
+        $('#buttonGridCourtViewer').dxButton({
+            text: 'Преглед на данни',
+            type: 'default',
+            onClick() {
+                if (importType == 0) {
+                    if ((courtId == 0) || (ny == 0)||(selectedFnSubAreaId==0)) {
+                        DevExpress.ui.dialog.alert('Изберете задължително отчетна единица, и начална година', 'Внимание');
+                        return;
+                    }
+                    redirectme3New("@Url.Action("Index", "ProgramDataCourtItems", new { area = "ProsecutorAdmin" })", "programNum", selectedFnSubAreaId, "courtId", courtId, "nyear", ny)
+                }
+           },
+        });
+        function viewExcelFile(courtId, ny, importType, institutionTypeId) {
+                redirectme1New("@Url.Action("Index", "ExcelViewer", new {area=""})", "id", ''.concat("", "|", courtId, "|", ny, "|", 0,"|",importType,"|",institutionTypeId));
+
+        }
+       
+
+    });
+    function ImportTypeChanged(uTypeId) {
+        var url = "@Url.Action("ImportTypePartial", "ImportPbKonto", new { area = "ProsecutorAdmin" })";
+        importType = uTypeId;
+        $("#divProcessing").show();
+        $("#UserContainer").empty();
+        $.ajax({
+            type: 'Get',
+            url: url,
+            contenType: 'application/html;charset=utf-8',
+            dataType: 'html',
+            data: { importTypeId: importType },
+            success: function (result) {
+                $("#divProcessing").hide();
+                $("#UserContainer").html(result);
+            },
+            error: function (ex) {
+                $("#divProcessing").hide();
+                alert('Грешка! ' + ex);
+            }
+        });
+        return false;
+    }
+     const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: Ciela.rootUrl+'images/back.png',
+
+
+        }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+                          case '1':
+                            window.location.href = Ciela.baseUrl;
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+</script>

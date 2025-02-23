@@ -1,0 +1,353 @@
+﻿using CielaDocs.Application;
+using CielaDocs.Application.Models;
+using CielaDocs.Domain.Entities;
+using CielaDocs.Shared.ExpressionEngine;
+using CielaDocs.Shared.Repository;
+using CielaDocs.Shared.Services;
+using CielaDocs.SjcWeb.Extensions;
+using CielaDocs.SjcWeb.Models;
+
+using ClosedXML.Excel;
+
+using DocumentFormat.OpenXml.Spreadsheet;
+using DocumentFormat.OpenXml.Vml;
+using DocumentFormat.OpenXml.Vml.Office;
+
+
+using MediatR;
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Graph;
+
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+using System.Data;
+
+namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
+{
+    [Area("ProsecutorAdmin")]
+    public class ImportKontoController : Controller
+    {
+        private readonly ILogger<MainDataController> _logger;
+        private readonly IMediator _mediator;
+        private readonly ISendGridMailer _emailSender;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogRepository _logRepo;
+        private readonly ISjcBudgetRepository _sjcRepo;
+        private readonly IWebHostEnvironment _env;
+        private readonly ISjcService _sjcService;
+        private readonly ISjcServiceV2 _sjcServiceV2;
+        private FilterMainDataVm? FilterData = null;
+
+        public ImportKontoController(ILogger<MainDataController> logger, IConfiguration configuration, ISendGridMailer emailSender,
+                        IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo,
+                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env, ISjcService sjcService, ISjcServiceV2 sjcServiceV2)
+        {
+            _logger = logger;
+            _mediator = mediator;
+            _emailSender = emailSender;
+            _httpContextAccessor = httpContextAccessor;
+            _logRepo = logRepo;
+            _sjcRepo = sjcRepo;
+            _env = env;
+            _sjcService = sjcService;
+            _sjcServiceV2 = sjcServiceV2;
+        }
+        public async Task<IActionResult> Index()
+        {
+            ViewData["ActivePeriod"] = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+            ViewData["Cfg"] = await _sjcRepo.GetCfgAsync();
+            var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+            string logmsg = $"Достъп до импорт на данни от Конто от {User?.Identity?.Name}";
+            await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
+
+            return View();
+        }
+
+
+
+        // [HttpPost]
+        //[ValidateAntiForgeryToken]
+        public async Task<JsonResult> LoadCustomExcelFile(string id, bool? isOverwrite)
+        {
+            try
+            {
+
+                // Check the File is received
+
+                if (string.IsNullOrWhiteSpace(id))
+                    return Json(new { msg = "Невалиден файл за зареждане на данни", success = false });
+
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                string logmsg = $"Зареждане на файл {id} от Конто от {User?.Identity?.Name}";
+                await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
+
+                string file = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", id);
+                var supportedTypes = new[] { "xlsm", "xls", "xlsx" };
+                var fileExt = System.IO.Path.GetExtension(id).Substring(1);
+                if (!supportedTypes.Contains(fileExt))
+                {
+                    return Json(new { msg = "Невалиден файл за зареждане на данни. Задължително изберете файл с разширение .xlsm,.xlsx или .xls", success = false });
+                }
+                string sFileNameOnly = System.IO.Path.GetFileNameWithoutExtension(id);
+                string[] par = sFileNameOnly.Split('_');
+                string nm = par[2].Substring(0, 2);
+                string ny = par[2].Substring(2, 2);
+
+                string kontoCode = par[3];
+                int.TryParse(nm, out int nMonth);
+                int.TryParse("20" + ny, out int nYear);
+                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2040))
+                {
+                    return Json(new { msg = $"Неразпознат месец: {nm} от формата на файла или година:{ny}", success = false });
+                }
+                var court = await _sjcRepo.GetCourtByKontoCodeAsync(kontoCode);
+                if (court == null)
+                {
+                    return Json(new { msg = $"Неоткрит код {kontoCode} на отчетна единица", success = false });
+                }
+                //===========check active period restriction========================
+                var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                if ((nYear < actuvePeriod.Y1) || (nYear > actuvePeriod.Y4))
+                {
+                    return Json(new { msg = $"Година {nYear} е извън обхвата на активния период! Моля проверете!", success = false });
+                }
+                //------check locked period------------
+                var checkLocked = await _sjcService.QueryRaw<KontoMonthDataLockedVm>($@"SELECT TOP 1 a.Id,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName 
+                    FROM KontoMonthDataLocked a
+                    left join users u on a.LockedBy=u.id
+                    where a.Nmonth={nMonth} and a.Nyear={nYear} ");
+                if (checkLocked != null)
+                {
+                    return Json(new { msg = $"Този период е заключен! Моля проверете!", success = false });
+                }
+                //-------end check locked period------------------------
+                List<KontoRow> dic = new();
+                using (var excelWorkbook = new XLWorkbook(file))
+                {
+                    var nonEmptyDataRows = excelWorkbook.Worksheet(1).RowsUsed();
+                    var rowCount = excelWorkbook.Worksheet(1).LastRowUsed().RowNumber();
+                    var columnCount = excelWorkbook.Worksheet(1).LastColumnUsed().ColumnNumber();
+                    int row = 12;
+                    string code = string.Empty;
+                    string value = string.Empty;
+
+                    while (row <= rowCount)
+                    {
+                        code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 3).GetString();
+                        value = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 4).GetString();
+                        if (!string.IsNullOrWhiteSpace(value))
+                        {
+                            if (decimal.TryParse(value, out decimal d))
+                            {
+
+                                dic.Add(new KontoRow { Id = row, Code = code, Value = d });
+                            }
+                        }
+
+
+                        row++;
+
+                    }
+                }
+                var courtData = await _sjcRepo.GetProgramDataCourtByCourtIdAsync(court?.Id, nYear);
+                int nCnt = 0;
+
+                foreach (var row in courtData)
+                {
+                    var kCodes = await _sjcRepo.GetKontoCodesFromProgramDef(row?.FunctionalSubAreaId, row?.RowNum);
+                    if (string.IsNullOrWhiteSpace(kCodes)) continue;
+                    decimal? nval = 0;
+                    var KontoCodesList = kCodes.Split(',');
+                    foreach (var kCode in KontoCodesList)
+                    {
+                        var foundItem = dic.Where(x => x.Code == kCode).ToList();
+                        if (!foundItem.Any()) continue;
+                        nval += foundItem.Sum(x => x.Value);
+                    }
+                    KontoMonthDataVm dataVm = new KontoMonthDataVm()
+                    {
+                        CourtId = court?.Id,
+                        ProgramDefId = 0,
+                        FunctionalSubAreaId = row?.FunctionalSubAreaId ?? 0,
+                        RowNum = row?.RowNum,
+                        RowCode = row?.RowCode ?? string.Empty,
+                        NMonth = nMonth,
+                        NYear = nYear,
+                        Nvalue = nval ?? 0,
+                        CurrencyId = 0,
+                        CurrencyMeasureId = 0,
+                        Datum = DateTime.Now,
+                    };
+                    _ = await _sjcRepo.AddUpdateKontoMonthData(dataVm);
+                    _ = await _sjcRepo.ProgramDataCourtAsync(court?.Id, row?.FunctionalSubAreaId ?? 0, row?.RowNum, nYear);
+                    nCnt++;
+                }
+
+                return Json(new { msg = $"Бяха заредени данни за {nCnt} записа", success = true });
+
+
+            }
+            catch (Exception ex)
+            {
+                return Json(new { msg = "Грешка при четене на файл: " + ex?.Message, success = false });
+            }
+        }
+        public async Task<JsonResult> LoadFromFolderKontoFile()
+        {
+            try
+            {
+                int nCnt = 0; int fileCnt = 0;
+                string[] filePaths = System.IO.Directory.GetFiles(System.IO.Path.Combine(_env.WebRootPath + "/uploads/"));
+                foreach (string filePath in filePaths)
+                {
+
+                    var res = await LoadKontoFile(System.IO.Path.GetFileName(filePath));
+                    fileCnt += res.Item1;
+                    nCnt += res.Item2;
+                }
+                return Json(new { msg = $"Процедурата по зареждане на месечни данни от Конто приключи. Файлове с данни {fileCnt}, заредени записи: {nCnt}", success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { msg = "Грешка при импорт на файлове: " + ex?.Message, success = false });
+            }
+        }
+        private async Task<(int, int)> LoadKontoFile(string fileName)
+        {
+            try
+            {
+
+                // Check the File is received
+
+                if (string.IsNullOrWhiteSpace(fileName))
+                    return (0, 0);
+
+                string file = System.IO.Path.Combine(_env.WebRootPath + "/uploads/", fileName);
+                var supportedTypes = new[] { "xlsm", "xls", "xlsx" };
+                var fileExt = System.IO.Path.GetExtension(fileName).Substring(1);
+                if (!supportedTypes.Contains(fileExt))
+                {
+                    return (0, 0);
+                }
+                string sFileNameOnly = System.IO.Path.GetFileNameWithoutExtension(fileName);
+                string[] par = sFileNameOnly.Split('_');
+                string nm = par[2].Substring(0, 2);
+                string ny = par[2].Substring(2, 2);
+
+                string kontoCode = par[3];
+                int.TryParse(nm, out int nMonth);
+                int.TryParse("20" + ny, out int nYear);
+                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2040))
+                {
+                    return (0, 0);
+                }
+                //===========check active period restriction========================
+                var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                if ((nYear < actuvePeriod.Y1) || (nYear > actuvePeriod.Y4))
+                {
+                    return (0, 0);
+                }
+                //------check locked period------------
+                var checkLocked = await _sjcService.QueryRaw<KontoMonthDataLockedVm>($@"SELECT TOP 1 a.Id,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName 
+                    FROM KontoMonthDataLocked a
+                    left join users u on a.LockedBy=u.id
+                    where a.Nmonth={nMonth} and a.Nyear={nYear} ");
+                if (checkLocked != null)
+                {
+                    return (0, 0);
+                }
+                //-------end check locked period------------------------
+                var court = await _sjcRepo.GetCourtByKontoCodeAsync(kontoCode);
+                if (court == null)
+                {
+                    return (0, 0);
+                }
+
+                List<KontoRow> dic = new();
+                using (var excelWorkbook = new XLWorkbook(file))
+                {
+                    var nonEmptyDataRows = excelWorkbook.Worksheet(1).RowsUsed();
+                    var rowCount = excelWorkbook.Worksheet(1).LastRowUsed().RowNumber();
+                    var columnCount = excelWorkbook.Worksheet(1).LastColumnUsed().ColumnNumber();
+                    int row = 12;
+                    string code = string.Empty;
+                    string value = string.Empty;
+
+                    while (row <= rowCount)
+                    {
+                        code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 3).GetString();
+                        value = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 4).GetString();
+                        if (!string.IsNullOrWhiteSpace(value))
+                        {
+                            if (decimal.TryParse(value, out decimal d))
+                            {
+
+                                dic.Add(new KontoRow { Id = row, Code = code, Value = d });
+                            }
+                        }
+
+
+                        row++;
+
+                    }
+                }
+                var courtData = await _sjcRepo.GetProgramDataCourtByCourtIdAsync(court?.Id, nYear);
+                int nCnt = 0;
+
+                foreach (var row in courtData)
+                {
+                    var kCodes = await _sjcRepo.GetKontoCodesFromProgramDef(row?.FunctionalSubAreaId, row?.RowNum);
+                    if (string.IsNullOrWhiteSpace(kCodes)) continue;
+                    decimal? nval = 0;
+                    var KontoCodesList = kCodes.Split(',');
+                    foreach (var kCode in KontoCodesList)
+                    {
+                        var foundItem = dic.Where(x => x.Code == kCode).ToList();
+                        if (!foundItem.Any()) continue;
+                        nval += foundItem.Sum(x => x.Value);
+                    }
+                    KontoMonthDataVm dataVm = new KontoMonthDataVm()
+                    {
+                        CourtId = court?.Id,
+                        ProgramDefId = 0,
+                        FunctionalSubAreaId = row?.FunctionalSubAreaId ?? 0,
+                        RowNum = row?.RowNum,
+                        RowCode = row?.RowCode,
+                        NMonth = nMonth,
+                        NYear = nYear,
+                        Nvalue = nval ?? 0,
+                        CurrencyId = 0,
+                        CurrencyMeasureId = 0,
+                        Datum = DateTime.Now,
+                    };
+                    _ = await _sjcRepo.AddUpdateKontoMonthData(dataVm);
+                    _ = await _sjcRepo.ProgramDataCourtAsync(court?.Id, row?.FunctionalSubAreaId ?? 0, row?.RowNum, nYear);
+                    nCnt++;
+                }
+
+                return (1, nCnt);
+
+
+            }
+            catch (Exception ex)
+            {
+                return (0, 0);
+            }
+        }
+        [HttpGet]
+        [AllowAnonymous]
+        public PartialViewResult AddImportKontoLockedPartial()
+        {
+
+            return PartialView("AddImportKontoLockedPartial");
+
+        }
+    }
+}

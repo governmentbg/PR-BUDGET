@@ -149,6 +149,7 @@ namespace CielaDocs.SjcWeb
             {
                 options.AddPolicy("AdminOnly", policy => policy.RequireClaim("Admin"));
                 options.AddPolicy("CourtUserOnly", policy => policy.RequireClaim("CourtUser"));
+                options.AddPolicy("ProsecutorAdminOnly", policy => policy.RequireClaim("ProsecutorAdmin"));
 
             });
             services.AddSession(options =>

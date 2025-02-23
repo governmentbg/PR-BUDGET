@@ -1,0 +1,112 @@
+﻿@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    ViewBag.Title = "MainPeriodItemLocked";
+    Layout = null;
+}
+@{
+    ViewData["Title"] = "Index";
+
+}
+<style type="text/css">
+
+    .ui-autocomplete {
+        z-index: 5000;
+    }
+
+    .select2-dropdown {
+        z-index: 50002;
+    }
+
+    .header-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+</style>
+
+<div class="spacer_10"></div>
+<div class="header-container">
+    <h6 style="margin: 0;">Заключени периоди </h6>
+</div>
+<div class="spacer_10"></div>
+<div id="gridMainItem"></div>
+<div class="spacer_10"></div>
+<script>
+
+
+    $(()=>{
+
+        $('#gridMainItem').dxDataGrid({
+            dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/ShowMainPeriodItemLocked", 'Get', { ny: nSelectedYear??0 });
+                    }
+                }),
+            }),
+            paging: {
+                pageSize: 10,
+            },
+            selection: {
+                mode: "single"
+            },
+            showBorders: true,
+            showRowLines: true,
+            columns: [
+                { dataField: 'NMonth', caption: 'Месец', width: "10%" },
+                { dataField: 'Nyear', caption: 'Година', width: "10%" },
+                { dataField: 'CourtName', caption: 'Отчетна единица', width: "30%" },
+                { dataField: 'LockedByUserName', caption: 'Заключил', width: "25%" },
+                {
+                        dataField: "LockedOn",
+                        width: "10%",
+                        caption: "Заключено на",
+                        alllowEditing: false,
+                        valueFormat: 'dd.MM.yyyy',
+                        dataType: 'date',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                },
+                {
+                    type: 'buttons',
+                    width: 124,
+                    buttons: [
+                    {
+                        hint: 'Изтриване',
+                        icon: 'trash',
+
+                        onClick(e) {
+                            e.component.refresh(true);
+                            e.event.preventDefault();
+                        },
+                    }
+                    ],
+                }
+            ],
+
+            onRowRemoved: function (e) {
+                e.component.selectRowsByIndexes(0);
+            },
+            onSelectionChanged: function (items) {
+                if (items.selectedRowsData[0]) {
+                    //selectedId = items.selectedRowsData[0].Id;
+                }
+            },
+            focusedRowEnabled: true,
+            onFocusedRowChanged(e) {
+                if (e) {
+                    //getExtraDataItem(e.row);
+                }
+            },
+        });
+      
+    });
+</script>

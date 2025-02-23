@@ -1,0 +1,26 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="~/bundle.min.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/devextreme/dx.light.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/bundle-spreadsheet.min.css" asp-append-version="true">
+    <script src="~/bundle.min.js" asp-append-version="true"></script>
+</head>
+<body class="dx-viewport">
+
+    <div class="demo-container">
+        @RenderBody()
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; @DateTime.Now.Year - ВСС Програмно бюджетиране
+        </div>
+    </footer>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

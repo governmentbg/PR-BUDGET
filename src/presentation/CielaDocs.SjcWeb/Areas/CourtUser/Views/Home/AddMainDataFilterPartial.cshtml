@@ -11,7 +11,15 @@
     <div class="modal-body form-horizontal">
 
         <div class="container-fluid">
-          
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <div class="lock-container">
+                            <input type="text" readonly id="aciveperiodparams" class="lock-result">
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
@@ -36,9 +44,17 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="lock-container">
+                        <input type="text" readonly id="lock-result">
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="spacer_10"></div>
         <div style="float:right;margin-right:10px;margin-bottom:10px;">
+            <div id="btnLockedView"></div>
         <div id="okFilterBtn"></div>
         <div id="closeFilterBtn"></div>
         </div>
@@ -51,6 +67,25 @@
         let nm = 0;
         let ny = 0;
         let courtId = $('#CourtId').val();
+        const buttonView = $("#btnLockedView").dxButton({
+        visible: true,
+        icon:Ciela.rootUrl+'images/lock-closed.svg',
+        hint:'Заключени периоди',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Home/AddMainDataLockedPartial", { }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Заключени периоди',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+
+         let isLocked=false;
+        $('#lock-result').val('');
+        $('#lock-result').addClass("hideme")
+      checkData();
         $("#selectBoxMonth").dxSelectBox({
             dataSource: selectBoxMonthData,
             valueExpr: 'id',
@@ -61,11 +96,19 @@
            
         });
         $("#selectBoxYear").dxSelectBox({
-            dataSource: selectBoxYearData,
-            valueExpr: 'id',
-            displayExpr: 'name',
+           dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
+                    }
+                }),
+            }),
+            valueExpr: 'Id',
+            displayExpr: 'Name',
             onValueChanged: function (e) {
                ny=e.value;
+               nSelectedYear=ny;
             }
 
         });
@@ -76,7 +119,7 @@
             placeholder: "Избери...",
             allowClear: true,
             ajax: {
-                url: "@Url.Action("GetFunctionalSubAreaByCourtId", "Noms", new { area = "CourtUser" })",
+                url:Ciela.baseUrl + "Noms/GetFunctionalSubAreaByCourtId",
                 contentType: "application/json; charset=utf-8",
                 data: function (params) {
                     var query =
@@ -111,11 +154,11 @@
             type: 'normal',
             width: 120,
             onClick() {
-                if ((functionalSubAreaId == 0)||(nm==0)||(ny==0)) { 
+                if ((functionalSubAreaId == 0)||(courtId==0)||(nm==0)||(nSelectedYear==0)) {
                     DevExpress.ui.dialog.alert('Изберете задължително отчетна единица, месец и година','Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('mainDataFilterOk', ''.concat(functionalSubAreaId, "|", nm, "|", ny));
+                window.parent.OnClosePopupEventHandlerEx('mainDataFilterOk', ''.concat(functionalSubAreaId, "|", nm, "|", nSelectedYear,"|",isLocked));
             },
         });
         $('#closeFilterBtn').dxButton({
@@ -127,6 +170,31 @@
                 popup.hide();
             },
         });
+          async function checkData(){
+            let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
+             .then(data =>{
+                if(!isEmpty(data)){
+                    $('#aciveperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
+                }
+                else {
+                      $('#aciveperiodparams').val('');
+                }
+             });
+      // Trigger your custom logic here
+         let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod3Locked", { programId: functionalSubAreaId,courtId:courtId,nm:nm, ny: ny })
+             .then(data =>{
+                if(!isEmpty(data)){
+                    $('#lock-result').val('Заключен период от '+data?.LockedByUserName);
+                    $('#lock-result').removeClass("hideme");
+                    isLocked=true;
+                }
+                else {
+                      $('#lock-result').val('');
+                    $('#lock-result').addClass("hideme");
+                    isLocked=false;
+                }
+             });
+        }
     });
    
 </script>

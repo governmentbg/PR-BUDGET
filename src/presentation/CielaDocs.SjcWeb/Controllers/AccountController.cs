@@ -167,6 +167,9 @@ namespace CielaDocs.SjcWeb.Controllers
                         case 3:
                             claimsIdentity.AddClaim(new Claim("CourtUser", "CourtUser"));
                             break;
+                        case 5:
+                            claimsIdentity.AddClaim(new Claim("ProsecutorAdmin", "ProsecutorAdmin"));
+                            break;
                         default: break;
                     }
 

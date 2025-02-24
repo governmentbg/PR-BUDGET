@@ -111,11 +111,10 @@
                         alllowEditing: true,
                         valueFormat: '#0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nvalue = value.toFixed(2);
+                            },
 
                     },
                     {
@@ -125,11 +124,10 @@
                         alllowEditing: true,
                         valueFormat: '#0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.ApprovedValue = value.toFixed(2);
+                            },
 
                     },
                     {
@@ -137,13 +135,12 @@
                         width: "10%",
                         caption: "Конто С-ст",
                         alllowEditing: false,
-                        valueFormat: '#0.00',
+                       valueFormat: '#0.00',
                         dataType: 'number',
-                        format: {
-                            formatter: function (value) {
-                                return value.toLocaleString('bg-BG');
-                            }
-                        }
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.CalculatedValue = value.toFixed(2);
+                            },
 
                     },
                 ],
@@ -201,20 +198,20 @@
         const menuData = [{
             id: '1',
             name: 'Затвори',
-            icon: './images/close.png',
+            icon: Ciela.baseUrl+'images/close.png',
 
 
         },
         {
             id: '6_1',
             name: 'Експорт',
-            icon: './images/exporter.svg',
+            icon:Ciela.baseUrl+'images/exporter.svg',
 
 
         }, {
             id: '4',
             name: 'Обнови',
-            icon: './images/refresh.png',
+            icon: Ciela.baseUrl+'images/refresh.png',
 
         }];
         const dxMenu = $('#menu').dxMenu({

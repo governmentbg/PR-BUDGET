@@ -1140,8 +1140,8 @@ namespace CielaDocs.Shared.Repository
                  left join    (
                                   select  FunctionalSubAreaId,RowNum,PlannedYear,SUM(
                  CASE 
-                     WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
-                     WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                     WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN Round(NValue * @OfficialEuroRate,2)
+                     WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN Round(NValue / @OfficialEuroRate,2)
                      ELSE NValue 
                  END
              ) as Nval1
@@ -1154,8 +1154,8 @@ namespace CielaDocs.Shared.Repository
 				  left join    (
                                   select  FunctionalSubAreaId,RowNum,PlannedYear,SUM(
                  CASE 
-                     WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
-                     WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                     WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN Round(NValue * @OfficialEuroRate,2)
+                     WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN Round(NValue / @OfficialEuroRate,2)
                      ELSE NValue 
                  END
              ) as Nval2
@@ -1167,8 +1167,8 @@ namespace CielaDocs.Shared.Repository
 				  left join    (
                                   select  FunctionalSubAreaId,RowNum,PlannedYear,SUM(
                  CASE 
-                     WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
-                     WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                     WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN Round(NValue * @OfficialEuroRate,2)
+                     WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN Round(NValue / @OfficialEuroRate,2)
                      ELSE NValue 
                  END
              ) as Nval3
@@ -1180,8 +1180,8 @@ namespace CielaDocs.Shared.Repository
                 left join    (
                                   select  FunctionalSubAreaId,RowNum,PlannedYear,SUM(
                  CASE 
-                     WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
-                     WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                     WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN Round(NValue * @OfficialEuroRate,2)
+                     WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN Round(NValue / @OfficialEuroRate,2)
                      ELSE NValue 
                  END
              ) as Nval4
@@ -5644,6 +5644,11 @@ namespace CielaDocs.Shared.Repository
             await connection.OpenAsync();
             var result = await connection.QuerySingleOrDefaultAsync<T>(sql);
             return result;
+        }
+
+        public Task GetProgramDataCourt3YAsync(int v, int ny)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -145,6 +145,10 @@ namespace CielaDocs.SjcWeb.Controllers
                 if ((custType == 2)||(custType==3) || (custType == 4)) {
                     return RedirectToAction("Index", "Home",new {area="CourtUser" });
                 }
+                if (custType == 5)
+                {
+                    return RedirectToAction("Index", "Home", new { area = "ProsecutorAdmin" });
+                }
             }
             return View();
 

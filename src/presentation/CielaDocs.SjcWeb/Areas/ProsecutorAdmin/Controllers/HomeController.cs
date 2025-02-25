@@ -192,15 +192,15 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
                 {
                     return Json(new { success = false, msg = "Не сте избрали коректни условия! " });
                 }
-                var mdexists = await _sjcRepo.CheckMainDataByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
-                var mditemsexists = await _sjcRepo.CheckMainDataItemsByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
+                var mdexists = await _sjcRepo.CheckMainDataByCourtIdPeriodAsync(functionalSubAreaId ?? 0, courtId ?? 0, nm ?? 0, ny ?? 0);
+                var mditemsexists = await _sjcRepo.CheckMainDataItemsByCourtIdPeriodAsync(functionalSubAreaId ?? 0, courtId ?? 0, nm ?? 0, ny ?? 0);
                 if (!mdexists)
                 {
-                    _ = await _sjcRepo.SpLoadMainDataByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
+                    _ = await _sjcRepo.SpLoadMainDataByCourtIdPeriodAsync(functionalSubAreaId ?? 0, courtId ?? 0, nm ?? 0, ny ?? 0);
                 }
                 if (!mditemsexists)
                 {
-                    _ = await _sjcRepo.SpLoadMainDataItemsByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
+                    _ = await _sjcRepo.SpLoadMainDataItemsByCourtIdPeriodAsync(functionalSubAreaId ?? 0, courtId ?? 0, nm ?? 0, ny ?? 0);
                 }
                 HttpContext.Session.Remove("FilterMainDataSess");
                 HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0, IsLocked = isLocked ?? false });
@@ -217,7 +217,7 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
             }
         }
         [HttpPost]
-        public async Task<JsonResult> SetMainDataItemFilter(int? courtId, int? nm, int? ny, bool? isLocked)
+        public async Task<JsonResult> SetMainDataItemFilter(int? functionalSubAreaId,int? courtId, int? nm, int? ny, bool? isLocked)
         {
             try
             {
@@ -225,15 +225,15 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
                 {
                     return Json(new { success = false, msg = "Не сте избрали коректни условия! " });
                 }
-                var mdexists = await _sjcRepo.CheckMainDataByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
-                var mditemsexists = await _sjcRepo.CheckMainDataItemsByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
+                var mdexists = await _sjcRepo.CheckMainDataByCourtIdPeriodAsync(functionalSubAreaId ?? 0,courtId ?? 0, nm ?? 0, ny ?? 0);
+                var mditemsexists = await _sjcRepo.CheckMainDataItemsByCourtIdPeriodAsync(functionalSubAreaId ?? 0,courtId ?? 0, nm ?? 0, ny ?? 0);
                 if (!mdexists)
                 {
-                    _ = await _sjcRepo.SpLoadMainDataByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
+                    _ = await _sjcRepo.SpLoadMainDataByCourtIdPeriodAsync(functionalSubAreaId ?? 0,courtId ?? 0, nm ?? 0, ny ?? 0);
                 }
                 if (!mditemsexists)
                 {
-                    _ = await _sjcRepo.SpLoadMainDataItemsByCourtIdPeriodAsync(courtId ?? 0, nm ?? 0, ny ?? 0);
+                    _ = await _sjcRepo.SpLoadMainDataItemsByCourtIdPeriodAsync(functionalSubAreaId ?? 0, courtId ?? 0, nm ?? 0, ny ?? 0);
                 }
                 HttpContext.Session.Remove("FilterMainDataSess");
                 HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = 0, CourtId = courtId ?? 0, Nmonth = nm ?? 0, Nyear = ny ?? 0, IsLocked = isLocked ?? false });

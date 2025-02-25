@@ -1,8 +1,11 @@
 ﻿using CielaDocs.Application.Models;
 using CielaDocs.Application.Utils;
+using CielaDocs.Domain.Entities;
 using CielaDocs.Shared.DataAccess;
 
 using Dapper;
+
+using DocumentFormat.OpenXml.Office2010.Excel;
 
 using MimeKit.Utils;
 
@@ -505,6 +508,117 @@ t1.PlannedYear as PlannedYear1,t2.PlannedYear as PlannedYear2,t3.PlannedYear as 
             parameters.Add("BudgetPeriodId", budgetPeriodId);
             var ret = await connection.ExecuteAsync("sp_DeleteEndPeriodData", parameters, commandType: CommandType.StoredProcedure);
             return ret;
+        }
+        public async Task<IEnumerable<MetricsFieldInProgramVm>> GetMetricsFieldInProgramByMainIndicatorIdAsync(int? id)
+        {
+            string sql = $@"SELECT [Id]
+              ,[MainIndicatorsId]
+              ,[FunctionalSubAreaId]
+              ,[Code]
+              ,[Name]
+              ,[NeededFor]
+              ,[IsActive]
+              ,[TypeOfIndicatorId]
+          FROM MetricsFieldInProgram where MainIndicatorsId={id}";
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<MetricsFieldInProgramVm>(sql);
+            return result?.ToList();
+        }
+        private async Task<IEnumerable<MetricsFieldInProgramVm>> GetMetricsFieldInProgramByMainIndicatorsId(int id) {
+            string sql = $@"SELECT [Id]
+              ,[MainIndicatorsId]
+              ,[FunctionalSubAreaId]
+              ,[Code]
+              ,[Name]
+              ,[NeededFor]
+              ,[IsActive]
+              ,[TypeOfIndicatorId]
+          FROM  MetricsFieldInProgram where MainIndicatorsId={id}";
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<MetricsFieldInProgramVm>(sql);
+            return result?.ToList();
+        }
+        public async Task<IEnumerable<MetricsFieldInProgramItemVm>> CreateMetricsFieldInProgramItemExists(MainData md) {
+            string sql = $@"SELECT [Id]
+                      ,[MetricsFieldInProgramId]
+                      ,[MainIndicatorsId]
+                      ,[FunctionalSubAreaId]
+                      ,[CourtId]
+                      ,[NMonth]
+                      ,[NYear]
+                      ,[Nvalue]
+                      ,[Datum]
+                      ,[EnteredOn] FROM MetricsFieldInProgramItem where MainIndicatorsId={md?.MainIndicatorsId??0} and FunctionalSubAreaId={md?.FunctionalSubAreaId??0} and CourtId={md?.CourtId??0} and NYear={md?.Nyear} and NMonth={md?.Nmonth} ";
+            
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<MetricsFieldInProgramItemVm>(sql);
+            if (!result.Any()) {
+                var metrics = await GetMetricsFieldInProgramByMainIndicatorsId(md?.MainIndicatorsId??0);
+                if (metrics.Any()) {
+                    string sqlins = string.Empty;
+                    foreach (var item in metrics) {
+                        sqlins = $@"INSERT INTO [dbo].[MetricsFieldInProgramItem]
+                               ([MetricsFieldInProgramId]
+                               ,[MainIndicatorsId]
+                               ,[FunctionalSubAreaId]
+                               ,[CourtId]
+                               ,[NMonth]
+                               ,[NYear]
+                               ,[Nvalue]
+                               )
+                         VALUES
+                               ({item?.Id ?? 0}
+                               ,{item?.MainIndicatorsId ?? 0}
+                               ,{item?.FunctionalSubAreaId ?? 0}
+                               ,{md?.CourtId ?? 0}
+                               ,{md?.Nmonth ?? 0}
+                               ,{md?.Nyear ?? 0}
+                               ,{0}
+                               )";
+                       
+                        var affectedRows = await connection.ExecuteAsync(sqlins);
+                    }
+                    return await connection.QueryAsync<MetricsFieldInProgramItemVm>(sql);
+                }
+            }
+            return result;
+        }
+        public async Task<IEnumerable<MetricsFieldInProgramItemVm>> GetMetricsFieldInProgramItemByMainIndicatorsId(int id) {
+            string sql = $@"SELECT a.Id
+                  ,a.MetricsFieldInProgramId
+                  ,a.MainIndicatorsId
+                  ,a.FunctionalSubAreaId
+                  ,a.CourtId
+                  ,a.NMonth
+                  ,a.NYear
+                  ,a.Nvalue
+                  ,a.Datum
+                  ,a.EnteredOn
+                  ,m.Code
+                  ,m.Name
+                  FROM MetricsFieldInProgramItem a
+                  left join MetricsFieldInProgram m on a.MetricsFieldInProgramId=m.id where a.MainIndicatorsId={id}";
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<MetricsFieldInProgramItemVm>(sql);
+            return result?.ToList();
+        }
+        public async Task<MainIndicatorsVm> GetMainIndicatorsById(int Id)
+        {
+            string sql = $@"select a.Id,a.FunctionalSubAreaId,a.Code,a.Name,a.MeasureId,a.IsActive,a.Calculation,a.Gkey,f.Name as FunctionalSubAreaName, c.Name as MeasureName,t.Name as TypeOfIndicatorName
+                            from MainIndicators a
+                            join FunctionalSubArea f on a.FunctionalSubAreaId=f.Id
+                            join Measure c on a.MeasureId=c.Id
+                            join TypeOfIndicator t on a.TypeOfIndicatorId=t.id
+                            where a.Id=@Id";
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QuerySingleOrDefaultAsync<MainIndicatorsVm>(sql, new { Id = Id });
+            return result;
         }
     }
 }

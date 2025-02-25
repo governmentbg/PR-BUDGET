@@ -1,0 +1,180 @@
+﻿@using CielaDocs.Application.Models
+@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    ViewData["Title"] = "Index";
+    var indicator = ViewData["Indicator"] as MainIndicatorsVm;
+}
+<div class="container">
+            <div class="spacer_10"></div>
+            <p style="color:red;">Показател:@indicator?.Name, Изчисление:@indicator?.Calculation</p>
+            <div class="spacer_10"></div>
+            <div id="gridresult"></div>
+            <div class="spacer_10"></div>
+            <div style="float:right;margin-right:10px;margin-bottom:10px;">
+                <div id="okBtn"></div>
+                <div id="closeBtn"></div>
+            </div>
+
+</div>
+
+<script>
+
+
+    $(() => {
+        let mainDataId=Number(@ViewBag.MainDataId);
+                $('#gridresult').dxDataGrid({
+                    dataSource: new DevExpress.data.DataSource({
+                        store: new DevExpress.data.CustomStore({
+                            key: 'Id',
+                            load() {
+                                return sendRequest(Ciela.baseUrl + "MainData/GetMetricsFieldInProgramItemByMainIndicatorId", 'Get', { mainIndicatorId: Number(@ViewBag.MainIndicatorId) });
+                            },
+                            update(key, values) {
+                                return sendRequest(Ciela.baseUrl + "MainData/UpdateMetricsFieldInProgramItem", 'Post', {
+                                    key: key,
+                                    values: JSON.stringify(values),
+                                });
+                            },
+                        }),
+                    }),
+                    paging: {
+                        pageSize: 100,
+                    },
+                    pager: {
+                        visible: true,
+                        showNavigationButtons: true,
+                        allowedPageSizes: [10, 25],
+                        showPageSizeSelector: true,
+                        showInfo: true,
+                        showNavigationButtons: true,
+                    },
+                    searchPanel: {
+                        visible: true,
+                        highlightCaseSensitive: true,
+                    },
+                    selection: {
+                        mode: "single"
+                    },
+                    showBorders: true,
+                    showRowLines: true,
+                    decimalSeparator: '.',
+                    columns: [
+                        {
+                            dataField: "Code",
+                            width: "15%",
+                            caption: "Код"
+                        },
+
+                        {
+                            dataField: "Name",
+                            width: "30%",
+                            caption: "Наименование на входни данни"
+                        },
+                        {
+                            dataField: "NMonth",
+                            width: "10%",
+                            caption: "Месец"
+                        },
+                        {
+                            dataField: "NYear",
+                            width: "10%",
+                            caption: "Година"
+                        },
+                        {
+                            dataField: "Nvalue",
+                            width: "10%",
+                            caption: "Стойност",
+                            alllowEditing: true,
+                            valueFormat: '0.00',
+                            dataType: 'number',
+                            format: function (value) { return value.toFixed(2); },
+                                setCellValue: function (rowData, value) {
+                                    rowData.Nvalue = value.toFixed(2);
+                                },
+
+                        }
+
+                    ],
+                    editing: {
+                        mode: 'cell',
+                        allowUpdating: true,
+                        allowDeleting: false,
+                        allowAdding: false,
+                    },
+                    onEditorPreparing: function (e) {
+                        if (e.dataField != "Nvalue" && e.dataField != "EnteredOn") e.editorOptions.disabled = true
+                        if (e.dataField === "Nvalue" && e.parentType === "dataRow") {
+                            const defaultValueChangeHandler = e.editorOptions.onValueChanged;
+                            e.editorOptions.onValueChanged = function (args) { // Override the default handler
+                                defaultValueChangeHandler(args);
+                            }
+                        }
+                        if (e.dataField === "EnteredOn" && e.parentType === "dataRow") {
+                            const defaultValueChangeHandler = e.editorOptions.onValueChanged;
+                            e.editorOptions.onValueChanged = function (args) { // Override the default handler
+                                defaultValueChangeHandler(args);
+                            }
+                        }
+                    },
+                    onRowRemoved: function (e) {
+                        e.component.selectRowsByIndexes(0);
+                    },
+                    onSelectionChanged: function (items) {
+                        if (items.selectedRowsData[0]) {
+                           // selectedId = items.selectedRowsData[0].Id;
+                        }
+                    },
+                    focusedRowEnabled: true,
+                    onFocusedRowChanged(e) {
+                        if (e) {
+                            //getExtraDataItem(e.row);
+                        }
+                    },
+                    hoverStateEnabled: true,
+               
+                });
+
+          //-------------buttons--------------
+          
+        $('#okBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+
+                doCalculation();
+            },
+        });
+        $('#closeBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+               mainPopup.hide();
+            },
+        });
+       function doCalculation()
+       {
+            $.ajax({
+                beforeSend: function (request) {
+                    request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                },
+                url: "@Url.Action("CalculateIndicator", "MainData")", method: 'POST', data: {mainDataId:mainDataId }
+
+            }).done(function (result) {
+                     window.parent.OnClosePopupEventHandlerEx('calculationOk', '');
+            })
+            .fail(function (e) {
+
+                 DevExpress.ui.notify('Грешка при изчисляване на показател! ' + e);
+            });
+           
+       }
+    });
+
+</script>

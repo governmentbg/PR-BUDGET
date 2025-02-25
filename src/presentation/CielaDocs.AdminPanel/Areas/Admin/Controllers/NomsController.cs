@@ -366,7 +366,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             }
         }
         [HttpGet]
-        public async Task<JsonResult> GetMetricsFields()
+        public async Task<JsonResult> GetMetricsFields(string term = "")
         {
             try
             {
@@ -379,7 +379,77 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             }
         }
         [HttpGet]
+        public async Task<JsonResult> GetMetricsFieldByCode(string term = "")
+        {
+            try
+            {
+                var data = await _sjcRepo.GetMetricsFields();
+                data = data.Where(x => x.Code.Contains(term.ToUpper()));
+                List<IdNames> ret = new List<IdNames>();
+                if (data.Any()) {
+                    foreach (var item in data) {
+                        ret.Add(new IdNames() { Id = item?.Id ?? 0, Name = item?.Code + "-" + item?.Name });
+                    }
+                }
+                return Json(ret);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MetricsField>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetMetricsFieldInProgramByMainIndicatorId(int id) {
+            var data = await _sjcServiceV2.GetMetricsFieldInProgramByMainIndicatorIdAsync(id);
+            return Json(data.ToList());
+        }
+        [HttpPost]
+        public async Task<JsonResult> DeleteMetricsFieldInProgramById(int id) {
+            _ = await _sjcService.ExecuteRawSql($"Delete from MetricsFieldInProgram where id={id}");
+            return Json(new { success = true });
+        }
+        [HttpGet]
+        public async Task<MetricsField> GetMetricsFieldById(int id)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRaw<MetricsField>($"SELECT [Id],[Code],[Name],[NeededFor],[IsActive],[TypeOfIndicatorId] FROM MetricsField where id={id}"); ;
+                return data;
+            }
+            catch (Exception ex)
+            {
+                return new MetricsField();
+            }
+        }
+        [HttpPost]
+        public async Task<JsonResult> AddMetricsFieldInProgramById(int? mainIndicatorsId, int? functionalSubAreaId, int? metricsFieldId)
+        {
+            var mf = await GetMetricsFieldById(metricsFieldId ?? 0);
+            _ = await _sjcService.ExecuteRawSql($@"INSERT INTO [MetricsFieldInProgram]([MainIndicatorsId],[FunctionalSubAreaId],[Code],[Name],[NeededFor],[IsActive],[TypeOfIndicatorId])
+                VALUES({mainIndicatorsId??0}
+                ,{functionalSubAreaId??0}
+                ,'{mf?.Code}'
+                ,'{mf?.Name}'
+                ,'{mf?.NeededFor}'
+                ,{1}
+                ,{mf?.TypeOfIndicatorId??0})");
+            return Json(new { success = true });
+        }
+        [HttpGet]
         public async Task<JsonResult> GetMeasure()
+        {
+            try
+            {
+                var data = await _sjcRepo.GetMeasureAsync();
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetMetricsByCode()
         {
             try
             {

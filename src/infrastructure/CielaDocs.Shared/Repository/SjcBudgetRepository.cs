@@ -528,18 +528,18 @@ namespace CielaDocs.Shared.Repository
             var result = await connection.QueryAsync<IdNames>(sql, new { Id=id});
             return result?.FirstOrDefault();
         }
-        public async Task<bool> CheckMainDataByCourtIdPeriodAsync(int courtId, int nm, int ny) {
-            var sql = "SELECT top 1 Id FROM MainData WHERE CourtId=@CourtId and NMonth=@NMonth  and NYear=@NYear";
+        public async Task<bool> CheckMainDataByCourtIdPeriodAsync(int functionalSubAreaId,int courtId, int nm, int ny) {
+            var sql = "SELECT top 1 Id FROM MainData WHERE FunctionalSubAreaId=@FunctionalSubAreaId and CourtId=@CourtId and NMonth=@NMonth  and NYear=@NYear";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var result = await connection.QueryAsync<int>(sql, new { CourtId = courtId, NMonth = nm, NYear=ny });
+            var result = await connection.QueryAsync<int>(sql, new { FunctionalSubAreaId=functionalSubAreaId, CourtId = courtId, NMonth = nm, NYear=ny });
             return result.Any();
         }
-        public async Task<bool> CheckMainDataItemsByCourtIdPeriodAsync(int courtId, int nm, int ny) {
-            var sql = "SELECT top 1 Id FROM MainDataItems WHERE CourtId=@CourtId and NMonth=@NMonth  and NYear=@NYear";
+        public async Task<bool> CheckMainDataItemsByCourtIdPeriodAsync(int functionalSubAreaId,int courtId, int nm, int ny) {
+            var sql = "SELECT top 1 Id FROM MainDataItems WHERE FunctionalSubAreaId=@FunctionalSubAreaId and CourtId=@CourtId and NMonth=@NMonth  and NYear=@NYear";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var result = await connection.QueryAsync<int>(sql, new { CourtId = courtId, NMonth = nm, NYear = ny });
+            var result = await connection.QueryAsync<int>(sql, new { FunctionalSubAreaId = functionalSubAreaId, CourtId = courtId, NMonth = nm, NYear = ny });
             return result.Any();
         }
         public async Task<bool> CheckPeriodDataByCourtIdPeriodAsync(int courtId, int nm, int ny) {
@@ -556,22 +556,24 @@ namespace CielaDocs.Shared.Repository
             var result = await connection.QueryAsync<int>(sql, new { CourtId = courtId, NMonth = nm, NYear = ny });
             return result.Any();
         }
-        public async Task<int?> SpLoadMainDataByCourtIdPeriodAsync(int courtId, int nm, int ny) {
+        public async Task<int?> SpLoadMainDataByCourtIdPeriodAsync(int functionalSubAreaId,int courtId, int nm, int ny) {
          
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("FunctionalSubAreaId", functionalSubAreaId);
             parameters.Add("CourtId", courtId);
             parameters.Add("NMonth", nm);
             parameters.Add("NYear", ny);
             var ret =await connection.ExecuteAsync("sp_LoadMainData", parameters, commandType: CommandType.StoredProcedure);
             return ret;
         }
-        public async Task<int?> SpLoadMainDataItemsByCourtIdPeriodAsync(int courtId, int nm, int ny)
+        public async Task<int?> SpLoadMainDataItemsByCourtIdPeriodAsync(int functionalSubAreaId,int courtId, int nm, int ny)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("FunctionalSubAreaId", functionalSubAreaId);
             parameters.Add("CourtId", courtId);
             parameters.Add("NMonth", nm);
             parameters.Add("NYear", ny);
@@ -601,12 +603,12 @@ namespace CielaDocs.Shared.Repository
             return ret;
         }
         public async Task<IEnumerable<MainDataGrid>> GetMainDataGridByFilterAsync(int functionalSubAreaId, int courtId, int nm, int ny) {
-            string sql = $@"select m.Id,m.CourtId,m.NMonth,m.NYear,m.MainIndicatorsId,m.Nvalue,m.EnteredValue,m.Datum,m.EnteredOn,i.Name as MainIndicatorName,i.Code,i.MeasureId,i.TypeOfIndicatorId,i.Calculation,c.Name as MeasureName,t.Name as TypeOfIndicatorName
+            string sql = $@"select m.Id,m.FunctionalSubAreaId,m.CourtId,m.NMonth,m.NYear,m.MainIndicatorsId,m.Nvalue,m.EnteredValue,m.Datum,m.EnteredOn,i.Name as MainIndicatorName,i.Code,i.MeasureId,i.TypeOfIndicatorId,i.Calculation,c.Name as MeasureName,t.Name as TypeOfIndicatorName
                         from MainData m
                         join MainIndicators i on m.MainIndicatorsId=i.Id
                         join Measure c on i.MeasureId=c.Id
                         join TypeOfIndicator t on i.TypeOfIndicatorId=t.id
-                        Where m.CourtId=@CourtId and m.NMonth=@NMonth and m.Nyear=@NYear and i.FunctionalSubAreaId=@FunctionalSubAreaId ";
+                        Where m.FunctionalSubAreaId=@FunctionalSubAreaId and m.CourtId=@CourtId and m.NMonth=@NMonth and m.Nyear=@NYear and i.FunctionalSubAreaId=@FunctionalSubAreaId ";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
@@ -615,12 +617,12 @@ namespace CielaDocs.Shared.Repository
         }
         public async Task<IEnumerable<MainDataGrid>> GetMainPeriodGridByFilterAsync(int functionalSubAreaId, int courtId, int nm, int ny)
         {
-            string sql = $@"select m.Id,m.CourtId,m.NMonth,m.NYear,m.MainIndicatorsId,m.Nvalue,m.EnteredValue,m.Datum,m.EnteredOn,i.Name as MainIndicatorName,i.Code,i.MeasureId,i.TypeOfIndicatorId,i.Calculation,c.Name as MeasureName,t.Name as TypeOfIndicatorName
+            string sql = $@"select m.Id,m.FunctionalSubAreaId,m.CourtId,m.NMonth,m.NYear,m.MainIndicatorsId,m.Nvalue,m.EnteredValue,m.Datum,m.EnteredOn,i.Name as MainIndicatorName,i.Code,i.MeasureId,i.TypeOfIndicatorId,i.Calculation,c.Name as MeasureName,t.Name as TypeOfIndicatorName
                         from MainPeriod m
                         join MainIndicators i on m.MainIndicatorsId=i.Id
                         join Measure c on i.MeasureId=c.Id
                         join TypeOfIndicator t on i.TypeOfIndicatorId=t.id
-                        Where m.CourtId=@CourtId and m.NMonth=@NMonth and m.Nyear=@NYear and i.FunctionalSubAreaId=@FunctionalSubAreaId ";
+                        Where m.FunctionalSubAreaId=@FunctionalSubAreaId and m.CourtId=@CourtId and m.NMonth=@NMonth and m.Nyear=@NYear and i.FunctionalSubAreaId=@FunctionalSubAreaId ";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
@@ -847,6 +849,16 @@ namespace CielaDocs.Shared.Repository
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             var affectedRows = await connection.ExecuteAsync(sql, new { EnteredValue = val, Id = id });
+
+            return affectedRows;
+
+        }
+        public async Task<int> UpdateMetricsFieldInProgramItemAsync(int? id, decimal? val)
+        {
+            var sql = @"UPDATE MetricsFieldInProgramItem SET NValue = @NValue, EnteredOn=getDate() WHERE Id = @Id";
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var affectedRows = await connection.ExecuteAsync(sql, new { NValue = val, Id = id });
 
             return affectedRows;
 

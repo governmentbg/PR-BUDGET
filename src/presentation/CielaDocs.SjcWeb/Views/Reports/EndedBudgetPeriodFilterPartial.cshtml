@@ -1,0 +1,77 @@
+﻿@{
+    ViewData["Title"] = "Index";
+
+}
+<style>
+    .select2-container--open {
+        z-index: 99999999
+    }
+</style>
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+        <div class="container-fluid">
+            
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="nyear">Избери година</label>
+                        <div id="selectBoxYear"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="spacer_10"></div>
+        <div style="float:right;margin-right:10px;margin-bottom:10px;">
+            <div id="okFilterBtn"></div>
+            <div id="closeFilterBtn"></div>
+        </div>
+    </div>
+</form>
+<script>
+    $(() => {
+        let ny = 0;
+       
+      
+        $("#selectBoxYear").dxSelectBox({
+             dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/GetInActivePeriodYear", 'Get', { });
+                    }
+                }),
+            }),
+            valueExpr: 'Id',
+            displayExpr: 'Name',
+            onValueChanged: function (e) {
+                ny = e.value;
+            }
+
+        });
+      
+        //-------------buttons--------------
+        $('#okFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                if (ny == 0) {
+                    DevExpress.ui.dialog.alert('Изберете задължително начална година на приключен период', 'Внимание');
+                    return;
+                }
+                window.parent.OnClosePopupEventHandlerEx('endedBudgetPeriodFilterOk', ny);
+            },
+        });
+        $('#closeFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                popup.hide();
+            },
+        });
+    });
+
+</script>

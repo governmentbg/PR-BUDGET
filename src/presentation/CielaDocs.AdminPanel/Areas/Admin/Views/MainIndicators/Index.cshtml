@@ -23,36 +23,33 @@
 <div id="programTitle" style="color:red;"></div>
 <div id="grid"></div>
 <span>Изчисление:&nbsp;</span><div id="elem-info" style="margin-top:10px;color:red;"></div>
-@await Html.PartialAsync("_ModalDialogPartial")
+
 @section scripts {
     <script>
-        const anyModal = $('#anyModal');
-        const anyContent = $('#anyContent');
-        const anyTitle = $('#anyTitle');
+      
         var selectedId = 0;
         let selectedFnSubAreaId = 0;
-        $('#btnAnySave').on('click', Save);
-        $('#btnAnyCancel').on('click', function () {
-            anyModal.modal('hide');
-            $("#grid").dxDataGrid("instance").refresh();
-        });
 
         function addMainIndicator() {
-            let spurl = EduDl.baseUrl + "MainIndicators/AddMainIndicatorPartial";
-            anyContent.empty();
-            anyTitle.text('Показател');
-            anyContent.html('<p>Зареждам данни…</p>')
-            $.ajax({
-                type: 'Get',
-                url: spurl,
-                data: { functionalSubAreaId: selectedFnSubAreaId },
-                success: function (data) {
-                    anyContent.html(data);
-                }
+              mainPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(EduDl.baseUrl + "MainIndicators/AddMainIndicatorPartial", { functionalSubAreaId: selectedFnSubAreaId }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Показател',
             });
-
-            anyModal.modal('show');
+            mainPopup.show();
         }
+
+         function OnClosePopupEventHandlerEx(arg, e) {
+             switch (arg) {
+                 case 'dataOk':
+                       mainPopup.hide();
+                       Save();
+                       $("#grid").dxDataGrid("instance").refresh();
+                     break;
+                
+             }
+         }
         function Save() {
 
             var postData = $("#anyForm").serialize();
@@ -79,7 +76,7 @@
                 })
                 .fail(function (e) {
 
-                    console.log(JSON.stringify(e));
+                    //console.log(JSON.stringify(e));
                     DevExpress.ui.notify('Failed to save! ' + e);
                     anyModal.modal('hide');
                 });
@@ -235,19 +232,13 @@
             return false;
         }
         function editMainIndicators(id) {
-            let url = EduDl.baseUrl + "MainIndicators/EditMainIndicatorsPartial";
-            anyContent.empty();
-            anyTitle.text('Редакция');
-            anyContent.html('<p>Зареждам данни…</p>')
-            $.ajax({
-                type: 'Get',
-                url: url,
-                data: { id: id },
-                success: function (data) {
-                    anyContent.html(data);
-                }
+             mainPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(EduDl.baseUrl + "MainIndicators/EditMainIndicatorsPartial", { id: id }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Показател',
             });
-            anyModal.modal('show');
+            mainPopup.show();
         }
         const menuData = [
             {

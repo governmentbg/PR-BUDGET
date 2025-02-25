@@ -34,16 +34,10 @@
 @Html.Hidden("CourtId",@court?.Id)
 @section scripts {
     <script>
-        const anyModal = $('#anyModal');
-        const anyContent = $('#anyContent');
-        const anyTitle = $('#anyTitle');
+       
         var selectedId = 0;
         let selectedTypeOfIndicatorId = 0;
-        $('#btnAnyCancel').on('click', function () {
-            anyModal.modal('hide');
-            $("#grid").dxDataGrid("instance").refresh();
-        });
-        $('#btnAnySave').on('click', Save);
+
          let loadIndicator;
         $('#image-indicator').dxLoadIndicator({
             indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
@@ -294,19 +288,15 @@
             return false;
         }
         function setMainDataItem(id) {
-            let url = Ciela.baseUrl + "MainData/GetMainDataItemsPartial";
-            anyContent.empty();
-            anyTitle.text('Входни данни');
-            anyContent.html('<p>Зареждам данни…</p>')
-            $.ajax({
-                type: 'Get',
-                url: url,
-                data: { id: id },
-                success: function (data) {
-                    anyContent.html(data);
-                }
+                mainPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "MainData/MetricsFieldInProgramItemPartial", {id: id }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Входни данни',
             });
-            anyModal.modal('show');
+            mainPopup.show();
+
+
         }
 
         const menuData = [{
@@ -398,6 +388,15 @@
 
                     DevExpress.ui.notify('Failed to calculate! ' + e);
                 });
+        }
+         function OnClosePopupEventHandlerEx(arg, e) {
+            switch (arg) {
+                case 'calculationOk':
+                     mainPopup.hide();
+                    $("#grid").dxDataGrid("instance").refresh();
+                    break;
+               
+            }
         }
     </script>
 }

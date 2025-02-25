@@ -1,4 +1,6 @@
 ﻿using CielaDocs.Application.Models;
+using CielaDocs.Domain.Entities;
+using CielaDocs.Domain.Entities.v2;
 using CielaDocs.Shared.Repository;
 
 using DocumentFormat.OpenXml.Drawing.Charts;
@@ -36,5 +38,9 @@ namespace CielaDocs.Shared.Services
         public async Task<IEnumerable<ProgramDataInstitutionHVm>> GetProgramDataInstitutionForEndingPeriod(int id) { return await _repo.GetProgramDataInstitutionForEndingPeriod(id); }
         public async Task<int> InsertIntoProgramDataInstitutionHAsync(ProgramDataInstitutionHVm data, int periodId) { return await _repo.InsertIntoProgramDataInstitutionHAsync(data, periodId); }
         public async Task<int?> SpDeleteEndPeriodDataAsync(int budgetPeriodId) { return await _repo.SpDeleteEndPeriodDataAsync(budgetPeriodId); }
+        public async Task<IEnumerable<MetricsFieldInProgramVm>> GetMetricsFieldInProgramByMainIndicatorIdAsync(int? id) { return await _repo.GetMetricsFieldInProgramByMainIndicatorIdAsync(id); }
+        public async Task<IEnumerable<MetricsFieldInProgramItemVm>> CreateMetricsFieldInProgramItemExists(MainData md) { return await _repo.CreateMetricsFieldInProgramItemExists(md); }
+        public async Task<IEnumerable<MetricsFieldInProgramItemVm>> GetMetricsFieldInProgramItemByMainIndicatorsId(int id) { return await _repo.GetMetricsFieldInProgramItemByMainIndicatorsId(id); }
+        public async Task<MainIndicatorsVm> GetMainIndicatorsById(int Id) { return await _repo.GetMainIndicatorsById(Id); }
     }
 }

@@ -6,6 +6,7 @@ namespace CielaDocs.Domain.Entities
     public partial class MainData
     {
         public int Id { get; set; }
+       public int? FunctionalSubAreaId { get; set; }
         public int? CourtId { get; set; }
         public int? Nmonth { get; set; }
         public int? Nyear { get; set; }

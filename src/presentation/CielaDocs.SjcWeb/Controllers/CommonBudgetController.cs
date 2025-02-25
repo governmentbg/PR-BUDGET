@@ -51,7 +51,7 @@ namespace CielaDocs.SjcWeb.Controllers
             int.TryParse(par, out int nYear);
             
             ViewBag.Nyear = nYear;
-            @ViewBag.Currency = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
+            ViewBag.Currency = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
             var ret = await GetExcelFileByName("CommonBudget.xlsx", nYear,currencyId??0,ViewBag.Currency);
             ViewBag.Success = ret.Item1.ToString();
             ViewBag.ResultFile=ret.Item2.ToString();

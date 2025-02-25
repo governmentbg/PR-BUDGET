@@ -70,8 +70,27 @@
                             <span asp-validation-for="Calculation" class="text-danger"></span>
                         </div>
                     </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label for="MetricsFileds">Входни данни</label>
+
+                            <label for="ddlMetricsCode">Код</label>
+                            <select class="form-control" id="ddlMetricsCode">
+                                <option>Избери... </option>
+                            </select>
+                            <div id="addMetricsBtn" style="margin-top:5px;"></div>
+                        
+                        </div>
+                    </div>
                 </div>
-       
+                <div class="row">
+                <div class="col-12"><div id="gridresult"></div></div>
+                </div>
+            <div class="spacer_10"></div>
+            <div style="float:right;margin-right:10px;margin-bottom:10px;">
+                <div id="okBtn"></div>
+                <div id="closeBtn"></div>
+            </div>
         </div>
     </div>
 
@@ -80,6 +99,8 @@
 
 
     $(() => {
+        let metricsFieldId=0;
+      
 
         $('#cbIsActive').prop('checked', ($('#IsActive').val().toLowerCase() == 'true') ? true : false);
 
@@ -178,6 +199,161 @@
          $('#MeasureId').val($(e.currentTarget).val());
         });
 
+          $("#ddlMetricsCode").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetMetricsFieldByCode", "Noms", new { area = "Admin" })",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+         metricsFieldId=$(e.currentTarget).val();
+        });
+
+
+                $('#gridresult').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(EduDl.baseUrl + "Noms/GetMetricsFieldInProgramByMainIndicatorId", 'Get', { id: $('#Id').val() });
+                        },
+                    }),
+                }),
+                paging: {
+                    pageSize: 100,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                decimalSeparator: '.',
+                columns: [
+                    {
+                        dataField: "Code",
+                        width: "20%",
+                        caption: "Код"
+                    },
+
+                    {
+                        dataField: "Name",
+                        width: "50%",
+                        caption: "Наименование на входни данни"
+                    },
+
+                    {
+                        type: 'buttons',
+                    width: 124,
+                    buttons: [
+                    {
+                        hint: 'Изтриване',
+                        icon: 'trash',
+
+                        onClick(e) {
+                            removeRow(e.row.data.Id);
+                            e.component.refresh(true);
+                            e.event.preventDefault();
+                        },
+                    }
+                    ],
+                    }
+
+                ],
+                
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                focusedRowEnabled: true,
+
+            });
+             function removeRow(id){
+              var result = DevExpress.ui.dialog.confirm("Потвърдете изтриването на записа?", "Потвърждение");
+                             result.done(function (dialogResult) {
+                                 if (dialogResult === true) {
+                                     $.ajax({
+                                         url: EduDl.baseUrl + "Noms/DeleteMetricsFieldInProgramById", data: {id:id }, method: 'POST'
+                                     })
+                                         .done(function (result) {
+                                              $("#gridresult").dxDataGrid("instance").refresh();
+                                             DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                             DevExpress.ui.notify('Грешка при изтриване на входни данни за показател.');
+                                         });
+                                 }
+                             });
+        }
+          //-------------buttons--------------
+           $('#addMetricsBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добави',
+            type: 'success',
+            width: 120,
+            onClick() {
+                addMetricsFieldInProgram($('#Id').val(),$('#FunctionalSubAreaId').val(),metricsFieldId);
+            },
+        });
+        $('#okBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+               
+                window.parent.OnClosePopupEventHandlerEx('dataOk', '');
+            },
+        });
+        $('#closeBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+               mainPopup.hide();
+            },
+        });
+        function addMetricsFieldInProgram(MainIndicatorsId,FunctionalSubAreaId,metricsFieldId){
+             $.ajax({
+                                         url: EduDl.baseUrl + "Noms/AddMetricsFieldInProgramById", data: {mainIndicatorsId:MainIndicatorsId,functionalSubAreaId:FunctionalSubAreaId,metricsFieldId:metricsFieldId }, method: 'POST'
+                                     })
+                                         .done(function (result) {
+                                              $("#gridresult").dxDataGrid("instance").refresh();
+                                             DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                             DevExpress.ui.notify('Грешка при добавяне на показател.');
+                                         });
+        }
     });
    
 </script>

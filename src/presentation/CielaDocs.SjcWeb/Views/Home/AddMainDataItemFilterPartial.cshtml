@@ -21,6 +21,26 @@
                         </div>
                     </div>
              </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="cbFunctionalArea">Функционална област</label>
+                        <select class="form-control" style="width:100%" id="cbFunctionalArea">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="cbFunctionalSubArea">Бюджетна програма</label>
+                        <select class="form-control" style="width:100%" id="cbFunctionalSubArea">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
            <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -74,6 +94,8 @@
 <script>
      
     $(() => {
+         let functionalAreaId = 0;
+        let functionalSubAreaId = 0;
         let courtTypeId = 0;
         let courtId = 0;
         let nm = 0;
@@ -198,27 +220,30 @@
             placeholder: "Избери...",
             allowClear: true,
             ajax: {
-                url: "@Url.Action("GetCourtTypes", "Noms" )",
+                  url: "@Url.Action("GetCourtTypesByProgramId", "Noms")",
                 contentType: "application/json; charset=utf-8",
                 data: function (params) {
                     var query =
                     {
+                        programId:functionalSubAreaId,
                         term: params.term,
                     };
                     return query;
                 },
-                processResults: function (result) {
-                    return {
-                        results: $.map(result, function (item) {
-                            return {
-                                id: item.Id,
-                                text: item.Name
+                    processResults: function (result) {
+                        return {
+                            results: $.map(result, function (item) {
+                                return {
+                                    id: item.Id,
+                                    text: item.Name
 
-                            };
+                                };
 
-                        }),
+                            }),
 
-                    };
+                        };
+
+                    }
 
                 }
             }
@@ -257,19 +282,86 @@
         }).on('change', function (e) {
             courtId=$(e.currentTarget).val();
         });
+          $("#cbFunctionalArea").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetFunctionalAreas", "Noms")",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            functionalAreaId = $(e.currentTarget).val();
+        });
+        $("#cbFunctionalSubArea").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetFunctionalSubAreaByAreaId", "Noms")",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        id: functionalAreaId,
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            functionalSubAreaId = $(e.currentTarget).val();
+        });
         //  ---------get dynamic action if selected two evalues
-       const dropdowns = [
-        { type: 'select2', element: $('#cbCourt') },
-        { type: 'dxDropDownM', element: $('#selectBoxMonth').dxSelectBox('instance')},
+           const dropdowns = [
+        { type: 'select2', element: $('#cbFunctionalSubArea') },
+         { type: 'select2C', element: $('#cbCourt') },
+         { type: 'dxDropDownM', element: $('#selectBoxMonth').dxSelectBox('instance') },
         { type: 'dxDropDownY', element: $('#selectBoxYear').dxSelectBox('instance') }
     ];
 
         dropdowns.forEach(dropdown => {
         if (dropdown.type === 'select2') {
             dropdown.element.on('change', checkAllSelected);
-        } else if (dropdown.type === 'dxDropDownM') {
+        } else if (dropdown.type === 'select2C') {
+            dropdown.element.on('change', checkAllSelected);
+        }
+        else if (dropdown.type === 'dxDropDownM') {
             dropdown.element.option('onValueChanged', checkAllSelected);
-        }else if (dropdown.type === 'dxDropDownY') {
+        } else if (dropdown.type === 'dxDropDownY') {
             dropdown.element.option('onValueChanged', checkAllSelected);
         } else {
             dropdown.element.addEventListener('change', checkAllSelected);
@@ -279,7 +371,9 @@
     function getValue(dropdown) {
         if (dropdown.type === 'select2') {
             return dropdown.element.val();
-        } else if (dropdown.type === 'dxDropDownM') {
+        } else if (dropdown.type === 'select2C') {
+            return dropdown.element.val();
+        }  else if (dropdown.type === 'dxDropDownM') {
             return dropdown.element.option('value');
         } else if (dropdown.type === 'dxDropDownY') {
             return dropdown.element.option('value');
@@ -287,7 +381,6 @@
             return dropdown.element.value;
         }
     }
-
         async function  checkAllSelected() {
             const allSelected = dropdowns.every(d => {
                 const value = getValue(d);
@@ -325,11 +418,11 @@
             type: 'normal',
             width: 120,
             onClick() {
-                if ((courtId==0)||(nm==0)||( nSelectedYear==0)) {
-                    DevExpress.ui.dialog.alert('Изберете задължително отчетна единица, месец и година','Внимание');
+                  if ((functionalSubAreaId == 0)||(courtId==0)||(nm==0)||(nSelectedYear==0)) {
+                    DevExpress.ui.dialog.alert('Изберете задължително програма, отчетна единица, месец и година','Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('mainDataItemFilterOk', ''.concat(courtId, "|", nm, "|",  nSelectedYear,"|",isLocked));
+                window.parent.OnClosePopupEventHandlerEx('mainDataItemFilterOk', ''.concat(functionalAreaId,"|",courtId, "|", nm, "|",  nSelectedYear,"|",isLocked));
             },
         });
         $('#closeFilterItemBtn').dxButton({

@@ -9,6 +9,8 @@ using CielaDocs.SjcWeb.Models;
 
 using DocumentFormat.OpenXml.Bibliography;
 
+using Google.Protobuf.WellKnownTypes;
+
 using MediatR;
 
 using Microsoft.AspNetCore.Http;
@@ -32,11 +34,12 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
         private readonly ISjcService _sjcService;
+        private readonly ISjcServiceV2 _sjcServiceV2;
         private  FilterMainDataVm? FilterData=null;  
 
         public MainDataController(ILogger<MainDataController> logger, IConfiguration configuration, ISendGridMailer emailSender,
                         IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo,
-                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env, ISjcService sjcService)
+                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env, ISjcService sjcService, ISjcServiceV2 sjcServiceV2)
         {
             _logger = logger;
             _mediator = mediator;
@@ -46,6 +49,7 @@ namespace CielaDocs.SjcWeb.Controllers
             _sjcRepo = sjcRepo;
            _env = env;
             _sjcService= sjcService;
+            _sjcServiceV2 = sjcServiceV2;
         }
         public async Task<IActionResult> Index()
         {
@@ -120,23 +124,40 @@ namespace CielaDocs.SjcWeb.Controllers
             }
 
         }
-        private  static int IndexOfWholeWord(string str, string word)
-        {
-            for (int j = 0; j < str.Length &&
-                (j = str.IndexOf(word, j, StringComparison.Ordinal)) >= 0; j++)
-                if ((j == 0 || !char.IsLetterOrDigit(str, j - 1)) &&
-                    (j + word.Length == str.Length || !char.IsLetterOrDigit(str, j + word.Length)))
-                    return j;
-            return -1;
+        [HttpGet]
+        public async Task<PartialViewResult> MetricsFieldInProgramItemPartial(int? id) {
+            if ((id == null) || (id < 0))
+            {
+                return PartialView("_ErrorPartialView", "Невалиден указател!");
+            }
+            var md = await _sjcRepo.GetMainDataByIdAsync(id ?? 0);
+            _ = await _sjcServiceV2.CreateMetricsFieldInProgramItemExists(md);
+            ViewBag.MainIndicatorId = md?.MainIndicatorsId ?? 0;
+            ViewBag.MainDataId = id ?? 0;
+            ViewData["Indicator"] = await _sjcServiceV2.GetMainIndicatorsById(md?.MainIndicatorsId ?? 0);
+            return PartialView("MetricsFieldInProgramPartialView");
         }
+        [HttpGet]
+        public async Task<JsonResult> GetMetricsFieldInProgramItemByMainIndicatorId(int? mainIndicatorId)
+        {
+            try
+            {
+                var data = await _sjcServiceV2.GetMetricsFieldInProgramItemByMainIndicatorsId(mainIndicatorId ?? 0);
+                return Json(data);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MetricsFieldInProgramItemVm>());
+            }
+        }
+      
         private string ReplaceCalculationFormula(string Source, Dictionary<string,string> dic)
         {
             string[] el=Source.Split(new char[] { '/', '*', '+', '-', ' ','(',')' },StringSplitOptions.RemoveEmptyEntries );
-           // string result=string.Empty;
             foreach (var (key,value) in dic) {
                 if (key is null) continue;
                 if (value is null) continue;
-                int Place = Source.IndexOf(key);
+                int Place = Source.IndexOfWholeWord(key);
                 Source = Source.Remove(Place, key.Length).Insert(Place, !string.IsNullOrWhiteSpace(value)?value:"0");
             }
             
@@ -308,6 +329,56 @@ namespace CielaDocs.SjcWeb.Controllers
             JsonConvert.PopulateObject(values, nv);
             _ = await _sjcRepo.UpdateMainDataEnteredValueByIdAsync(key, nv.EnteredValue);
             return Json(string.Empty);
+        }
+
+        [HttpPost]
+        public async Task<JsonResult> UpdateMetricsFieldInProgramItem(int key, string values)
+        {
+            var nv = new Nvalues();
+        JsonConvert.PopulateObject(values, nv);
+            _ = await _sjcRepo.UpdateMetricsFieldInProgramItemAsync(key, nv.Nvalue);
+            return Json(string.Empty);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> CalculateIndicator(int? mainDataId) 
+        {
+            var md = await _sjcRepo.GetMainDataByIdAsync(mainDataId ?? 0);
+            var mi = await _sjcRepo.GetMainIndicatorsByIdAsync(md?.MainIndicatorsId??0);
+            var data = await _sjcServiceV2.GetMetricsFieldInProgramItemByMainIndicatorsId(md?.MainIndicatorsId ?? 0);
+
+            var dic = new Dictionary<string, string>();
+            
+
+                foreach (var itm in data)
+                {
+                    if (!dic.ContainsKey(itm.Code))
+                    {
+                        dic.Add(itm.Code, itm.Nvalue.ToString());
+                    }
+                }
+            string calculationString = ReplaceCalculationFormula(mi.Calculation ?? string.Empty, dic);
+
+            if (ValidateString(calculationString))
+            {
+                try
+                {
+                    var res = Parser.Parse(calculationString).Eval(null);
+                    bool isNaN = Double.IsNaN(res);
+                    if (isNaN) res = 0;
+                    if (mi?.MeasureId == 1)
+                    {
+                        res = res * 100;
+                    }
+                    var ok = await _sjcRepo.UpdateMainDataValueByIdAsync(mainDataId, res);
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { msg = "Error calculation: " + ex?.Message, success = false });
+                }
+            }
+
+            return Json(new { msg = "Показателите бяха преизчислени", success = true });
         }
     }
 }

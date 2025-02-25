@@ -34,7 +34,9 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<FunctionalSubArea>> GetFunctionalSubAreasAsync(int functionalAreaId);
         Task<FunctionalSubArea> GetFunctionalSubAreabyIdAsync(int Id);
         Task<IEnumerable<TreeListMinDataModel>> GetTreeListFunctionalMinData();
+
         Task<IEnumerable<MainIndicatorsVm>> GetMainIndicatorsByProgramId(int programId);
+        Task<int> UpdateMetricsFieldInProgramItemAsync(int? id, decimal? val);
         Task<IEnumerable<ProgramDefVm>> GetProgramDefByProgramIdAsync(int programId);
         Task<IEnumerable<ProgramDefVm>> GetProgramDefProgCodesByProgramIdAsync(int programId);
         Task<ProgramDefVm> GetProgramDefByIdAsync(int id);
@@ -46,13 +48,13 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<IdNames>> GetTypeOfIndicatorAsync();
         Task<IdNames> GetMeasureByIdAsync(int id);
         Task<IdNames> GetTypeOfIndicatorByIdAsync(int id);
-        Task<bool> CheckMainDataByCourtIdPeriodAsync(int courtId, int nm, int ny);
-        Task<bool> CheckMainDataItemsByCourtIdPeriodAsync(int courtId, int nm, int ny);
+        Task<bool> CheckMainDataByCourtIdPeriodAsync(int functionalSubAreaId, int courtIdrtId, int nm, int ny);
+        Task<bool> CheckMainDataItemsByCourtIdPeriodAsync(int functionalSubareaId,int courtId, int nm, int ny);
         Task<bool> CheckPeriodDataByCourtIdPeriodAsync(int courtId, int nm, int ny);
         Task<bool> CheckPeriodDataItemsByCourtIdPeriodAsync(int courtId, int nm, int ny);
 
-        Task<int?> SpLoadMainDataByCourtIdPeriodAsync(int courtId, int nm, int ny);
-        Task<int?> SpLoadMainDataItemsByCourtIdPeriodAsync(int courtId, int nm, int ny);
+        Task<int?> SpLoadMainDataByCourtIdPeriodAsync(int functionalSubAreaId, int courtId, int nm, int ny);
+        Task<int?> SpLoadMainDataItemsByCourtIdPeriodAsync(int functionalSubAreaId,int courtId, int nm, int ny);
         Task<int?> SpLoadMainPeriodByCourtIdPeriodAsync(int courtId, int nm, int ny);
         Task<int?> SpLoadMainPeriodItemsByCourtIdPeriodAsync(int courtId, int nm, int ny);
 

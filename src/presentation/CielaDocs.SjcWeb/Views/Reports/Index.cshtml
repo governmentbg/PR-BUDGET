@@ -87,6 +87,15 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="capsule-at">
+                    <div id="endedBudgetPeriod" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Auto-Archive-WF.png")" alt="." />
+                        <p class="button_text-at">Приключени периоди</p>
+                        <p>Справки и отчети за приключени периоди за бюджетни програми</p>
+                    </div>
+                </div>
+            </div>
       </div>
     </div>
 
@@ -176,6 +185,7 @@ else
         $(function () {
              officialCurrencyId = window.localStorage.getItem('OfficialCurrencyId') ? Number(window.localStorage.getItem('OfficialCurrencyId')) : 0;
              activeYear = window.localStorage.getItem('ActiveYear') ? Number(window.localStorage.getItem('ActiveYear')) : 0;
+
              $("#selectBoxCurrency").dxSelectBox({
              dataSource: selectBoxCurrencyData,
              value: window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId,
@@ -226,6 +236,13 @@ else
                  });
                  popup.show();
              });
+               $("#endedBudgetPeriod").on("click", function () {
+                  popup.option({
+                      contentTemplate: () => popupContentTemplate(8)
+                  });
+                  popup.show();
+              });
+              
         });
            
         
@@ -264,10 +281,14 @@ else
                     popup.hide();
                     applyProgramNumYear(e);
                     break;
-                     case 'commonBudgetFilterOk':
+                case 'commonBudgetFilterOk':
                       popup.hide();
                       applyCommonBudget(e);
                      break;
+                 case 'endedBudgetPeriodFilterOk':
+                  popup.hide();
+                       applyEndedBudget(e);
+                 break;
             }
         }
         const popupContentTemplate = function (id) {
@@ -287,7 +308,8 @@ else
                     break;
                 case 7: cnturl = "@Url.Action("AddCommonBudgetFilterPartial", "Reports")";
                      break;
-
+                case 8: cnturl = "@Url.Action("EndedBudgetPeriodFilterPartial", "Reports")";
+                           break;
             }
 
             const scrollView = $('<div />');
@@ -348,9 +370,12 @@ else
         function applyProgramNumYear(e) {
              redirectme2("@Url.Action("FunctionalSubAreaNumYearReport", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
         }
-          function  applyCommonBudget(e){
+        function  applyCommonBudget(e){
               redirectme2("@Url.Action("Index", "CommonBudget")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
-          }
+        }
+         function  applyEndedBudget(e){
+              redirectme2("@Url.Action("Index", "EndedBudget")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
+         }
         const reportmenuData = [{
                    id: '1',
                    name: 'Начало',

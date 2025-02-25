@@ -9,6 +9,7 @@ namespace CielaDocs.Application.Models
     public class MainDataGrid
     {
         public int Id { get; set; }
+        public int? FunctionalSubAreaId { get; set; }
         public int? CourtId { get; set; }
         public int? Nmonth { get; set; }
         public int? Nyear { get; set; }

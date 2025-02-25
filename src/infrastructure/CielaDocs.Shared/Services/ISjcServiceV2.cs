@@ -1,4 +1,5 @@
 ﻿using CielaDocs.Application.Models;
+using CielaDocs.Domain.Entities;
 
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,10 @@ namespace CielaDocs.Shared.Services
         Task<IEnumerable<ProgramDataInstitutionHVm>> GetProgramDataInstitutionForEndingPeriod(int id);
         Task<int> InsertIntoProgramDataInstitutionHAsync(ProgramDataInstitutionHVm data, int periodId);
         Task<int?> SpDeleteEndPeriodDataAsync(int budgetPeriodId);
+        Task<IEnumerable<MetricsFieldInProgramVm>> GetMetricsFieldInProgramByMainIndicatorIdAsync(int? id);
+        Task<IEnumerable<MetricsFieldInProgramItemVm>> CreateMetricsFieldInProgramItemExists(MainData md);
+        Task<IEnumerable<MetricsFieldInProgramItemVm>> GetMetricsFieldInProgramItemByMainIndicatorsId(int id);
+        Task<MainIndicatorsVm> GetMainIndicatorsById(int Id);
 
     }
 }

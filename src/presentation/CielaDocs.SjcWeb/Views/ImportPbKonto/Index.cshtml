@@ -14,7 +14,9 @@
         gap: 10px;
     }
 </style>
-<div class="spacer_20"></div>
+<div class="spacer_5"></div>
+<div style="display:inline-block;" id="menu"></div>
+<div class="spacer_5"></div>
 <h4>Импорт на данни за проектобюджет</h4>
 <div class="container-flex">
     <div class="activeperiod-right">
@@ -72,8 +74,9 @@
                         <div id="dxContextMenu"></div>
                         <div id="btnLock"></div>
                         <div id="btnLockedView"></div>
+                        <div id="btnEnteredData"></div>
                 </div>
-
+           
                     
            
 
@@ -85,6 +88,7 @@
 </div>
 
 <script>
+   
     let importType = 0;
     let institutionTypeId = 0;
     let courtTypeId = 0;
@@ -116,6 +120,23 @@
             mainRightReadOnlyPopup.show();
         }
         }).dxButton("instance");
+
+            const buttonCourts = $("#btnEnteredData").dxButton({
+        visible: true,
+        icon:Ciela.baseUrl+'images/input-data.svg',
+        hint:'Въведени данни',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "ImportPbKonto/AnalizeDraftBudgetPartial", {importTypeId:importType,functionalSubAreaId:selectedFnSubAreaId, institutionTypeId:institutionTypeId, courtTypeId:courtTypeId,ny:ny }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Анализ на въведени данни',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+
+
        let isLocked=false;
         $('#lock-result').val('');
         $('#lock-result').addClass("hideme")
@@ -349,5 +370,36 @@
         });
         return false;
     }
+     const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: Ciela.baseUrl+'images/back.png',
 
+
+        }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+                          case '1':
+                            window.location.href = Ciela.baseUrl;
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
 </script>

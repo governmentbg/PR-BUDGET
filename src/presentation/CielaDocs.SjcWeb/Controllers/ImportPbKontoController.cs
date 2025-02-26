@@ -9,6 +9,8 @@ using CielaDocs.SjcWeb.Models;
 
 using ClosedXML.Excel;
 
+using DevExpress.Export;
+
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Vml;
 
@@ -405,6 +407,20 @@ namespace CielaDocs.SjcWeb.Controllers
 
             return PartialView("AddImportPbKontoLockedPartial");
 
+        }
+        [HttpGet]
+        public async Task<PartialViewResult> AnalizeDraftBudgetPartial(int? importTypeId, int? functionalSubAreaId,int? institutionTypeId, int? courtTypeId, int? ny)
+        {
+            ViewBag.FunctionalSubAreaId = functionalSubAreaId ?? 0;
+            ViewBag.FunctionalSubAreaName = await _sjcRepo.QueryRawAsync<String>($"Select Name from FunctionalSubArea where id={functionalSubAreaId ?? 0}");
+            ViewBag.CourtTypeId = courtTypeId ?? 0;
+            ViewBag.CourtTypeName = await _sjcRepo.QueryRawAsync<String>($"Select Name from CourtType where id={courtTypeId ?? 0}");
+            ViewBag.InstitutionTypeId = institutionTypeId ?? 0;
+            ViewBag.InstitutionTypeIName = await _sjcRepo.QueryRawAsync<String>($"Select Name from InstitutionType where id={institutionTypeId ?? 0}");
+            ViewBag.ImportTypeId = importTypeId ?? 0;
+            ViewBag.ImportTypeName = (importTypeId == 1) ? "Експертен проектобюджет" : "Проектобюджет на отчетни единици";
+            ViewBag.Ny = ny ?? 0;
+            return PartialView("AnalizeDraftBudgetPartial");
         }
     }
 }

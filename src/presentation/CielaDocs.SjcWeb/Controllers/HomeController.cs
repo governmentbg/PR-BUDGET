@@ -432,8 +432,25 @@ namespace CielaDocs.SjcWeb.Controllers
         public PartialViewResult AddMainDataLockedPartial() => PartialView("AddMainDataLockedPartial");
         public PartialViewResult AddMainDataPeriodLockedPartial() => PartialView("AddMainDataPeriodLockedPartial");
         public PartialViewResult AddApprovedDataItemLockedPartial() => PartialView("AddApprovedDataItemLockedPartial");
+        public async Task<PartialViewResult> AnalizeMainDataPartial(int? functionalSubAreaId,int? courtTypeId,int? nm, int? ny) {
+            ViewBag.FunctionalSubAreaId = functionalSubAreaId ?? 0;
+            ViewBag.FunctionalSubAreaName = await _sjcRepo.QueryRawAsync<String>($"Select Name from FunctionalSubArea where id={functionalSubAreaId ?? 0}");
+            ViewBag.CourtTypeId = courtTypeId ?? 0;
+            ViewBag.CourtTypeName= await _sjcRepo.QueryRawAsync<String>($"Select Name from CourtType where id={courtTypeId ?? 0}");
+            ViewBag.Nm = nm ?? 0;
+            ViewBag.Ny = ny ?? 0;
+            return PartialView("AnalizeMainDataPartial");
+        }
 
-        
+        public async Task<PartialViewResult> AnalizeProgramDataPartial(int? functionalSubAreaId) {
+            ViewBag.FunctionalSubAreaId = functionalSubAreaId ?? 0;
+            ViewBag.FunctionalSubAreaName = await _sjcRepo.QueryRawAsync<String>($"Select Name from FunctionalSubArea where id={functionalSubAreaId ?? 0}");
+            return PartialView("AnalizeProgramDataPartial");
+        }
+        public async Task<PartialViewResult> AnalizeProgramDataAllPartial()
+        {
+            return PartialView("AnalizeProgramDataAllPartial");
+        }
 
     }
 }

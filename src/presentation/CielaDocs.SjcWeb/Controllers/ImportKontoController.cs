@@ -345,5 +345,10 @@ namespace CielaDocs.SjcWeb.Controllers
             return PartialView("AddImportKontoLockedPartial");
 
         }
+        [HttpGet]
+        public async Task<PartialViewResult> AnalizeKontoMonthDataPartial()
+        {
+            return PartialView("AnalizeKontoMonthDataPartial");
+        }
     }
 }

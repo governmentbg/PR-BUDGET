@@ -4,7 +4,8 @@ const selectBoxYearData = [{ id: 0, name: "Изберете година" }, { i
     { id: 2028, name: "2028" }, { id: 2029, name: "2029" }, { id: 2030, name: "2030" }, { id: 2031, name: "2031" }, { id: 2032, name: "2032" }];
 const selectBoxQuarterData = [{ id: 0, name: "Изберете тримесечие" }, { id: 3, name: "Март" }, { id: 6, name: "Юни" }, { id: 9, name: "Септември" }, { id: 12, name: "Декември" }];
 const selectBoxCurrencyData = [{ id: 0, name:"BGN" }, { id: 1, name:"EUR" }];
-
+const selectBoxResultTypeData = [{ id: 0, name: "Въведени данни" }, { id: 1, name: "Невъведени данни" }];
+const selectBoxImportTypeData = [{ id: 0, name: "Бюджетни единици" }, { id: 1, name: "Експертен бюджет" }];
 var loadingModal = $("#loadingModal");
 var selectedCardId = 0;
 var selectedEmplId = 0;

@@ -1,0 +1,154 @@
+﻿@using System.Linq
+@{
+
+    ViewBag.Title = "AnalizeMAinData";
+    Layout = null;
+}
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="spacer_10"></div>
+<div class="header-container">
+    <h6 style="margin: 0;">Анализ за въведени данни от Конто</h6>
+</div>
+<div class="spacer_5"></div>
+<div id="typeOfResultFilter" style="width:180px;display:inline-block;padding-left:5px;"></div>
+<div id="activePeriodFilter" style="width:180px;display:inline-block;padding-left:5px;"></div>
+<div id="monthFilter" style="width:180px;display:inline-block;padding-left:5px;"></div>
+<div style="display:inline-block;padding-left:10px;" id="menu1"></div>
+<div class="spacer_5"></div>
+<div id="image-indicator"></div>
+<div id="gridKonto"></div>
+<div class="spacer_10"></div>
+<script>
+
+
+        $('#image-indicator').dxLoadIndicator({
+            indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
+        });
+
+    $(()=>{
+         let selectedtypeOfResultId;
+
+         let loadIndicator;
+         let ny;
+         let nm;
+       loadIndicator = $('#image-indicator').dxLoadIndicator({
+                visible: false,
+            }).dxLoadIndicator('instance');
+            loadIndicator.option('visible', false);
+
+            $('#typeOfResultFilter').dxSelectBox({
+                dataSource: selectBoxResultTypeData,
+                value: 0,
+                valueExpr: 'id',
+                displayExpr: 'name',
+                label: "Вид резултат",
+                labelMode: "floating",
+                stylingMode:"underlined",
+                onValueChanged(data) {
+                    selectedtypeOfResultId = data.value;
+                    $("#gridKonto").dxDataGrid("instance").refresh();
+                },
+            });
+             $('#activePeriodFilter').dxSelectBox({
+                dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
+                    }
+                }),
+            }),
+            valueExpr: 'Id',
+            displayExpr: 'Name',
+                label: "Година",
+                labelMode: "floating",
+                stylingMode:"underlined",
+                onValueChanged(data) {
+                    ny = data.value;
+                    $("#gridKonto").dxDataGrid("instance").refresh();
+                },
+            });
+
+            $("#monthFilter").dxSelectBox({
+            dataSource: selectBoxMonthData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+                nm=e.value;
+            }
+
+        });
+        $('#gridKonto').dxDataGrid({
+            dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/ShowKontoMonthDataAllAnalize", 'Get', {typeOfResultId: selectedtypeOfResultId??0,  ny: ny, nm:nm});
+                    }
+                }),
+            }),
+            paging: {
+                pageSize: 10,
+            },
+            selection: {
+                mode: "single"
+            },
+            showBorders: true,
+            showRowLines: true,
+            columns: [
+                { dataField: 'Name', caption: 'Отчетна единица', width: "80%" },
+
+            ],
+
+            focusedRowEnabled: true,
+
+        });
+         const menuData1 = [
+            {
+                id: '1',
+                name: 'Експорт',
+                icon: Ciela.baseUrl+'images/exporter.svg',
+
+
+            }];
+        const dxMenu1 = $('#menu1').dxMenu({
+            dataSource: menuData1,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+
+                        case '1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("KontoData");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#gridKonto").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "KontoMonthData.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+    });
+</script>

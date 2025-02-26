@@ -86,6 +86,7 @@
             <div id="dxContextMenu"></div>
             <div id="btnLock"></div>
             <div id="btnLockedView"></div>
+            <div id="btnEnteredData"></div>
         <div id="okFilterBtn"></div>
         <div id="closeFilterBtn"></div>
         </div>
@@ -99,6 +100,7 @@
         let courtId = 0;
         let nm = 0;
         let ny = 0;
+
         const buttonView = $("#btnLockedView").dxButton({
         visible: true,
         icon:Ciela.baseUrl+'images/lock-closed.svg',
@@ -113,6 +115,24 @@
             mainRightReadOnlyPopup.show();
         }
         }).dxButton("instance");
+
+         const buttonCourts = $("#btnEnteredData").dxButton({
+        visible: true,
+        icon:Ciela.baseUrl+'images/input-data.svg',
+        hint:'Въведени данни',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Home/AnalizeMainDataPartial", { functionalSubAreaId: functionalSubAreaId,courtTypeId:courtTypeId,nm:nm, ny: ny }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Анализ на въведени данни',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+
+
+
 
          let isLocked=false;
         $('#lock-result').val('');

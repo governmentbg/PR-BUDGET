@@ -169,6 +169,7 @@ namespace CielaDocs.SjcWeb.Controllers
         public IActionResult AddProgramYearFilterPartial() => PartialView(nameof(AddProgramYearFilterPartial));
         public IActionResult AddCommonBudgetFilterPartial() => PartialView(nameof(AddCommonBudgetFilterPartial));
         public IActionResult EndedBudgetPeriodFilterPartial()=> PartialView(nameof(EndedBudgetPeriodFilterPartial));
+        public IActionResult AddMainDataFilterPartial() => PartialView(nameof(AddMainDataFilterPartial));
 
         [HttpGet]
 
@@ -272,6 +273,27 @@ namespace CielaDocs.SjcWeb.Controllers
             {
                 return Json(new List<MainDataItemsGrid>());
             }
+        }
+        public async Task<IActionResult> Indicators(string par, int? currencyId)
+        {
+            string[] args = par.Split('|');
+            int.TryParse(args[0], out int functionalSubAreaId);
+            int.TryParse(args[1], out int courtId);
+            int.TryParse(args[2], out int nMonth);
+            int.TryParse(args[3], out int nYear);
+
+
+            var court = await _mediator.Send(new GetCourtByIdQuery { Id = courtId });
+            var fsub = await _mediator.Send(new GetFunctionalSubAreaByIdQuery { Id = functionalSubAreaId });
+
+            ViewData["court"] = court;
+            ViewBag.FunctionalSubAreaId = functionalSubAreaId;
+            ViewBag.CourtId = courtId;
+            ViewBag.Month = nMonth;
+            ViewBag.Year = nYear;
+            ViewBag.FunctionalSubAreaName = fsub?.Name;
+            @ViewBag.Currency = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
+            return View();
         }
     }
 }

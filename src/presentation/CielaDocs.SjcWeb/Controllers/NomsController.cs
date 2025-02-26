@@ -299,7 +299,19 @@ namespace CielaDocs.SjcWeb.Controllers
                 return Json(new List<IdNames>());
             }
         }
-        
+        public async Task<JsonResult> GetIndicatorsDataGrid( int? functionalSubAreaId,int? courtId,int?nm,int? ny)
+        {
+            try
+            {
+              
+                var data = await _sjcRepo.GetIndicatorsGridByFilterAsync(functionalSubAreaId ?? 0, courtId ?? 0, nm ?? 0, ny ?? 0);
+                return  Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MainDataGrid>());
+            }
+        }
         [HttpGet]
         public async Task<JsonResult> GetInstitutionTypes()
         {

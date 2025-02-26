@@ -60,6 +60,18 @@
             </div>
             <div class="col-md-3">
                 <div class="capsule-at">
+                    <div id="mainDataCtrl" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/calendar.png")" alt="." />
+                        <p class="button_text-at">Данни за показатели</p>
+                        <p>Данни за показатели и входни данни за отчетна единица...</p>
+                    </div>
+                </div>
+            </div>
+          
+        </div>
+      <div class="row">
+            <div class="col-md-3">
+                <div class="capsule-at">
                     <div id="reportKontoPb" style="margin-top:10px;">
                         <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/ExcelOnline.png")" alt="." />
                         <p class="button_text-at">Резултати от проектобюджети</p>
@@ -67,8 +79,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-      <div class="row">
             <div class="col-md-3">
                 <div class="capsule-at">
                     <div id="reportProgramNum" style="margin-top:10px;">
@@ -242,6 +252,12 @@ else
                   });
                   popup.show();
               });
+                $("#mainDataCtrl").on("click", function () {
+                 popup.option({
+                     contentTemplate: () => popupContentTemplate(9)
+                 });
+                 popup.show();
+             });
               
         });
            
@@ -289,6 +305,10 @@ else
                   popup.hide();
                        applyEndedBudget(e);
                  break;
+                  case 'mainDataFilterOk':
+                    popup.hide();
+                           applyMainDataFilter(e);
+                  break;
             }
         }
         const popupContentTemplate = function (id) {
@@ -310,6 +330,8 @@ else
                      break;
                 case 8: cnturl = "@Url.Action("EndedBudgetPeriodFilterPartial", "Reports")";
                            break;
+                 case 9: cnturl = "@Url.Action("AddMainDataFilterPartial", "Reports")";
+                            break;
             }
 
             const scrollView = $('<div />');
@@ -376,6 +398,9 @@ else
          function  applyEndedBudget(e){
               redirectme2("@Url.Action("Index", "EndedBudget")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
          }
+          function  applyMainDataFilter(e){
+                redirectme2("@Url.Action("Indicators", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
+          }
         const reportmenuData = [{
                    id: '1',
                    name: 'Начало',

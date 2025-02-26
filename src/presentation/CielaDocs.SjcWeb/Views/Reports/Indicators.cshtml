@@ -1,0 +1,190 @@
+﻿@using CielaDocs.Application.Dtos
+@using System.Linq
+@using CielaDocs.SjcWeb.Models;
+@{
+    Layout = "~/Views/Shared/_LayoutMax.cshtml";
+
+    var court = ViewData["court"] as CielaDocs.Application.Dtos.CourtDto;
+    var mainSubArea = $"{ViewBag.FunctionalSubAreaName}";
+    var title = $" Отчетна единица: {@court?.Name}, година: {ViewBag.Year} към месец: {Toolbox.MonthStr[(int)ViewBag.Month]}";
+}
+<h3></h3>
+<div class="spacer_20"></div>
+<h3>@mainSubArea</h3>
+<div class="spacer_5"></div>
+<h4>@title</h4>
+
+<div class="spacer_5"></div>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="image-indicator"></div>
+<div id="grid"></div>
+<div class="school-info" id="school-info" style="color: #bf4e6a;"></div>
+@Html.Hidden("CourtId", @court?.Id)
+@section scripts {
+    <script>
+
+        var selectedId = 0;
+        let selectedTypeOfIndicatorId = 0;
+
+         let loadIndicator;
+        $('#image-indicator').dxLoadIndicator({
+            indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
+        });
+        
+
+        $(() => {
+
+           
+
+
+            loadIndicator = $('#image-indicator').dxLoadIndicator({
+                visible: false,
+            }).dxLoadIndicator('instance');
+            loadIndicator.option('visible', false);
+
+           
+
+            $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(Ciela.baseUrl + "Noms/GetIndicatorsDataGrid", 'Get', { 
+                                functionalSubAreaId:Number(@ViewBag.FunctionalSubAreaId),
+                                courtId:Number(@ViewBag.CourtId),
+                                nm:Number(@ViewBag.Month),
+                                ny:Number(@ViewBag.Year)
+                            });
+                        },
+                    }),
+                }),
+                paging: {
+                    pageSize: 100,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                decimalSeparator: '.',
+                columns: [
+                    {
+                        dataField: "Code",
+                        width: "5%",
+                        caption: "Код"
+                    },
+
+                    {
+                        dataField: "MainIndicatorName",
+                        width: "50%",
+                        caption: "Наименование"
+                    },
+                    {
+                        dataField: "TypeOfIndicatorName",
+                        width: "10%",
+                        caption: "Тип"
+                    },
+                    {
+                        dataField: "MeasureName",
+                        width: "10%",
+                        caption: "Мернa единица"
+                    },
+                    {
+                        dataField: "Nvalue",
+                        width: "10%",
+                        caption: "Изчислена С-т",
+                        alllowEditing: false,
+                        valueFormat: '0.00',
+                        dataType: 'number',
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nvalue = value.toFixed(2);
+                            },
+
+                    }
+
+                ],
+                focusedRowEnabled: true,
+                hoverStateEnabled: true,
+                
+
+            });
+
+
+        });
+       
+
+        const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: Ciela.baseUrl+'images/back.png',
+
+
+        },
+            {
+                id: '6_1',
+                name: 'Експорт',
+                icon: Ciela.baseUrl+'images/exporter.svg',
+
+
+            }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+                          case '1':
+                            window.location.href = Ciela.baseUrl+"Reports/Index";
+                            break;
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+                        case '3': recalc();
+
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("Owners");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "MainData.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+
+    </script>
+}

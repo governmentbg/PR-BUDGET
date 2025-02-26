@@ -615,6 +615,57 @@ namespace CielaDocs.Shared.Repository
             var result = await connection.QueryAsync<MainDataGrid>(sql, new { FunctionalSubAreaId = functionalSubAreaId, CourtId= courtId, NMonth=nm, NYear=ny });
             return result?.ToList();
         }
+        public async Task<IEnumerable<MainDataGrid>> GetIndicatorsGridByFilterAsync(int functionalSubAreaId, int courtId, int nm, int ny)
+        {
+            string sql = $@"SELECT 
+                            m.Id,
+                            m.FunctionalSubAreaId,
+                            m.CourtId,
+                            m.NMonth,
+                            m.NYear,
+                            m.MainIndicatorsId,
+                            m.Nvalue,
+                            SUM(m.Nvalue) OVER (
+                                PARTITION BY m.FunctionalSubAreaId, m.CourtId, m.NYear, m.MainIndicatorsId
+                                ORDER BY m.NMonth
+                                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                            ) AS CumulativeNvalue,  -- Running sum from January to @NMonth
+                            m.EnteredValue,
+                            m.Datum,
+                            m.EnteredOn,
+                            i.Name AS MainIndicatorName,
+                            i.Code,
+                            i.MeasureId,
+                            i.TypeOfIndicatorId,
+                            i.Calculation,
+                            c.Name AS MeasureName,
+                            t.Name AS TypeOfIndicatorName
+                        FROM MainData m
+                        JOIN MainIndicators i ON m.MainIndicatorsId = i.Id
+                        JOIN Measure c ON i.MeasureId = c.Id
+                        JOIN TypeOfIndicator t ON i.TypeOfIndicatorId = t.Id
+                        WHERE 
+                            m.FunctionalSubAreaId = @FunctionalSubAreaId
+                            AND m.CourtId = @CourtId
+                            AND m.NYear = @NYear
+                            AND i.FunctionalSubAreaId = @FunctionalSubAreaId
+                            AND m.NMonth BETWEEN 1 AND @NMonth  -- Always include months from 1 to @NMonth
+                        ORDER BY m.NMonth;";
+
+            var parameters = new
+            {
+
+
+                FunctionalSubAreaId = functionalSubAreaId,
+                CourtId = courtId,
+                NYear = ny,
+                NMonth = nm
+            };
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<MainDataGrid>(sql, parameters);
+            return result?.ToList();
+        }
         public async Task<IEnumerable<MainDataGrid>> GetMainPeriodGridByFilterAsync(int functionalSubAreaId, int courtId, int nm, int ny)
         {
             string sql = $@"select m.Id,m.FunctionalSubAreaId,m.CourtId,m.NMonth,m.NYear,m.MainIndicatorsId,m.Nvalue,m.EnteredValue,m.Datum,m.EnteredOn,i.Name as MainIndicatorName,i.Code,i.MeasureId,i.TypeOfIndicatorId,i.Calculation,c.Name as MeasureName,t.Name as TypeOfIndicatorName

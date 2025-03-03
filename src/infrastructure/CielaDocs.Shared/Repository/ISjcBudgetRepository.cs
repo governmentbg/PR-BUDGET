@@ -103,8 +103,11 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<DraftBudgetDataVm>> GetDraftBudgetDataByCourtIdAsync(int? courtId, int? ny);
         Task<int?> Sp_InitProgramDataAsync(int? programNum, int? ny);
         Task<int?> Sp_InitProgramDataCourtAsync(int? programNum, int? ny);
+        Task<int?> Sp_InitIndicatorDataAsync(int? programNum, int? ny,int? budgetPeriodId);
+        Task<int?> Sp_InitIndicatorDataCourtAsync(int? programNum, int? ny, int? budgetPeriodId);
         Task<int?> Sp_UpdateProgramDataAsync(int? programNum, int? ny);
         Task<int?> Sp_UpdateProgramDataCourtAsync(int? programNum, int? ny);
+     
         Task<IEnumerable<IdNames>> GetCourtsInProgramData(int? programNum);
         Task<string> GetKontoCodesFromProgramDef(int? functionalSubAreaId, int? rowNum);
         Task<string> GetKontoCodesFromDraftBudgetDefByParAsync(string sPar);
@@ -159,6 +162,7 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<ProgramDef3Y>> GetProgramDataCourt3YCommonCurrencyAsync(int? programDefNum, int? ny, int displayCurrencyId);
         Task GetProgramDataCourt3YAsync(int v, int ny);
         Task<IEnumerable<MainDataGrid>> GetIndicatorsGridByFilterAsync(int functionalSubAreaId, int courtId, int nm, int ny);
+        Task<IEnumerable<IndicatorData3Y>> GetIndicatorData3YAsync(int functionalSubAreaId, int ny);
     }
   
 }

@@ -322,6 +322,31 @@ namespace CielaDocs.SjcWeb.Controllers
             }
         }
         [HttpPost]
+        public async Task<JsonResult> SetIndicatorDataFilter(int? functionalSubAreaId, int? ny, int? currencyId, int? currencyMeasureId, bool? isLocked)
+        {
+            try
+            {
+                if ((functionalSubAreaId == null) || (functionalSubAreaId < 1) || (ny == null) || (ny < 2022))
+                {
+                    return Json(new { success = false, msg = "Не сте избрали коректни условия! " });
+                }
+
+                HttpContext.Session.Remove("FilterMainDataSess");
+                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0, Nyear = ny ?? 0, CurrencyId = currencyId ?? 0, CurrencyMeasureId = currencyMeasureId ?? 0, IsLocked = isLocked ?? false });
+                _ = await _sjcRepo.Sp_InitIndicatorDataAsync(functionalSubAreaId ?? 0, ny ?? 0,0);
+                _ = await _sjcRepo.Sp_InitIndicatorDataCourtAsync(functionalSubAreaId ?? 0, ny ?? 0, 0);
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                string logmsg = $"Филтър по програми {User?.Identity?.Name}";
+                await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
+                return Json(new { success = true, msg = "Ok" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, msg = "Грешка: " + ex?.Message });
+            }
+        }
+        [HttpPost]
         public async Task<JsonResult> EmplLogFilter(EmplLogVm model)
         {
             var empl = await _mediator.Send(new GetUserByIdQuery { Id = model.EmplId });
@@ -451,6 +476,13 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             return PartialView("AnalizeProgramDataAllPartial");
         }
-
+        public PartialViewResult AddIndicatorDataLockedPartial() => PartialView("AddIndicatorDataLockedPartial");
+        public PartialViewResult AddIndicatorDataFilterPartial() => PartialView("AddIndicatorDataFilterPartial");
+        public async Task<PartialViewResult> AnalizeIndicatorDataPartial(int? functionalSubAreaId)
+        {
+            ViewBag.FunctionalSubAreaId = functionalSubAreaId ?? 0;
+            ViewBag.FunctionalSubAreaName = await _sjcRepo.QueryRawAsync<String>($"Select Name from FunctionalSubArea where id={functionalSubAreaId ?? 0}");
+            return PartialView("AnalizeIndicatorDataPartial");
+        }
     }
 }

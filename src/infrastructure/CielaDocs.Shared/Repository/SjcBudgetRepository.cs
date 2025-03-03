@@ -962,6 +962,28 @@ namespace CielaDocs.Shared.Repository
             var ret = await connection.ExecuteAsync("sp_InitProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
             return ret;
         }
+        public async Task<int?> Sp_InitIndicatorDataAsync(int? programNum, int? ny, int? budgetPeriodId)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("ProgramDefNum", programNum ?? 0);
+            parameters.Add("nYear", ny);
+            parameters.Add("nBudgetPeriodId", budgetPeriodId??0);
+            var ret = await connection.ExecuteAsync("sp_InitIndicatorData", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
+        }
+        public async Task<int?> Sp_InitIndicatorDataCourtAsync(int? programNum, int? ny, int? budgetPeriodId)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("ProgramDefNum", programNum ?? 0);
+            parameters.Add("nYear", ny);
+            parameters.Add("nBudgetPeriodId", budgetPeriodId ?? 0);
+            var ret = await connection.ExecuteAsync("sp_InitIndicatorDataCourt", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
+        }
         public async Task<int?> Sp_InitProgramDataCourtByIdAsync(int? programNum,int? courtId, int? ny)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -1003,6 +1025,7 @@ namespace CielaDocs.Shared.Repository
             var ret = await connection.ExecuteAsync("sp_UpdateProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
             return ret;
         }
+      
         public async Task<int?> Sp_UpdateProgramDataInstitutionAsync(int? programNum, int? ny)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -1121,6 +1144,41 @@ namespace CielaDocs.Shared.Repository
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             var result = await connection.QueryAsync<ProgramData3Y>(sql2);
+            return result?.ToList();
+        }
+        public async Task<IEnumerable<IndicatorData3Y>> GetIndicatorData3YAsync(int functionalSubAreaId, int ny)
+        {
+            string sql2 = $@"SELECT  a.Id
+                      ,a.MainIndicatorId
+	                  ,a.functionalSubAreaId
+                      ,m.Code
+                      ,m.Name
+	                  ,m.MeasureId
+	                  ,m.IsActive
+	                  ,m.TypeOfIndicatorId
+	                  ,m.Calculation
+	                  ,z.Name as MeasureName
+	                  ,t.NAme as TypeOfIndicatorName
+	                  ,a.PlannedYear
+	                  ,a.Nvalue as nval1
+	                  ,b.nvalue as nval2
+	                  ,c.Nvalue as nval3
+	                  ,d.Nvalue as nval4
+	  
+     
+                  FROM IndicatorData a
+                  left join MainIndicators m on  a.MainIndicatorId=m.id
+                  left join Measure z on m.MeasureId=z.id
+                  left join TypeOfIndicator t on m.TypeOfIndicatorId=t.id
+                  left join IndicatorData b on a.FunctionalSubAreaId=b.FunctionalSubAreaId and a.MainIndicatorId=b.MainIndicatorId and b.PlannedYear=a.PlannedYear+1
+                  left join IndicatorData c on a.FunctionalSubAreaId=c.FunctionalSubAreaId and a.MainIndicatorId=c.MainIndicatorId and c.PlannedYear=a.PlannedYear+2
+                  left join IndicatorData d on a.FunctionalSubAreaId=d.FunctionalSubAreaId and a.MainIndicatorId=d.MainIndicatorId and d.PlannedYear=a.PlannedYear+3
+
+	              where a.FunctionalSubAreaId={functionalSubAreaId} and a.PlannedYear={ny} ";
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<IndicatorData3Y>(sql2);
             return result?.ToList();
         }
         public async Task<IEnumerable<ProgramDataCourt3Y>> GetProgramDataCourt3YAsync(int functionalSubAreaId, int ny, int? rowNum) {
@@ -2012,6 +2070,8 @@ namespace CielaDocs.Shared.Repository
 
             return affectedRows;
         }
+
+       
         public async Task<int> UpdateProgramDataInstitution3YValueByIdAsync(int? id, string fieldName, decimal? val)
         {
             var rec = await GetProgramDataInstitutionByIdAsync(id ?? 0);
@@ -5673,6 +5733,7 @@ namespace CielaDocs.Shared.Repository
                   ,[OfficialCurrencyCode]
                   ,[OfficialEuroRate]
                   ,DefaultCurrencyMeasureId
+                  ,CurrentYear
               FROM [dbo].[Cfg] where id=0";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();

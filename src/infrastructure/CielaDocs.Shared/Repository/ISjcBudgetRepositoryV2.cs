@@ -32,5 +32,18 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<MetricsFieldInProgramItemVm>> GetMetricsFieldInProgramItemByMainIndicatorsId(int id);
         Task<MainIndicatorsVm> GetMainIndicatorsById(int Id);
 
+        Task<IEnumerable<IndicatorDataHVm>> GetIndicatorDataForEndingPeriod(int id);
+        Task<bool> GetIndicatorDataHExistsAsync(int? budgetPeriodId, int? functionalSubAreaId, int? mainIndicatorId, int? plannedYear1);
+        Task<int> InsertIntoIndicatorDataHAsync(IndicatorDataHVm data, int periodId);
+        Task<bool> GetIndicatorDataCourtHExistsAsync(int? budgetPeriodId, int? courtId, int? functionalSubAreaId, int? mainIndicatorId, int? plannedYear1);
+        Task<IEnumerable<IndicatorDataCourtHVm>> GetIndicatorDataCourtForEndingPeriod(int id);
+        Task<int> InsertIntoIndicatorDataCourtHAsync(IndicatorDataCourtHVm data, int periodId);
+        Task<int> UpdateIndicatorData3YValueByIdAsync(int? id, string fieldName, decimal? val, int? nYear);
+        Task<int> UpdateIndicatorDataCourt3YValueByIdAsync(int? id, string fieldName, decimal? val);
+
+        Task<IEnumerable<IndicatorDataCourt3Y>> GetIndicatorDataCourt3YAsync(int functionalSubAreaId, int ny, int? mainIndicatorId);
+        Task<IEnumerable<IndicatorDataCourt3Y>> GetIndicatorDataCourt3YByCourtIdAsync(int? functionalSubAreaId, int? ny, int? courtId);
+        Task<IndicatorDataVm> GetIndicatorDataById(int Id);
+        Task<IndicatorDataCourtVm> GetIndicatorDataCourtById(int Id);
     }
 }

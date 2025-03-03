@@ -103,7 +103,6 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                 try
                 {
                     var res = await _sjcRepo.Sp_InitProgramDataAsync(i, id ?? 0);
-
                     var res2 = await _sjcRepo.Sp_InitProgramDataCourtAsync(i, id ?? 0);
                     var res3 = await _sjcRepo.Sp_InitProgramDataInstitutionAsync(i, id ?? 0);
                 }
@@ -205,6 +204,32 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                         }
                     }
                 }
+                var idhinput = await _sjcServiceV2.GetIndicatorDataForEndingPeriod(id ?? 0);
+                itemExists = false;
+                if (idhinput.Any())
+                {
+                    foreach (var item in idhinput)
+                    {
+                        itemExists = await _sjcServiceV2.GetIndicatorDataHExistsAsync(id, item?.FunctionalSubAreaId, item?.Id, item?.PlannedYear1);
+                        if (!itemExists)
+                        {
+                            _ = await _sjcServiceV2.InsertIntoIndicatorDataHAsync(item, id ?? 0);
+                        }
+                    }
+                }
+                var idchinput = await _sjcServiceV2.GetIndicatorDataCourtForEndingPeriod(id ?? 0);
+                itemExists = false;
+                if (idchinput.Any())
+                {
+                    foreach (var item in idchinput)
+                    {
+                        itemExists = await _sjcServiceV2.GetIndicatorDataCourtHExistsAsync(id,item?.CourtId, item?.FunctionalSubAreaId, item?.Id, item?.PlannedYear1);
+                        if (!itemExists)
+                        {
+                            _ = await _sjcServiceV2.InsertIntoIndicatorDataCourtHAsync(item, id ?? 0);
+                        }
+                    }
+                }
                 _ = await _sjcServiceV2.SpDeleteEndPeriodDataAsync(id ?? 0);
                 return Json(new { msg = $"Приключването на бюджетния период завърши! Изберете следващ активен бюджетен период", success = true });
             }
@@ -227,6 +252,24 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             List<int> years = new List<int> { ny, ny+1, ny+2, ny+3 };
             try
             {
+                int? newId = await _sjcService.ExecuteRawSql($@"INSERT INTO BudgetPeriod
+                           ([Y1]
+                           ,[Y2]
+                           ,[Y3]
+                           ,[Y4]
+                           ,[IsActive]
+                           ,[IsUsable]
+                           ,[ActiveFrom]
+                           )
+                     VALUES
+                           ({ny}
+                           ,{ny + 1}
+                           ,{ny + 2}
+                           ,{ny + 3}
+                           ,{1}
+                           ,{1}
+                           ,'{CielaDocs.Application.Utils.Utils.GetSqlDateTime(DateTime.Now, 0)}')
+                            SELECT SCOPE_IDENTITY() AS LastInsertedId;");
                 foreach (int year in years)
                 {
                  
@@ -236,6 +279,8 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                         
                            _ = await _sjcRepo.Sp_InitProgramDataAsync(i, year);
                            _ = await _sjcRepo.Sp_InitProgramDataCourtAsync(i, year);
+                           _ = await _sjcRepo.Sp_InitIndicatorDataAsync(i, year, newId??0);
+                           _ = await _sjcRepo.Sp_InitIndicatorDataCourtAsync(i, year,newId??0);
                            _ = await _sjcRepo.Sp_InitProgramDataInstitutionAsync(i, year);
                       
                     }
@@ -248,23 +293,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                       
                     }
                 }
-                _ = await _sjcService.ExecuteRawSql($@"INSERT INTO BudgetPeriod
-                           ([Y1]
-                           ,[Y2]
-                           ,[Y3]
-                           ,[Y4]
-                           ,[IsActive]
-                           ,[IsUsable]
-                           ,[ActiveFrom]
-                           )
-                     VALUES
-                           ({ny}
-                           ,{ny+1}
-                           ,{ny+2}
-                           ,{ny+3}
-                           ,{1}
-                           ,{1}
-                           ,'{CielaDocs.Application.Utils.Utils.GetSqlDateTime(DateTime.Now, 0)}')");
+                
 
                 return Json(new { msg = $"Създаването на новия активен бюджетен период завърши", success = true });
 

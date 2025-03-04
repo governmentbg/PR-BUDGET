@@ -115,6 +115,18 @@ namespace CielaDocs.SjcWeb.Controllers
             }
             return Json(string.Empty);
         }
+        public async Task<JsonResult> RecalculateGrid(int? functionalSubAreaId,int? courtId, int? nyear)
+        {
+            try
+            {
+                _ = await _sjcRepo.sp_RecalculateApprovedBudgetCourtAsync(functionalSubAreaId ?? 0, nyear ?? 0, courtId??0);
 
+                return Json(new { error = string.Empty });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
     }
 }

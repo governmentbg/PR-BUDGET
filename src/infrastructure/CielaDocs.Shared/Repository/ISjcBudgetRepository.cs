@@ -119,6 +119,8 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<KontoCourtsYearVm>> GetKontoCourtsYearAsync(int? institutionTypeId, int? courtTypeId, int? courtId, int? ny, int? nmonth, int? reportTypeId);
         Task<int> CalculateProgramDataValues(int functionalSubAreaId, int rowNum, int plannedYear, decimal val);
         Task<int?> sp_RecalculateProgramDataAsync(int? functionalSubAreaId, int? ny);
+        Task<int?> sp_RecalculateApprovedBudgetAsync(int? functionalSubAreaId, int? ny);
+        Task<int?> sp_RecalculateApprovedBudgetCourtAsync(int? functionalSubAreaId, int? ny, int? courtId);
         Task<int?> sp_RecalculateProgramDataCourtAsync(int? functionalSubAreaId, int? ny, int? courtId);
         Task<int?> sp_UpdateProgramsByProgramDefAsync(int? Id);
         Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataGridAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? currencyId);

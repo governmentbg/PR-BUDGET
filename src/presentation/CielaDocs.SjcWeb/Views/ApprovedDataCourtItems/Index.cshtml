@@ -23,7 +23,7 @@
         }
 </style>
 <div class="spacer_5"></div>
-<h4>Бюджетна прогноза по ведомствени и администрирани разходни параграфи на програмата за @title</h4>
+<h4>Утвърден бюджет на програмата за @title</h4>
 <h4>@ViewBag.ProgramName</h4>
 <h5>Валута:@ViewBag.CurrencyName, Мярка:@ViewBag.CurrencyMeasureName</h5>
 <h5>Отчетна единица:@ViewBag.CourtName</h5>
@@ -43,7 +43,7 @@
         const anyTitle = $('#anyTitle');
 
         var selectedId = 0;
-
+         currentYear=Number(@ViewBag.Year)||0;
         $('#btnAnyCancel').on('click', function () {
             anyModal.modal('hide');
             $("#grid").dxDataGrid("instance").refresh();
@@ -53,7 +53,20 @@
         function Save() {
         };
 
+         function recalculateGrid() {
+            $.ajax({
+                url: Ciela.baseUrl + "ApprovedDataCourtItems/RecalculateGrid", data: { functionalSubAreaId: $('#FunctionalSubAreaId').val(), courtId: $("#CourtId").val(), nyear: currentYear }
 
+            }).done(function (result) {
+                $("#grid").dxDataGrid("instance").refresh();
+
+            })
+                .fail(function (e) {
+                    DevExpress.ui.notify('Failed to recalculate data! ' + e);
+
+                });
+            return false;
+        }
 
         $(() => {
 
@@ -133,7 +146,7 @@
                     {
                         dataField: "CalculatedValue",
                         width: "10%",
-                        caption: "Конто С-ст",
+                        caption: "Отчет",
                         alllowEditing: false,
                        valueFormat: '#0.00',
                         dataType: 'number',
@@ -144,6 +157,22 @@
 
                     },
                 ],
+                 toolbar: {
+                    items: [
+                        {
+                            location: 'after',
+                            widget: 'dxButton',
+                            options: {
+                                icon: 'formula',
+                                onClick() {
+                                    recalculateGrid();
+                                },
+                            },
+                        },
+                        'columnChooserButton',
+                        "searchPanel",
+                    ],
+                },
                 editing: {
                     mode: 'cell',
                     allowUpdating: true,
@@ -183,7 +212,10 @@
                     if (info.rowType === "data" && info.data.ValueAllowed === false) {
                         info.rowElement.css('background', '#ffcc99');
                     }
-                }
+                },
+                onRowUpdated() {
+                    recalculateGrid();
+                },
 
             });
 

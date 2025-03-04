@@ -2456,6 +2456,27 @@ namespace CielaDocs.Shared.Repository
 
             return affectedRows;
         }
+        public async Task<int?> sp_RecalculateApprovedBudgetAsync(int? functionalSubAreaId, int? ny)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("functionalSubAreaId", functionalSubAreaId ?? 0);
+            parameters.Add("nYear", ny);
+            var ret = await connection.ExecuteAsync("sp_RecalculateApprovedBudget", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
+        }
+        public async Task<int?> sp_RecalculateApprovedBudgetCourtAsync(int? functionalSubAreaId, int? ny, int? courtId)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("functionalSubAreaId", functionalSubAreaId ?? 0);
+            parameters.Add("nYear", ny);
+            parameters.Add("CourtId", courtId ?? 0);
+            var ret = await connection.ExecuteAsync("sp_RecalculateApprovedBudgetCourt", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
+        }
         public async Task<int?> sp_RecalculateProgramDataAsync(int? functionalSubAreaId, int? ny) {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();

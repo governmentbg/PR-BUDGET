@@ -25,7 +25,7 @@ namespace CielaDocs.Shared.Services
         {
             _repo = budgetRepositoryV2;
         }
-
+        public async Task<int> GetCurrentYearAsync() { return await _repo.GetCurrentYearAsync(); }
         public async Task<BudgetPeriodVm> GetActiveBudgetPeriodAsync() { return await _repo.GetActiveBudgetPeriodAsync(); }
         public async Task<IEnumerable<BudgetPeriodVm>> GetInActiveBudgetPeriodsAsync() { return await _repo.GetInActiveBudgetPeriodsAsync(); }
         public async Task<IEnumerable<BudgetPeriodVm>> GetBudgetPeriodsAsync() { return await _repo.GetBudgetPeriodsAsync(); }

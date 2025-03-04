@@ -11,16 +11,7 @@
     <div class="modal-body form-horizontal">
 
         <div class="container-fluid">
-          
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <div class="lock-container">
-                                <input type="text" readonly id="aciveperiodparams" class="lock-result">
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
                <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
@@ -197,15 +188,7 @@
                 button.option('visible', condition);
                 button.option('icon',Ciela.baseUrl+'images/lock-open.svg')
             }
-          let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
-             .then(data =>{
-                if(!isEmpty(data)){
-                    $('#aciveperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
-                }
-                else {
-                      $('#aciveperiodparams').val('');
-                }
-             });
+       
     // Initialize the Context Menu
         $("#selectBoxMonth").dxSelectBox({
             dataSource: selectBoxMonthData,
@@ -221,7 +204,7 @@
                 store: new DevExpress.data.CustomStore({
                     key: 'Id',
                     load() {
-                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
+                        return sendRequest(Ciela.baseUrl + "Noms/GetCurrentYear", 'Get', { });
                     }
                 }),
             }),

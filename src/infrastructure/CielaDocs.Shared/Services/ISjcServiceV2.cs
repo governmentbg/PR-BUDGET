@@ -11,6 +11,7 @@ namespace CielaDocs.Shared.Services
 {
     public interface ISjcServiceV2
     {
+        Task<int> GetCurrentYearAsync();
         Task<BudgetPeriodVm> GetActiveBudgetPeriodAsync();
         Task<BudgetPeriodVm> GetActiveBudgetPeriodByIdAsync(int id);
         Task<IEnumerable<BudgetPeriodVm>> GetInActiveBudgetPeriodsAsync();

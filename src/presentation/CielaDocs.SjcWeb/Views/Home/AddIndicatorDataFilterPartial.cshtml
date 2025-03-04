@@ -11,15 +11,7 @@
 <form id="anyForm">
     <div class="modal-body form-horizontal">
         <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <div class="lock-container">
-                            <input type="text" readonly id="aciveperiodparams" class="lock-result">
-                        </div>
-                    </div>
-                </div>
-            </div>
+          
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
@@ -115,7 +107,7 @@
                              result.done(function (dialogResult) {
                                  if (dialogResult === true) {
                                      $.ajax({
-                                         url: Ciela.baseUrl + "Noms/LockIndicatorData", data: {typeoflock:0, programId: functionalSubAreaId, ny: activeYear }, method: 'POST'
+                                         url: Ciela.baseUrl + "Noms/LockIndicatorData", data: {typeoflock:0, programId: functionalSubAreaId, ny: currentYear }, method: 'POST'
                                      })
                                          .done(function (result) {
                                              DevExpress.ui.notify(result.msg);
@@ -131,7 +123,7 @@
                              result.done(function (dialogResult) {
                                  if (dialogResult === true) {
                                      $.ajax({
-                                         url: Ciela.baseUrl + "Noms/LockIndicatorData", data: {typeoflock:1, programId: functionalSubAreaId, ny: activeYear }, method: 'POST'
+                                         url: Ciela.baseUrl + "Noms/LockIndicatorData", data: {typeoflock:1, programId: functionalSubAreaId, ny: currentYear }, method: 'POST'
                                      })
                                          .done(function (result) {
                                              DevExpress.ui.notify(result.msg);
@@ -160,16 +152,7 @@
                 button.option('icon', Ciela.baseUrl+'images/lock-open.svg')
             }
 
-    // Initialize the Context Menu
-              let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
-             .then(data =>{
-                if(!isEmpty(data)){
-                    $('#aciveperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
-                }
-                else {
-                      $('#aciveperiodparams').val('');
-                }
-             });
+   
 
 
         $("#cbFunctionalArea").select2({
@@ -266,7 +249,7 @@
 
         if (allSelected) {
             // Trigger your custom logic here
-            let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriodIndicatorDataLocked", { programId: functionalSubAreaId, ny: activeYear })
+            let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriodIndicatorDataLocked", { programId: functionalSubAreaId, ny: currentYear })
              .then(data =>{
                 if(!isEmpty(data)){
                     $('#lock-result').val('Заключен период от '+data?.LockedByUserName);
@@ -290,11 +273,11 @@
             type: 'normal',
             width: 120,
             onClick() {
-                if ((functionalSubAreaId == 0)  || (activeYear == 0)) {
+                if ((functionalSubAreaId == 0)  || (currentYear == 0)) {
                     DevExpress.ui.dialog.alert('Изберете задължително бюджетна програма и година', 'Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('indicatorDataFilterOk', ''.concat(functionalSubAreaId, "|",activeYear,"|",officialCurrencyId,"|",0,"|",isLocked));
+                window.parent.OnClosePopupEventHandlerEx('indicatorDataFilterOk', ''.concat(functionalSubAreaId, "|",currentYear,"|",officialCurrencyId,"|",0,"|",isLocked));
             },
         });
         $('#closeFilterBtn').dxButton({

@@ -48,6 +48,23 @@ namespace CielaDocs.SjcWeb.Controllers
             _sjcServiceV2= sjcServiceV2;
         }
         [HttpGet]
+        public async Task<JsonResult> GetCurrentYear()
+        {
+            try
+            {
+                var y = await _sjcService.QueryRaw<int?>($"Select CurrentYear from Cfg");
+                var items = new List<IdNames>() {
+                    new IdNames() { Id=y??0, Name=y.ToString() },
+                };
+
+                return Json(items);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
         public async Task<JsonResult> GetActivePeriodYear() {
             try
             {

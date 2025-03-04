@@ -29,7 +29,12 @@ namespace CielaDocs.Shared.Repository
         {
             this._context = context;
         }
-
+        public async Task<int> GetCurrentYearAsync() {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QuerySingleOrDefaultAsync<int?>("Select CurrentYear from Cfg");
+            return result??0;
+        }
         public async Task<BudgetPeriodVm> GetActiveBudgetPeriodAsync()
         {
             string sql = $@"SELECT [Id]

@@ -249,10 +249,11 @@ else{
             
             window.localStorage.setItem('OfficialCurrencyId', @cfg.OfficialCurrencyId);
             window.localStorage.setItem('ActiveYear', @activePeriod?.Y1);
+            window.localStorage.setItem('CurrentYear', @cfg?.CurrentYear);
             //global vars
             officialCurrencyId = window.localStorage.getItem('OfficialCurrencyId') ? Number(window.localStorage.getItem('OfficialCurrencyId')) : 0;
             activeYear = window.localStorage.getItem('ActiveYear') ? Number(window.localStorage.getItem('ActiveYear')) : 0;
-            
+            currentYear = window.localStorage.getItem('CurrentYear') ? Number(window.localStorage.getItem('CurrentYear')) : 0;
  
         $("#admin").on("click", function () {
             redirectme("@Url.Action("Index", "Home", new { area = "Admin" })");

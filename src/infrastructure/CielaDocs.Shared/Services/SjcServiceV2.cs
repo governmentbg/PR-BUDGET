@@ -42,7 +42,7 @@ namespace CielaDocs.Shared.Services
         public async Task<int?> SpDeleteEndPeriodDataAsync(int budgetPeriodId) { return await _repo.SpDeleteEndPeriodDataAsync(budgetPeriodId); }
         public async Task<IEnumerable<MetricsFieldInProgramVm>> GetMetricsFieldInProgramByMainIndicatorIdAsync(int? id) { return await _repo.GetMetricsFieldInProgramByMainIndicatorIdAsync(id); }
         public async Task<IEnumerable<MetricsFieldInProgramItemVm>> CreateMetricsFieldInProgramItemExists(MainData md) { return await _repo.CreateMetricsFieldInProgramItemExists(md); }
-        public async Task<IEnumerable<MetricsFieldInProgramItemVm>> GetMetricsFieldInProgramItemByMainIndicatorsId(int id) { return await _repo.GetMetricsFieldInProgramItemByMainIndicatorsId(id); }
+        public async Task<IEnumerable<MetricsFieldInProgramItemVm>> GetMetricsFieldInProgramItemByMainIndicatorsId(int id, int? courtId, int? nm, int? ny) { return await _repo.GetMetricsFieldInProgramItemByMainIndicatorsId(id,courtId,  nm, ny); }
         public async Task<MainIndicatorsVm> GetMainIndicatorsById(int Id) { return await _repo.GetMainIndicatorsById(Id); }
 
         public async Task<IEnumerable<IndicatorDataHVm>> GetIndicatorDataForEndingPeriod(int id) { return await _repo.GetIndicatorDataForEndingPeriod(id); }
@@ -57,5 +57,11 @@ namespace CielaDocs.Shared.Services
         public async Task<IEnumerable<IndicatorDataCourt3Y>> GetIndicatorDataCourt3YByCourtIdAsync(int? functionalSubAreaId, int? ny, int? courtId) { return await _repo.GetIndicatorDataCourt3YByCourtIdAsync(functionalSubAreaId, ny,courtId); }
         public async Task<IndicatorDataVm> GetIndicatorDataById(int Id) { return await _repo.GetIndicatorDataById(Id); }
         public async Task<IndicatorDataCourtVm> GetIndicatorDataCourtById(int Id) { return await _repo.GetIndicatorDataCourtById(Id); }
+        public async Task<IEnumerable<IndicatorDataCourt1Y>> GetIndicatorDataCourt1YAsync(int functionalSubAreaId, int ny, int? mainIndicatorId) { return await _repo.GetIndicatorDataCourt1YAsync(functionalSubAreaId, ny, mainIndicatorId); }
+        public async Task<int> UpdateIndicatorData1YValueByIdAsync(int? id, string fieldName, decimal? val, int? nYear) { return await _repo.UpdateIndicatorData1YValueByIdAsync(id,fieldName, val,nYear); }
+        public async Task<int> UpdateIndicatorDataCourt1YValueByIdAsync(int? id, string fieldName, decimal? val) { return await _repo.UpdateIndicatorDataCourt1YValueByIdAsync(id, fieldName, val); }
+        public async Task<IEnumerable<IndicatorDataCourt1Y>> GetIndicatorDataCourt1YByCourtIdAsync(int? functionalSubAreaId, int? ny, int? courtId) { return await _repo.GetIndicatorDataCourt1YByCourtIdAsync(functionalSubAreaId, ny, courtId); }
+
+
     }
 }

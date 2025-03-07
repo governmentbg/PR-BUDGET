@@ -174,19 +174,6 @@
                         caption: "Мернa единица"
                     },
                     {
-                        dataField: "Nvalue",
-                        width: "10%",
-                        caption: "Изчислена С-т",
-                        alllowEditing: false,
-                        valueFormat: '0.00',
-                        dataType: 'number',
-                        format: function (value) { return value.toFixed(2); },
-                            setCellValue: function (rowData, value) {
-                                rowData.Nvalue = value.toFixed(2);
-                            },
-
-                    },
-                    {
                         dataField: "EnteredOn",
                         width: "10%",
                         caption: "Въведено на",
@@ -201,15 +188,15 @@
 
                     },
                     {
-                        dataField: "EnteredValue",
+                        dataField: "Nvalue",
                         width: "10%",
-                        caption: "Въведена С-т",
-                        alllowEditing: true,
-                        valueFormat: '#0.00',
+                        caption: "Отчет",
+                        alllowEditing: false,
+                        valueFormat: '0.00',
                         dataType: 'number',
                         format: function (value) { return value.toFixed(2); },
                             setCellValue: function (rowData, value) {
-                                rowData.EnteredValue = value.toFixed(2);
+                                rowData.Nvalue = value.toFixed(2);
                             },
 
                     },

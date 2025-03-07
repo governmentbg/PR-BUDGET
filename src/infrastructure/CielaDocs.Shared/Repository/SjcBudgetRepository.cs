@@ -23,6 +23,7 @@ using DocumentFormat.OpenXml.Bibliography;
 using System.Net.Http.Headers;
 using DocumentFormat.OpenXml.Office2010.ExcelAc;
 using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 
 namespace CielaDocs.Shared.Repository
 {
@@ -615,7 +616,7 @@ namespace CielaDocs.Shared.Repository
             var result = await connection.QueryAsync<MainDataGrid>(sql, new { FunctionalSubAreaId = functionalSubAreaId, CourtId= courtId, NMonth=nm, NYear=ny });
             return result?.ToList();
         }
-        public async Task<IEnumerable<MainDataGrid>> GetIndicatorsGridByFilterAsync(int functionalSubAreaId, int courtId, int nm, int ny)
+        private async Task<IEnumerable<MainDataGrid>> GetMainDataGridAsync(int functionalSubAreaId, int nm1, int nm2, int ny)
         {
             string sql = $@"SELECT 
                             m.Id,
@@ -646,10 +647,9 @@ namespace CielaDocs.Shared.Repository
                         JOIN TypeOfIndicator t ON i.TypeOfIndicatorId = t.Id
                         WHERE 
                             m.FunctionalSubAreaId = @FunctionalSubAreaId
-                            AND m.CourtId = @CourtId
                             AND m.NYear = @NYear
                             AND i.FunctionalSubAreaId = @FunctionalSubAreaId
-                            AND m.NMonth BETWEEN 1 AND @NMonth  -- Always include months from 1 to @NMonth
+                            AND m.NMonth BETWEEN @NMonth1 AND @NMonth2  -- Always include months from 1 to @NMonth
                         ORDER BY m.NMonth;";
 
             var parameters = new
@@ -657,13 +657,66 @@ namespace CielaDocs.Shared.Repository
 
 
                 FunctionalSubAreaId = functionalSubAreaId,
-                CourtId = courtId,
+
                 NYear = ny,
-                NMonth = nm
+                NMonth1 = nm1,
+                NMonth2 = nm2
             };
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             var result = await connection.QueryAsync<MainDataGrid>(sql, parameters);
+            return result?.ToList();
+        }
+        public async Task<IEnumerable<MainDataGridReport>> GetIndicatorsGridByFilterAsync(int functionalSubAreaId, int nm1, int nm2, int ny)
+        {
+            string sql = $@"SELECT 
+                            m.Id,
+                            m.FunctionalSubAreaId,
+                            m.CourtId,
+                            m.NMonth,
+                            m.NYear,
+                            m.MainIndicatorsId,
+                            m.Nvalue,
+                            m.EnteredValue,
+                            SUM(m.Nvalue) OVER (
+                                PARTITION BY m.FunctionalSubAreaId, m.CourtId, m.NYear, m.MainIndicatorsId
+                                ORDER BY m.NMonth
+                                ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+                            ) AS CalculatedValue,  -- Running sum from January to @NMonth
+                           
+                            m.Datum,
+                            m.EnteredOn,
+                            i.Name AS MainIndicatorName,
+                            i.Code,
+                            i.MeasureId,
+                            i.TypeOfIndicatorId,
+                            i.Calculation,
+                            c.Name AS MeasureName,
+                            t.Name AS TypeOfIndicatorName
+                        FROM MainData m
+                        JOIN MainIndicators i ON m.MainIndicatorsId = i.Id
+                        JOIN Measure c ON i.MeasureId = c.Id
+                        JOIN TypeOfIndicator t ON i.TypeOfIndicatorId = t.Id
+                        WHERE 
+                            m.FunctionalSubAreaId = @FunctionalSubAreaId
+                            AND m.NYear = @NYear
+                            AND i.FunctionalSubAreaId = @FunctionalSubAreaId
+                            AND m.NMonth BETWEEN @NMonth1 AND @NMonth2  -- Always include months from 1 to @NMonth
+                        ORDER BY m.NMonth;";
+
+            var parameters = new
+            {
+
+
+                FunctionalSubAreaId = functionalSubAreaId,
+
+                NYear = ny,
+                NMonth1 = nm1,
+                NMonth2 = nm2
+            };
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<MainDataGridReport>(sql, parameters);
             return result?.ToList();
         }
         public async Task<IEnumerable<MainDataGrid>> GetMainPeriodGridByFilterAsync(int functionalSubAreaId, int courtId, int nm, int ny)
@@ -819,6 +872,14 @@ namespace CielaDocs.Shared.Repository
         }
         public async Task<int> UpdateMainDataValueByIdAsync(int? Id, double? nValue) {
             var sql = $@"UPDATE MainData SET Nvalue ={nValue??0}, EnteredOn=getDate()  WHERE Id = {Id??0}";
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var affectedRows = await connection.ExecuteAsync(sql);
+            return affectedRows;
+        }
+        public async Task<int> UpdateMainDataCalculationValueByIdAsync(int? Id, double? nValue)
+        {
+            var sql = $@"UPDATE MainData SET CalculatedValue ={nValue ?? 0}, EnteredOn=getDate()  WHERE Id = {Id ?? 0}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             var affectedRows = await connection.ExecuteAsync(sql);
@@ -1105,8 +1166,20 @@ namespace CielaDocs.Shared.Repository
                             p.PlannedYear,
                             p.IsActive,
                             p.OrderNum,
-                            p.ApprovedValue,
-                            p.CalculatedValue,
+                            -- Преобразуване на ApprovedValue спрямо DisplayCurrencyId
+                            ROUND(
+                                CASE 
+                                    WHEN @DisplayCurrencyId = 0 AND p.CurrencyId = 1 THEN p.ApprovedValue * @OfficialEuroRate  -- EUR → BGN
+                                    WHEN @DisplayCurrencyId = 1 AND p.CurrencyId = 0 THEN p.ApprovedValue / @OfficialEuroRate  -- BGN → EUR
+                                    ELSE p.ApprovedValue 
+                                END, 2) AS ApprovedValue, 
+                             -- Преобразуване на CalculatedValue спрямо DisplayCurrencyId
+                            ROUND(
+                                CASE 
+                                    WHEN @DisplayCurrencyId = 0 AND p.CurrencyId = 1 THEN p.CalculatedValue * @OfficialEuroRate  -- EUR → BGN
+                                    WHEN @DisplayCurrencyId = 1 AND p.CurrencyId = 0 THEN p.CalculatedValue / @OfficialEuroRate  -- BGN → EUR
+                                    ELSE p.CalculatedValue 
+                                END, 2) AS CalculatedValue, 
                             p.IsCalculated,
                             a.Name AS FunctionalSubAreaName,
                             c.Name AS CurrencyName,
@@ -1179,6 +1252,37 @@ namespace CielaDocs.Shared.Repository
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             var result = await connection.QueryAsync<IndicatorData3Y>(sql2);
+            return result?.ToList();
+        }
+
+        public async Task<IEnumerable<IndicatorData1Y>> GetIndicatorData1YAsync(int functionalSubAreaId, int ny)
+        {
+            string sql2 = $@"SELECT  a.Id
+                      ,a.MainIndicatorId
+	                  ,a.functionalSubAreaId
+                      ,m.Code
+                      ,m.Name
+	                  ,m.MeasureId
+	                  ,m.IsActive
+	                  ,m.TypeOfIndicatorId
+	                  ,m.Calculation
+	                  ,z.Name as MeasureName
+	                  ,t.NAme as TypeOfIndicatorName
+	                   ,a.Nvalue 
+                      ,a.EnteredDate
+	                  ,a.PlannedYear
+	                  ,a.ApprovedValue
+                      ,a.CalculatedValue
+                  FROM IndicatorData a
+                  left join MainIndicators m on  a.MainIndicatorId=m.id
+                  left join Measure z on m.MeasureId=z.id
+                  left join TypeOfIndicator t on m.TypeOfIndicatorId=t.id
+                 
+	              where a.FunctionalSubAreaId={functionalSubAreaId} and a.PlannedYear={ny} and m.IsActive=1 ";
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<IndicatorData1Y>(sql2);
             return result?.ToList();
         }
         public async Task<IEnumerable<ProgramDataCourt3Y>> GetProgramDataCourt3YAsync(int functionalSubAreaId, int ny, int? rowNum) {

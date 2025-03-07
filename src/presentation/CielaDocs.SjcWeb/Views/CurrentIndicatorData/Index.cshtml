@@ -40,7 +40,7 @@
 
 </style>
 <div class="spacer_5"></div>
-<h4>Бюджетна прогноза за показатели за изпълнение за @title</h4>
+<h4>Бюджетен проект за показатели за изпълнение за @title</h4>
 <h4>@ViewBag.ProgramName</h4>
 
 
@@ -108,7 +108,7 @@
                 case 'popUpOk':
                     commonModal.modal('hide');
                     var par = e.split('|');
-                    redirectme3New("@Url.Action("Index", "IndicatorDataCourtItems")", "programNum", par[0], "courtId", par[1], "nyear", selectedYear)
+                    redirectme3New("@Url.Action("Index", "CurrentIndicatorCourtItems")", "programNum", par[0], "courtId", par[1], "nyear", selectedYear)
                     break;
                 case 'popUpClose':
                     commonModal.modal('hide');
@@ -119,7 +119,7 @@
         function editCourtRow(id) {
             DevExpress.ui.dialog.alert('Тази функционалност е в процес на обсъждане към момента', 'Внимание');
         }
-      
+
 
         $(() => {
 
@@ -141,10 +141,10 @@
                     store: new DevExpress.data.CustomStore({
                         key: 'Id',
                         load() {
-                            return sendRequest(Ciela.baseUrl + "IndicatorDataItems/GetDataGrid", 'Get', { nyear: selectedYear });
+                            return sendRequest(Ciela.baseUrl + "CurrentIndicatorData/GetDataGrid", 'Get', { nyear: selectedYear });
                         },
                         update(key, values) {
-                            return sendRequest(Ciela.baseUrl + "IndicatorDataItems/UpdateDataItem", 'Post', {
+                            return sendRequest(Ciela.baseUrl + "CurrentIndicatorData/UpdateDataItem", 'Post', {
                                 key: key,
                                 values: JSON.stringify(values),
                             });
@@ -187,7 +187,7 @@
                 columns: [
                     {
                         dataField: "Name",
-                        width: "50%",
+                        width: "80%",
                         caption: "Показател"
                     },
                      {
@@ -196,53 +196,15 @@
                         caption: "Мярка"
                     },
                     {
-                        dataField: "Nval1",
+                        dataField: "Nvalue",
                         width: "10%",
-                        caption: selectedYear,
+                        caption: 'Целева стоиност',
                         alllowEditing: true,
                         valueFormat: '0.00',
                         dataType: 'number',
                         format: function (value) { return value.toFixed(2); },
                             setCellValue: function (rowData, value) {
-                                rowData.Nval1 = value.toFixed(2);
-                            },
-
-                    },
-                    {
-                        dataField: "Nval2",
-                        width: "10%",
-                        caption: selectedYear+1,
-                        alllowEditing: true,
-                        valueFormat: '0.00',
-                        dataType: 'number',
-                        format: function (value) { return value.toFixed(2); },
-                            setCellValue: function (rowData, value) {
-                                rowData.Nval2 = value.toFixed(2);
-                            },
-
-                    }, {
-                        dataField: "Nval3",
-                        width: "10%",
-                        caption: selectedYear+2,
-                        alllowEditing: true,
-                        valueFormat: '0.00',
-                        dataType: 'number',
-                        format: function (value) { return value.toFixed(2); },
-                            setCellValue: function (rowData, value) {
-                                rowData.Nval3 = value.toFixed(2);
-                            },
-
-                    },
-                    {
-                        dataField: "Nval4",
-                        width: "10%",
-                        caption: selectedYear+3,
-                        alllowEditing: true,
-                        valueFormat: '0.00',
-                        dataType: 'number',
-                       format: function (value) { return value.toFixed(2); },
-                            setCellValue: function (rowData, value) {
-                                rowData.Nval4 = value.toFixed(2);
+                                rowData.Nvalue = value.toFixed(2);
                             },
 
                     },
@@ -292,10 +254,10 @@
                                     width: "15%",
                                     caption: "Отчетна единица"
                                 },
-                                    
+
                                     {
                                         dataField: "Name",
-                                        width: "50%",
+                                        width: "70%",
                                         caption: "Наименование"
                                     }
                                     ,
@@ -305,53 +267,16 @@
                                         caption: "Мярка"
                                     },
                                     {
-                                        dataField: "Nval1",
+                                        dataField: "Nvalue",
                                         width: "10%",
-                                        caption: selectedYear,
+                                        caption: 'Целева стойност',
                                         alllowEditing: true,
                                         valueFormat: '0.00',
                                         dataType: 'number',
                                        format: function (value) { return value.toFixed(2); },
                                             setCellValue: function (rowData, value) {
-                                                rowData.Nval1 = value.toFixed(2);
+                                                rowData.Nvalue = value.toFixed(2);
                                             },
-
-                                    },
-                                    {
-                                        dataField: "Nval2",
-                                        width: "10%",
-                                        caption: selectedYear + 1,
-                                        alllowEditing: true,
-                                        valueFormat: '0.00',
-                                        dataType: 'number',
-                                         format: function (value) { return value.toFixed(2); },
-                                            setCellValue: function (rowData, value) {
-                                                rowData.Nval2 = value.toFixed(2);
-                                            },
-
-                                    }, {
-                                        dataField: "Nval3",
-                                        width: "10%",
-                                        caption: selectedYear + 2,
-                                        alllowEditing: true,
-                                        valueFormat: '0.00',
-                                        dataType: 'number',
-                                        format: function (value) { return value.toFixed(2); },
-                                            setCellValue: function (rowData, value) {
-                                                rowData.Nval3 = value.toFixed(2);
-                                            },
-
-                                    }, {
-                                        dataField: "Nval4",
-                                        width: "10%",
-                                        caption: selectedYear + 3,
-                                        alllowEditing: true,
-                                        valueFormat: '0.00',
-                                        dataType: 'number',
-                                        format: function (value) { return value.toFixed(2); },
-                                        setCellValue: function (rowData, value) {
-                                            rowData.Nval4 = value.toFixed(2);
-                                        },
 
                                     },
 
@@ -361,40 +286,13 @@
                                         column: 'Id',
                                         summaryType: 'count',
                                     }, {
-                                        column: 'Nval1',
+                                        column: 'Nvalue',
                                         summaryType: 'sum',
                                         valueFormat: '#0.00',
                                         dataType: 'number',
                                         format: function (value) { return value.toFixed(2); },
                                             setCellValue: function (rowData, value) {
-                                                rowData.Nval1 = value.toFixed(2);
-                                            },
-                                    }, {
-                                        column: 'Nval2',
-                                        summaryType: 'sum',
-                                        valueFormat: '#0.00',
-                                        dataType: 'number',
-                                        format: function (value) { return value.toFixed(2); },
-                                            setCellValue: function (rowData, value) {
-                                                rowData.Nval2 = value.toFixed(2);
-                                            },
-                                    }, {
-                                        column: 'Nval3',
-                                        summaryType: 'sum',
-                                        valueFormat: '#0.00',
-                                        dataType: 'number',
-                                        format: function (value) { return value.toFixed(2); },
-                                            setCellValue: function (rowData, value) {
-                                                rowData.Nval3 = value.toFixed(2);
-                                            },
-                                    }, {
-                                        column: 'Nval4',
-                                        summaryType: 'sum',
-                                        valueFormat: '#0.00',
-                                        dataType: 'number',
-                                       format: function (value) { return value.toFixed(2); },
-                                            setCellValue: function (rowData, value) {
-                                                rowData.Nval4 = value.toFixed(2);
+                                                rowData.Nvalue = value.toFixed(2);
                                             },
                                     }],
                                 },
@@ -413,10 +311,10 @@
                                     store: new DevExpress.data.CustomStore({
                                         key: 'Id',
                                         load() {
-                                            return sendRequest(Ciela.baseUrl + "IndicatorDataItems/GetCourtsByIndicatorDataId", 'Get', { nyear: selectedYear, indicatorDataId: options.key });
+                                            return sendRequest(Ciela.baseUrl + "CurrentIndicatorData/GetCourtsByIndicatorDataId", 'Get', { nyear: selectedYear, indicatorDataId: options.key });
                                         },
                                         update(key, values) {
-                                            return sendRequest(Ciela.baseUrl + "IndicatorDataItems/UpdateDataCourtItem", 'Post', {
+                                            return sendRequest(Ciela.baseUrl + "CurrentIndicatorData/UpdateDataCourtItem", 'Post', {
                                                 key: key,
                                                 values: JSON.stringify(values),
                                             });
@@ -442,14 +340,14 @@
                                 },
                                 onEditorPreparing: function (e) {
                                     if ( e.dataField === "Name" ) e.editorOptions.disabled = true
-                                    if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3" || e.dataField === "Nval4") && e.parentType === "dataRow") {
+                                    if (e.dataField === "Nvalue"  && e.parentType === "dataRow") {
                                         const defaultValueChangeHandler = e.editorOptions.onValueChanged;
                                         e.editorOptions.onValueChanged = function (args) {
                                             defaultValueChangeHandler(args);
                                         }
                                     }
                                 }
-                               
+
                             }).appendTo(container);
                     },
                 },
@@ -461,7 +359,7 @@
                 },
                 onEditorPreparing: function (e) {
                     if (e.dataField === "Name" ) e.editorOptions.disabled = true
-                    if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3"|| e.dataField === "Nval4") && e.parentType === "dataRow") {
+                    if ((e.dataField === "Nvalue" ) && e.parentType === "dataRow") {
                         const defaultValueChangeHandler = e.editorOptions.onValueChanged;
                         e.editorOptions.onValueChanged = function (args) {
                             defaultValueChangeHandler(args);
@@ -542,7 +440,7 @@
                                 worksheet: worksheet
                             }).then(function () {
                                 workbook.xlsx.writeBuffer().then(function (buffer) {
-                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "ProgramData.xlsx");
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "CurrentIndicatorsData.xlsx");
                                 });
                             });
                             break;

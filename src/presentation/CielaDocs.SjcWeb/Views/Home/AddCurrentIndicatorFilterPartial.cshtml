@@ -6,20 +6,10 @@
     .select2-container--open {
         z-index: 99999999
     }
-
 </style>
 <form id="anyForm">
     <div class="modal-body form-horizontal">
         <div class="container-fluid">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <div class="lock-container">
-                            <input type="text" readonly id="aciveperiodparams" class="lock-result">
-                        </div>
-                    </div>
-                </div>
-            </div>
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
@@ -40,7 +30,14 @@
                     </div>
                 </div>
             </div>
-
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="nyear">За година</label>
+                        <div id="selectBoxYear"></div>
+                    </div>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-12">
                     <div class="lock-container">
@@ -54,44 +51,29 @@
             <div id="dxContextMenu"></div>
             <div id="btnLock"></div>
             <div id="btnLockedView"></div>
-            <div id="btnEnteredData"></div>
             <div id="okFilterBtn"></div>
             <div id="closeFilterBtn"></div>
         </div>
     </div>
 </form>
 <script>
-
     $(() => {
-        let functionalAreaId = 0;
+         let functionalAreaId = 0;
         let functionalSubAreaId = 0;
-
+        let ny = 0;
+        let currencyId = 0;
+        let currencyMeasureId = 0;
 
         const buttonView = $("#btnLockedView").dxButton({
         visible: true,
-        icon: Ciela.baseUrl+'images/lock-closed.svg',
+        icon:Ciela.baseUrl+'images/lock-closed.svg',
         hint:'Заключени периоди',
         onClick: function () {
                 mainRightReadOnlyPopup.option({
-                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Home/AddIndicatorDataLockedPartial", { }),
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Home/AddCurrentIndicatorLockedPartial", { }),
                 height: $(window).height() - 150,
                 width: $(window).width() - 800,
                 title: 'Заключени периоди',
-            });
-            mainRightReadOnlyPopup.show();
-        }
-        }).dxButton("instance");
-
-         const buttonCourts = $("#btnEnteredData").dxButton({
-        visible: true,
-        icon:Ciela.baseUrl+'images/input-data.svg',
-        hint:'Въведени данни',
-        onClick: function () {
-                mainRightReadOnlyPopup.option({
-                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Home/AnalizeIndicatorDataPartial", { functionalSubAreaId: functionalSubAreaId}),
-                height: $(window).height() - 150,
-                width: $(window).width() - 800,
-                title: 'Анализ на въведени данни',
             });
             mainRightReadOnlyPopup.show();
         }
@@ -115,7 +97,7 @@
                              result.done(function (dialogResult) {
                                  if (dialogResult === true) {
                                      $.ajax({
-                                         url: Ciela.baseUrl + "Noms/LockIndicatorData", data: {typeoflock:0, programId: functionalSubAreaId, ny: activeYear }, method: 'POST'
+                                         url: Ciela.baseUrl + "Noms/LockCurrentIndicator", data: {typeoflock:0, programId: functionalSubAreaId, ny: ny }, method: 'POST'
                                      })
                                          .done(function (result) {
                                              DevExpress.ui.notify(result.msg);
@@ -131,7 +113,7 @@
                              result.done(function (dialogResult) {
                                  if (dialogResult === true) {
                                      $.ajax({
-                                         url: Ciela.baseUrl + "Noms/LockIndicatorData", data: {typeoflock:1, programId: functionalSubAreaId, ny: activeYear }, method: 'POST'
+                                         url: Ciela.baseUrl + "Noms/LockCurrentIndicator", data: {typeoflock:1, programId: functionalSubAreaId, ny: ny }, method: 'POST'
                                      })
                                          .done(function (result) {
                                              DevExpress.ui.notify(result.msg);
@@ -142,6 +124,7 @@
                                  }
                              });
                         break;
+
                 }
              }
          }).dxContextMenu("instance");
@@ -157,18 +140,27 @@
 
             function toggleButtonVisibility(condition) {
                 button.option('visible', condition);
-                button.option('icon', Ciela.baseUrl+'images/lock-open.svg')
+                button.option('icon',Ciela.baseUrl+'images/lock-open.svg')
             }
 
-     let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
-             .then(data =>{
-                if(!isEmpty(data)){
-                    $('#aciveperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
-                }
-                else {
-                      $('#aciveperiodparams').val('');
-                }
-             });
+    // Initialize the Context Menu
+        $("#selectBoxYear").dxSelectBox({
+          dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/GetCurrentYear", 'Get', { });
+                    }
+                }),
+            }),
+            valueExpr: 'Id',
+            displayExpr: 'Name',
+            onValueChanged: function (e) {
+               ny=e.value;
+               nSelectedYear=ny;
+            }
+
+        });
 
         $("#cbFunctionalArea").select2({
             placeholder: "Избери...",
@@ -234,15 +226,17 @@
             functionalSubAreaId = $(e.currentTarget).val();
         });
 
-
-      //  ---------get dynamic action if selected two evalues
+       //  ---------get dynamic action if selected two evalues
        const dropdowns = [
-        { type: 'select2', element: $('#cbFunctionalSubArea')  }
+        { type: 'select2', element: $('#cbFunctionalSubArea') },
+        { type: 'dxDropDown', element: $('#selectBoxYear').dxSelectBox('instance') }
     ];
 
         dropdowns.forEach(dropdown => {
         if (dropdown.type === 'select2') {
             dropdown.element.on('change', checkAllSelected);
+        } else if (dropdown.type === 'dxDropDown') {
+            dropdown.element.option('onValueChanged', checkAllSelected);
         } else {
             dropdown.element.addEventListener('change', checkAllSelected);
         }
@@ -251,7 +245,9 @@
     function getValue(dropdown) {
         if (dropdown.type === 'select2') {
             return dropdown.element.val();
-        }  else {
+        } else if (dropdown.type === 'dxDropDown') {
+            return dropdown.element.option('value');
+        } else {
             return dropdown.element.value;
         }
     }
@@ -263,8 +259,11 @@
         });
 
         if (allSelected) {
+           // console.log('All dropdowns have selected values!');
+           ny=$("#selectBoxYear").dxSelectBox("option", "value");
+           nSelectedYear=ny;
             // Trigger your custom logic here
-            let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriodIndicatorDataLocked", { programId: functionalSubAreaId, ny: activeYear })
+            let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod5Locked", { programId: functionalSubAreaId, ny: ny })
              .then(data =>{
                 if(!isEmpty(data)){
                     $('#lock-result').val('Заключен период от '+data?.LockedByUserName);
@@ -288,11 +287,11 @@
             type: 'normal',
             width: 120,
             onClick() {
-                if ((functionalSubAreaId == 0)  || (activeYear == 0)) {
+                if ((functionalSubAreaId == 0) || (ny == 0)) {
                     DevExpress.ui.dialog.alert('Изберете задължително бюджетна програма и година', 'Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('indicatorDataFilterOk', ''.concat(functionalSubAreaId, "|",activeYear,"|",officialCurrencyId,"|",0,"|",isLocked));
+                window.parent.OnClosePopupEventHandlerEx('currentIndicatorFilterOk', ''.concat(functionalSubAreaId, "|", ny, "|", officialCurrencyId, "|", currencyMeasureId,"|",isLocked));
             },
         });
         $('#closeFilterBtn').dxButton({

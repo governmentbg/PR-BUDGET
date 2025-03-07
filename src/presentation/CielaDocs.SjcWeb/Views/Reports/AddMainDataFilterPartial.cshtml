@@ -32,29 +32,18 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label for="cbCourtType">Вид</label>
-                        <select class="form-control" style="width:100%" id="cbCourtType">
-                            <option>Избери... </option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="form-group">
-                        <label for="cbCourt">Отчетна единица</label>
-                        <select class="form-control" style="width:100%" id="cbCourt">
-                            <option>Избери... </option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+         
             <div class="row">
                 <div class="col-3">
                     <div class="form-group">
-                        <label for="nmonth">Към месец</label>
-                        <div id="selectBoxMonth"></div>
+                        <label for="nmonth">От месец</label>
+                        <div id="selectBoxMonth1"></div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="form-group">
+                        <label for="nmonth">До месец</label>
+                        <div id="selectBoxMonth2"></div>
                     </div>
                 </div>
                 <div class="col-3">
@@ -78,15 +67,25 @@
         let functionalSubAreaId = 0;
         let courtTypeId = 0;
         let courtId = 0;
-        let nm = 0;
+        let nm1 = 0;
+        let nm2 = 0;
         let ny = 0;
        
-        $("#selectBoxMonth").dxSelectBox({
+        $("#selectBoxMonth1").dxSelectBox({
             dataSource: selectBoxMonthData,
             valueExpr: 'id',
             displayExpr: 'name',
             onValueChanged: function (e) {
-                nm=e.value;
+                nm1=e.value;
+            }
+
+        });
+          $("#selectBoxMonth2").dxSelectBox({
+            dataSource: selectBoxMonthData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+                nm2=e.value;
             }
 
         });
@@ -95,7 +94,7 @@
                 store: new DevExpress.data.CustomStore({
                     key: 'Id',
                     load() {
-                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
+                        return sendRequest(Ciela.baseUrl + "Noms/GetCurrentYear", 'Get', { });
                     }
                 }),
             }),
@@ -108,70 +107,7 @@
 
         });
 
-        $("#cbCourtType").select2({
-            placeholder: "Избери...",
-            allowClear: true,
-            ajax: {
-                url: "@Url.Action("GetCourtTypesByProgramId", "Noms")",
-                contentType: "application/json; charset=utf-8",
-                data: function (params) {
-                    var query =
-                    {
-                        programId:functionalSubAreaId,
-                        term: params.term,
-                    };
-                    return query;
-                },
-                processResults: function (result) {
-                    return {
-                        results: $.map(result, function (item) {
-                            return {
-                                id: item.Id,
-                                text: item.Name
-
-                            };
-
-                        }),
-
-                    };
-
-                }
-            }
-        }).on('change', function (e) {
-            courtTypeId=$(e.currentTarget).val();
-        });
-        $("#cbCourt").select2({
-            placeholder: "Избери...",
-            allowClear: true,
-            ajax: {
-                url: "@Url.Action("GetCourtsByCourtTypeIdSelect2", "Noms")",
-                contentType: "application/json; charset=utf-8",
-                data: function (params) {
-                    var query =
-                    {
-                        courtTypeId: courtTypeId,
-                        term: params.term,
-                    };
-                    return query;
-                },
-                processResults: function (result) {
-                    return {
-                        results: $.map(result, function (item) {
-                            return {
-                                id: item.Id,
-                                text: item.Name
-
-                            };
-
-                        }),
-
-                    };
-
-                }
-            }
-        }).on('change', function (e) {
-            courtId=$(e.currentTarget).val();
-        });
+      
         $("#cbFunctionalArea").select2({
             placeholder: "Избери...",
             allowClear: true,
@@ -243,11 +179,11 @@
             type: 'normal',
             width: 120,
             onClick() {
-                if ((functionalSubAreaId == 0)||(courtId==0)||(nm==0)||(nSelectedYear==0)) {
+                if ((functionalSubAreaId == 0)||(nm1==0)||(nm2==0)||(nSelectedYear==0)) {
                     DevExpress.ui.dialog.alert('Изберете задължително отчетна единица, месец и година','Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('mainDataFilterOk', ''.concat(functionalAreaId,"|",courtId, "|", nm, "|", nSelectedYear));
+                window.parent.OnClosePopupEventHandlerEx('mainDataFilterOk', ''.concat(functionalAreaId,"|",nm1, "|", nm2, "|", nSelectedYear));
             },
         });
         $('#closeFilterBtn').dxButton({

@@ -348,12 +348,13 @@ namespace CielaDocs.SjcWeb.Controllers
                 return Json(new List<IdNames>());
             }
         }
-        public async Task<JsonResult> GetIndicatorsDataGrid( int? functionalSubAreaId,int? courtId,int?nm,int? ny)
+        public async Task<JsonResult> GetIndicatorsDataGrid( int? functionalSubAreaId,int? nm1,int? nm2,int? ny)
         {
             try
             {
+             
               
-                var data = await _sjcRepo.GetIndicatorsGridByFilterAsync(functionalSubAreaId ?? 0, courtId ?? 0, nm ?? 0, ny ?? 0);
+                var data = await _sjcRepo.GetIndicatorsGridByFilterAsync(functionalSubAreaId ?? 0, nm1?? 0, nm2 ?? 0, ny ?? 0);
                 return  Json(data.ToList());
             }
             catch (Exception ex)

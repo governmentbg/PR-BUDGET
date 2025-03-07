@@ -163,8 +163,10 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<ProgramDef3Y>> GetProgramDataInstitution3YCommonCurrencyAsync(int? programDefNum, int? ny, int displayCurrencyId);
         Task<IEnumerable<ProgramDef3Y>> GetProgramDataCourt3YCommonCurrencyAsync(int? programDefNum, int? ny, int displayCurrencyId);
         Task GetProgramDataCourt3YAsync(int v, int ny);
-        Task<IEnumerable<MainDataGrid>> GetIndicatorsGridByFilterAsync(int functionalSubAreaId, int courtId, int nm, int ny);
+        Task<IEnumerable<MainDataGridReport>> GetIndicatorsGridByFilterAsync(int functionalSubAreaId, int nm1, int nm2, int ny);
         Task<IEnumerable<IndicatorData3Y>> GetIndicatorData3YAsync(int functionalSubAreaId, int ny);
+        Task<IEnumerable<IndicatorData1Y>> GetIndicatorData1YAsync(int functionalSubAreaId, int ny);
+        Task<int> UpdateMainDataCalculationValueByIdAsync(int? Id, double? nValue);
     }
   
 }

@@ -4,9 +4,9 @@
 @{
     Layout = "~/Views/Shared/_LayoutMax.cshtml";
 
-    var court = ViewData["court"] as CielaDocs.Application.Dtos.CourtDto;
+
     var mainSubArea = $"{ViewBag.FunctionalSubAreaName}";
-    var title = $" Отчетна единица: {@court?.Name}, година: {ViewBag.Year} към месец: {Toolbox.MonthStr[(int)ViewBag.Month]}";
+    var title = $"от месец: {Toolbox.MonthStr[(int)ViewBag.Month1]} до месец: {Toolbox.MonthStr[(int)ViewBag.Month2]}  година: {ViewBag.Year}";
 }
 <h3></h3>
 <div class="spacer_20"></div>
@@ -20,7 +20,7 @@
 <div id="image-indicator"></div>
 <div id="grid"></div>
 <div class="school-info" id="school-info" style="color: #bf4e6a;"></div>
-@Html.Hidden("CourtId", @court?.Id)
+
 @section scripts {
     <script>
 
@@ -52,8 +52,8 @@
                         load() {
                             return sendRequest(Ciela.baseUrl + "Noms/GetIndicatorsDataGrid", 'Get', { 
                                 functionalSubAreaId:Number(@ViewBag.FunctionalSubAreaId),
-                                courtId:Number(@ViewBag.CourtId),
-                                nm:Number(@ViewBag.Month),
+                                nm1:Number(@ViewBag.Month1),
+                                nm2:Number(@ViewBag.Month2),
                                 ny:Number(@ViewBag.Year)
                             });
                         },
@@ -105,13 +105,26 @@
                     {
                         dataField: "Nvalue",
                         width: "10%",
-                        caption: "Изчислена С-т",
+                        caption: "Целева стойност",
                         alllowEditing: false,
                         valueFormat: '0.00',
                         dataType: 'number',
                         format: function (value) { return value.toFixed(2); },
                             setCellValue: function (rowData, value) {
                                 rowData.Nvalue = value.toFixed(2);
+                            },
+
+                    },
+                    {
+                        dataField: "CalculatedValue",
+                        width: "10%",
+                        caption: "Отчет",
+                        alllowEditing: false,
+                        valueFormat: '0.00',
+                        dataType: 'number',
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.CalculatedValue = value.toFixed(2);
                             },
 
                     }

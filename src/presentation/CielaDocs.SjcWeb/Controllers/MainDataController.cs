@@ -142,7 +142,8 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             try
             {
-                var data = await _sjcServiceV2.GetMetricsFieldInProgramItemByMainIndicatorsId(mainIndicatorId ?? 0);
+                FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm();
+                var data = await _sjcServiceV2.GetMetricsFieldInProgramItemByMainIndicatorsId(mainIndicatorId ?? 0,FilterData?.CourtId, FilterData?.Nmonth, FilterData?.Nyear);
                 return Json(data);
             }
             catch (Exception ex)
@@ -246,7 +247,6 @@ namespace CielaDocs.SjcWeb.Controllers
                 }
                 //-------end check locked period------------------------
 
-
                 foreach (var row in data)
                 {
                     var mi = await _sjcRepo.GetMainIndicatorsByIdAsync(row?.MainIndicatorsId ?? 0);
@@ -345,7 +345,9 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             var md = await _sjcRepo.GetMainDataByIdAsync(mainDataId ?? 0);
             var mi = await _sjcRepo.GetMainIndicatorsByIdAsync(md?.MainIndicatorsId??0);
-            var data = await _sjcServiceV2.GetMetricsFieldInProgramItemByMainIndicatorsId(md?.MainIndicatorsId ?? 0);
+  
+            FilterData = HttpContext.Session.Get<FilterMainDataVm>("FilterMainDataSess") ?? new FilterMainDataVm();
+            var data = await _sjcServiceV2.GetMetricsFieldInProgramItemByMainIndicatorsId(md?.MainIndicatorsId ?? 0, FilterData?.CourtId, FilterData?.Nmonth, FilterData?.Nyear);
 
             var dic = new Dictionary<string, string>();
             

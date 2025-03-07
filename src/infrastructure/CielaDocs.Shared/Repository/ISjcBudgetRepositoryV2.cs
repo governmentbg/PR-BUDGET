@@ -2,6 +2,8 @@
 using CielaDocs.Domain.Entities;
 using CielaDocs.Domain.Entities.v2;
 
+using DocumentFormat.OpenXml.Office2010.Excel;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +32,7 @@ namespace CielaDocs.Shared.Repository
         Task<int?> SpDeleteEndPeriodDataAsync(int budgetPeriodId);
         Task<IEnumerable<MetricsFieldInProgramVm>> GetMetricsFieldInProgramByMainIndicatorIdAsync(int? id);
         Task<IEnumerable<MetricsFieldInProgramItemVm>> CreateMetricsFieldInProgramItemExists(MainData md);
-        Task<IEnumerable<MetricsFieldInProgramItemVm>> GetMetricsFieldInProgramItemByMainIndicatorsId(int id);
+        Task<IEnumerable<MetricsFieldInProgramItemVm>> GetMetricsFieldInProgramItemByMainIndicatorsId(int id, int? courtId, int? nm, int? ny);
         Task<MainIndicatorsVm> GetMainIndicatorsById(int Id);
 
         Task<IEnumerable<IndicatorDataHVm>> GetIndicatorDataForEndingPeriod(int id);
@@ -46,5 +48,10 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<IndicatorDataCourt3Y>> GetIndicatorDataCourt3YByCourtIdAsync(int? functionalSubAreaId, int? ny, int? courtId);
         Task<IndicatorDataVm> GetIndicatorDataById(int Id);
         Task<IndicatorDataCourtVm> GetIndicatorDataCourtById(int Id);
+        Task<IEnumerable<IndicatorDataCourt1Y>> GetIndicatorDataCourt1YAsync(int functionalSubAreaId, int ny, int? mainIndicatorId);
+        Task<int> UpdateIndicatorData1YValueByIdAsync(int? id, string fieldName, decimal? val, int? nYear);
+        Task<int> UpdateIndicatorDataCourt1YValueByIdAsync(int? id, string fieldName, decimal? val);
+        Task<IEnumerable<IndicatorDataCourt1Y>> GetIndicatorDataCourt1YByCourtIdAsync(int? functionalSubAreaId, int? ny, int? courtId);
+        Task<decimal?> SumMetricsFieldInProgramItemByMainIndicatorsId(int id, int? nm1, int? nm2, int? ny);
     }
 }

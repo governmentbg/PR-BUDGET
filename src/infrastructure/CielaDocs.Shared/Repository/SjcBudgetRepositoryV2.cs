@@ -592,7 +592,7 @@ t1.PlannedYear as PlannedYear1,t2.PlannedYear as PlannedYear2,t3.PlannedYear as 
             }
             return result;
         }
-        public async Task<IEnumerable<MetricsFieldInProgramItemVm>> GetMetricsFieldInProgramItemByMainIndicatorsId(int id) {
+        public async Task<IEnumerable<MetricsFieldInProgramItemVm>> GetMetricsFieldInProgramItemByMainIndicatorsId(int id,int? courtId, int? nm, int? ny) {
             string sql = $@"SELECT a.Id
                   ,a.MetricsFieldInProgramId
                   ,a.MainIndicatorsId
@@ -606,11 +606,24 @@ t1.PlannedYear as PlannedYear1,t2.PlannedYear as PlannedYear2,t3.PlannedYear as 
                   ,m.Code
                   ,m.Name
                   FROM MetricsFieldInProgramItem a
-                  left join MetricsFieldInProgram m on a.MetricsFieldInProgramId=m.id where a.MainIndicatorsId={id}";
+                  left join MetricsFieldInProgram m on a.MetricsFieldInProgramId=m.id
+                  where a.MainIndicatorsId={id} and a.CourtId={courtId??0} and NMonth={nm??0} and NYear={ny??0}";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             var result = await connection.QueryAsync<MetricsFieldInProgramItemVm>(sql);
             return result?.ToList();
+        }
+        public async Task<decimal?> SumMetricsFieldInProgramItemByMainIndicatorsId(int id, int? nm1, int? nm2, int? ny)
+        {
+            string sql = $@"SELECT coalesce(sum(a.Nvalue),0)
+                  
+                  FROM MetricsFieldInProgramItem a
+                  left join MetricsFieldInProgram m on a.MetricsFieldInProgramId=m.id
+                  where a.MainIndicatorsId={id} and a.NMonth>={nm1} and NMonth<={nm2 ?? 0} and NYear={ny ?? 0}";
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QuerySingleOrDefaultAsync<decimal?>(sql);
+            return result??0;
         }
         public async Task<MainIndicatorsVm> GetMainIndicatorsById(int Id)
         {
@@ -871,6 +884,32 @@ t1.PlannedYear as PlannedYear1,t2.PlannedYear as PlannedYear2,t3.PlannedYear as 
 
             return affectedRows;
         }
+        public async Task<int> UpdateIndicatorData1YValueByIdAsync(int? id, string fieldName, decimal? val, int? nYear)
+        {
+            var indicatorReq = await GetIndicatorDataById(id ?? 0);
+            var rec = await GetMainIndicatorsById(indicatorReq?.MainIndicatorId ?? 0);
+            int currentYear = nYear ?? 0;
+
+            var sql = $@"UPDATE IndicatorData SET Nvalue = {val}, EnteredDate=getDate() WHERE MainIndicatorId={rec?.Id} and FunctionalSubAreaId={rec?.FunctionalSubAreaId} and PlannedYear={currentYear} ";
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var affectedRows = await connection.ExecuteAsync(sql);
+
+            return affectedRows;
+        }
+        public async Task<int> UpdateIndicatorDataCourt1YValueByIdAsync(int? id, string fieldName, decimal? val)
+        {
+            var indicatorDataCourt = await GetIndicatorDataCourtById(id ?? 0);
+            var rec = await GetMainIndicatorsById(indicatorDataCourt?.MainIndicatorId ?? 0);
+            int currentYear = indicatorDataCourt?.PlannedYear ?? 0;
+
+            var sql = $@"UPDATE IndicatorDataCourt SET Nvalue = {val}, EnteredDate=getDate() WHERE  MainIndicatorId={indicatorDataCourt?.MainIndicatorId ?? 0} and CourtId={indicatorDataCourt?.CourtId ?? 0} and FunctionalSubAreaId={rec?.FunctionalSubAreaId} and PlannedYear={currentYear}  ";
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var affectedRows = await connection.ExecuteAsync(sql);
+
+            return affectedRows;
+        }
         public async Task<IEnumerable<IndicatorDataCourt3Y>> GetIndicatorDataCourt3YAsync(int functionalSubAreaId, int ny, int? mainIndicatorId) 
         {
 
@@ -910,6 +949,43 @@ t1.PlannedYear as PlannedYear1,t2.PlannedYear as PlannedYear2,t3.PlannedYear as 
             var result = await connection.QueryAsync<IndicatorDataCourt3Y>(sql2);
             return result?.ToList();
         }
+        public async Task<IEnumerable<IndicatorDataCourt1Y>> GetIndicatorDataCourt1YAsync(int functionalSubAreaId, int ny, int? mainIndicatorId)
+        {
+
+
+            string sql2 = $@"SELECT  a.Id
+                      ,a.MainIndicatorId
+                      ,a.CourtId
+	                  ,a.functionalSubAreaId
+                      ,m.Code
+                      ,m.Name
+	                  ,m.MeasureId
+	                  ,m.IsActive
+	                  ,m.TypeOfIndicatorId
+	                  ,m.Calculation
+	                  ,z.Name as MeasureName
+	                  ,t.NAme as TypeOfIndicatorName
+                      ,a.Nvalue 
+                      ,a.EnteredDate
+	                  ,a.PlannedYear
+	                  ,a.ApprovedValue
+                      ,a.CalculatedValue
+	                  ,r.Name as CourtName
+     
+                  FROM IndicatorDataCourt a
+                  left join MainIndicators m on  a.MainIndicatorId=m.id
+                  left join Measure z on m.MeasureId=z.id
+                  left join TypeOfIndicator t on m.TypeOfIndicatorId=t.id
+                  left join court r on a.CourtId=r.id
+                 
+
+	              where a.MainIndicatorId={mainIndicatorId ?? 0} and a.FunctionalSubAreaId={functionalSubAreaId} and a.PlannedYear={ny} ";
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<IndicatorDataCourt1Y>(sql2);
+            return result?.ToList();
+        }
         public async Task<IEnumerable<IndicatorDataCourt3Y>> GetIndicatorDataCourt3YByCourtIdAsync(int? functionalSubAreaId, int? ny, int? courtId)
         {
             string sql2 = $@"SELECT  a.Id
@@ -945,6 +1021,41 @@ t1.PlannedYear as PlannedYear1,t2.PlannedYear as PlannedYear2,t3.PlannedYear as 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             var result = await connection.QueryAsync<IndicatorDataCourt3Y>(sql2);
+            return result?.ToList();
+        }
+        public async Task<IEnumerable<IndicatorDataCourt1Y>> GetIndicatorDataCourt1YByCourtIdAsync(int? functionalSubAreaId, int? ny, int? courtId)
+        {
+            string sql2 = $@"SELECT  a.Id
+                      ,a.MainIndicatorId
+                      ,a.CourtId
+	                  ,a.functionalSubAreaId
+                      ,m.Code
+                      ,m.Name
+	                  ,m.MeasureId
+	                  ,m.IsActive
+	                  ,m.TypeOfIndicatorId
+	                  ,m.Calculation
+	                  ,z.Name as MeasureName
+	                  ,t.NAme as TypeOfIndicatorName
+                      ,a.Nvalue 
+                      ,a.EnteredDate
+	                  ,a.PlannedYear
+	                  ,a.ApprovedValue
+                      ,a.CalculatedValue
+	                  ,r.Name as CourtName
+     
+                  FROM IndicatorDataCourt a
+                  left join MainIndicators m on  a.MainIndicatorId=m.id
+                  left join Measure z on m.MeasureId=z.id
+                  left join TypeOfIndicator t on m.TypeOfIndicatorId=t.id
+                  left join court r on a.CourtId=r.id
+                 
+
+	              where a.CourtId={courtId ?? 0} and a.FunctionalSubAreaId={functionalSubAreaId} and a.PlannedYear={ny} ";
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.QueryAsync<IndicatorDataCourt1Y>(sql2);
             return result?.ToList();
         }
         public async Task<IndicatorDataVm> GetIndicatorDataById(int Id) {

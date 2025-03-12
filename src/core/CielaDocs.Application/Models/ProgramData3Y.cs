@@ -21,4 +21,5 @@ namespace CielaDocs.Application.Models
         public decimal? Nval3 { get; set; }
         public decimal? Nval4 { get; set; }
     }
+   
 }

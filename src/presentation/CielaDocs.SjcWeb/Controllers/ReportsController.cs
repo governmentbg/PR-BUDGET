@@ -14,6 +14,7 @@ using CielaDocs.SjcWeb.Models;
 using ClosedXML.Excel;
 
 using DocumentFormat.OpenXml.Bibliography;
+using DocumentFormat.OpenXml.Drawing.Charts;
 
 using FluentValidation.Internal;
 
@@ -169,6 +170,7 @@ namespace CielaDocs.SjcWeb.Controllers
         public IActionResult AddProgramYearFilterPartial() => PartialView(nameof(AddProgramYearFilterPartial));
         public IActionResult AddCommonBudgetFilterPartial() => PartialView(nameof(AddCommonBudgetFilterPartial));
         public IActionResult EndedBudgetPeriodFilterPartial()=> PartialView(nameof(EndedBudgetPeriodFilterPartial));
+        public IActionResult AddMainDataFilterPartial() => PartialView(nameof(AddMainDataFilterPartial));
 
         [HttpGet]
 
@@ -272,6 +274,27 @@ namespace CielaDocs.SjcWeb.Controllers
             {
                 return Json(new List<MainDataItemsGrid>());
             }
+        }
+        public async Task<IActionResult> Indicators(string par, int? currencyId)
+        {
+            string[] args = par.Split('|');
+            int.TryParse(args[0], out int functionalSubAreaId);
+            int.TryParse(args[1], out int nMonth1);
+            int.TryParse(args[2], out int nMonth2);
+            int.TryParse(args[3], out int nYear);
+
+
+           
+            var fsub = await _mediator.Send(new GetFunctionalSubAreaByIdQuery { Id = functionalSubAreaId });
+
+           
+            ViewBag.FunctionalSubAreaId = functionalSubAreaId;
+            ViewBag.Month1 = nMonth1;
+            ViewBag.Month2 = nMonth2;
+            ViewBag.Year = nYear;
+            ViewBag.FunctionalSubAreaName = fsub?.Name;
+            @ViewBag.Currency = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
+            return View();
         }
     }
 }

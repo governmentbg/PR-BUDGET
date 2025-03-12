@@ -111,10 +111,10 @@ namespace CielaDocs.SjcWeb.Controllers
                     return Json(new { msg = $"Неоткрит код {kontoCode} на отчетна единица", success = false });
                 }
                 //===========check active period restriction========================
-                var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
-                if ((nYear < actuvePeriod.Y1) || (nYear > actuvePeriod.Y4))
+                var currentY = await _sjcServiceV2.GetCurrentYearAsync();
+                if ((nYear < currentY) || (nYear > currentY))
                 {
-                    return Json(new { msg = $"Година {nYear} е извън обхвата на активния период! Моля проверете!", success = false });
+                    return Json(new { msg = $"Година {nYear} е извън обхвата на текущия период! Моля проверете!", success = false });
                 }
                 //------check locked period------------
                 var checkLocked = await _sjcService.QueryRaw<KontoMonthDataLockedVm>($@"SELECT TOP 1 a.Id,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName 
@@ -245,8 +245,8 @@ namespace CielaDocs.SjcWeb.Controllers
                     return (0, 0);
                 }
                 //===========check active period restriction========================
-                var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
-                if ((nYear < actuvePeriod.Y1) || (nYear > actuvePeriod.Y4))
+                var currentY = await _sjcServiceV2.GetCurrentYearAsync();
+                if ((nYear < currentY) || (nYear > currentY))
                 {
                     return (0, 0);
                 }
@@ -344,6 +344,11 @@ namespace CielaDocs.SjcWeb.Controllers
 
             return PartialView("AddImportKontoLockedPartial");
 
+        }
+        [HttpGet]
+        public async Task<PartialViewResult> AnalizeKontoMonthDataPartial()
+        {
+            return PartialView("AnalizeKontoMonthDataPartial");
         }
     }
 }

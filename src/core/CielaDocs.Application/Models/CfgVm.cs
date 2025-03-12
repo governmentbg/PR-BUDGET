@@ -13,6 +13,7 @@ namespace CielaDocs.Application.Models
         public string OfficialCurrencyCode { get; set; }
         public decimal OfficialEuroRate { get; set; }
         public int DefaultCurrencyMeasureId { get; set; }
+        public int? CurrentYear { get; set; }
 
     }
 }

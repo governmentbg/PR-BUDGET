@@ -22,68 +22,96 @@
         <h3 style="color:red;">@ViewBag.AppMode</h3>
         <div class="container-flex">
             <div class="activeperiod-right">
-                <label for="currency" style="color:darkred;font-size:medium;">Активен период:@activePeriod?.Y1 г.(@cfg.OfficialCurrencyCode)</label>
+                <label for="currency" style="color:darkred;font-size:medium;">Текуща година:@cfg?.CurrentYear, Активен период:@activePeriod?.Y1 г.(@cfg.OfficialCurrencyCode)</label>
             </div>
         </div>
         <div class="spacer_10"></div>
+
         <div class="row">
             <div class="col-md-12">
-                <h4 class="section-titlepara">Въвеждане на данни</h4>
+                <h4 class="section-titlepara">Бюджетно планиране</h4>
+            </div>
+            <div class="border"></div>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+
+                <div class="capsule-at">
+                    <span id="cntExpiredCardMsg" class="badge badge-pill badge-info" title="Планиране" style="cursor:pointer;"></span>
+                    <div id="programFilter" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Highlighted-WF.png")" alt="." />
+                        <p class="button_text-at">Планиране по бюджетни програми</p>
+                        <p>Планиране по бюджетни програми</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+
+                <div class="capsule-at">
+                    <span id="cntExpiredCardMsg" class="badge badge-pill badge-info" title="Планиране на показатели по програми" style="cursor:pointer;"></span>
+                    <div id="indicatorFilter" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Finance.png")" alt="." />
+                        <p class="button_text-at">Планиране на показатели по бюджетни програми</p>
+                        <p>Планиране на показатели по бюджетни програми</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3" id="importPbKonto">
+                <div class="capsule-at">
+
+                    <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/ExcelOnline.png")" alt="." />
+                    <p class="button_text-at">Импорт на данни за проекто бюджет</p>
+                    <p>Импорт на данни за проекто бюджет за избран период...</p>
+
+                </div>
+
+            </div>
+            <div class="col-md-3" id="importIndicators">
+                <div class="capsule-at">
+
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Data-Import.png")" alt="." />
+                    <p class="button_text-at">Импорт на данни за показатели по програми</p>
+                    <p>Импорт на данни за показатели по бюджетни програми за избран период...</p>
+
+                </div>
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <h4 class="section-titlepara">Въвеждане на данни за @cfg?.CurrentYear г.</h4>
             </div>
             <div class="border"></div>
             </div>
 
             <div class="row">
+            <div class="col-md-3">
 
-                <div class="col-md-3">
-                   
-                    <div class="capsule-at">
-                        <span id="cntExpiredCardMsg" class="badge badge-pill badge-info" title="Планиране" style="cursor:pointer;"></span>
-                        <div id="programFilter" style="margin-top:10px;">
-                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Highlighted-WF.png")" alt="." />
-                            <p class="button_text-at">Планиране по бюджетни програми</p>
-                        <p>Планиране по бюджетни програми</p>
-                      </div>
+                <div class="capsule-at">
+                    <span id="cntExpiredCardMsg" class="badge badge-pill badge-info" title="Утвърден бюджет" style="cursor:pointer;"></span>
+                    <div id="approvedFilter" style="margin-top:10px;">
+                            <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Agreement-01.png")" alt="." />
+                        <p class="button_text-at">Утвърден бюджет</p>
+                        <p>Данни за утвърден бюджет за година</p>
                     </div>
                 </div>
+            </div>
             <div class="col-md-3">
-                  <div class="capsule-at">
-                        <div id="mainDataItemCtrl" style="margin-top:10px;">
-                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Data-add-WF.png")" alt="." />
-                            <p class="button_text-at">Входни данни</p>
-                            <p>Входни данни за изчисляване на показатели...</p>
-                        </div>
+                <div class="capsule-at">
+                    <div id="currentIndicatorFilter" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Bar.png")" alt="." />
+                        <p class="button_text-at">Проект за показатели за изпълнение</p>
+                        <p>Данни за показатели за изпълнение...</p>
                     </div>
+                </div>
             </div>
              <div class="col-md-3">
                 <div class="capsule-at">
                     <div id="mainDataCtrl" style="margin-top:10px;">
                         <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/calendar.png")" alt="." />
-                        <p class="button_text-at">Данни за показатели-месечни</p>
+                        <p class="button_text-at">Месечни данни за показатели</p>
                         <p>Данни за показатели и входни данни за отчетна единица...</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="capsule-at">
-                    <div id="mainPeriodDataCtrl" style="margin-top:10px;">
-                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/DateTime_01.png")" alt="." />
-                        <p class="button_text-at">Данни за показатели за период</p>
-                        <p>Данни за показатели за период...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-
-            <div class="col-md-3">
-
-                <div class="capsule-at">
-                    <span id="cntExpiredCardMsg" class="badge badge-pill badge-info" title="Планиране" style="cursor:pointer;"></span>
-                    <div id="approvedFilter" style="margin-top:10px;">
-                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Paper-WF.png")" alt="." />
-                        <p class="button_text-at">Утвърден бюджет</p>
-                        <p>Данни за утвърден бюджет за година</p>
                     </div>
                 </div>
             </div>
@@ -91,30 +119,12 @@
                 <div class="capsule-at">
 
                     <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Excel-Import.png")" alt="." />
-                    <p class="button_text-at">Импорт на данни от Конто</p>
-                    <p>Импорт на данни от Конто...</p>
+                    <p class="button_text-at">Импорт на месечни данни от Конто</p>
+                    <p>Импорт на месечни данни от Конто...</p>
 
                 </div>
 
             </div>
-            <div class="col-md-3" id="importPbKonto">
-                <div class="capsule-at">
-
-                    <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/ExcelOnline.png")" alt="." />
-                    <p class="button_text-at">Импорт на данни проекто бюджет</p>
-                    <p>Импорт на данни проекто бюджет за избран период...</p>
-
-                </div>
-
-            </div>
-            <div class="col-md-3" id="importVss">
-                <div class="capsule-at">
-                    <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Data-Import.png")" alt="." />
-                    <p class="button_text-at">Импорт на входни данни</p>
-                    <p>Импорт на входни данни за период...</p>
-                </div>
-            </div>
-        
          
         </div>
         <div class="row">
@@ -248,10 +258,11 @@ else{
             
             window.localStorage.setItem('OfficialCurrencyId', @cfg.OfficialCurrencyId);
             window.localStorage.setItem('ActiveYear', @activePeriod?.Y1);
+            window.localStorage.setItem('CurrentYear', @cfg?.CurrentYear);
             //global vars
             officialCurrencyId = window.localStorage.getItem('OfficialCurrencyId') ? Number(window.localStorage.getItem('OfficialCurrencyId')) : 0;
             activeYear = window.localStorage.getItem('ActiveYear') ? Number(window.localStorage.getItem('ActiveYear')) : 0;
-            
+            currentYear = window.localStorage.getItem('CurrentYear') ? Number(window.localStorage.getItem('CurrentYear')) : 0;
  
         $("#admin").on("click", function () {
             redirectme("@Url.Action("Index", "Home", new { area = "Admin" })");
@@ -265,6 +276,12 @@ else{
                 });
                 popup.show();
         });
+              $("#indicatorFilter").on("click", function () {
+                    popup.option({
+                        contentTemplate: () => popupContentTemplate(7)
+                    });
+                    popup.show();
+            });
             $("#approvedFilter").on("click", function () {
                 popup.option({
                     contentTemplate: () => popupContentTemplate(6)
@@ -286,6 +303,12 @@ else{
             $("#docarchive").on("click", function () {
             redirectme("@Url.Action("Index", "DocumentUploader")");
         });
+                 $("#currentIndicatorFilter").on("click", function () {
+                        popup.option({
+                            contentTemplate: () => popupContentTemplate(8)
+                        });
+                        popup.show();
+                    });
             $("#help").on("click", function () {
                 redirectme("@Url.Action("Index", "Help")");
             });
@@ -435,6 +458,14 @@ $('#btnAnySave').on('click', function() {
                     popup.hide();
                     applyApprovedDataFilter(e);
                     break;
+               case 'indicatorDataFilterOk':
+                    popup.hide();
+                    applyIndicatorDataFilter(e);
+                    break;
+               case 'currentIndicatorFilterOk': 
+                    popup.hide();
+                    applyCurrentIndicatorFilter(e);
+                    break;
             }
         }
         const popupContentTemplate = function (id) {
@@ -454,6 +485,10 @@ $('#btnAnySave').on('click', function() {
                     break;
                 case 6: cnturl = "@Url.Action("AddApprovedDataItemFilterPartial", "Home")";
                     break;
+                case 7: cnturl = "@Url.Action("AddIndicatorDataFilterPartial", "Home")";
+                        break;
+                case 8: cnturl = "@Url.Action("AddCurrentIndicatorFilterPartial", "Home")";
+                                break;
                 default: cnturl = "@Url.Action("AuthorshipPartial", "Home")";
                     break;
             }
@@ -585,6 +620,49 @@ $('#btnAnySave').on('click', function() {
                     DevExpress.ui.notify('Failed to set filter! ' + e);
                 });
         }
+             function applyIndicatorDataFilter(e) {
+                var itm = e.split('|');
+                $.ajax({
+                    beforeSend: function (request) {
+                        request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                    },
+
+                    url: "@Url.Action("SetIndicatorDataFilter", "Home")", method: 'POST', data: { functionalSubAreaId: itm[0], ny: itm[1],currencyId:itm[2],currencyMeasureId:itm[3],isLocked:itm[4] }
+
+                }).done(function (result) {
+                    if (result.success === true) {
+                        redirectme("@Url.Action("Index", "IndicatorDataItems")");
+                    }
+                    else {
+                        DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                    }
+                })
+                    .fail(function (e) {
+                        DevExpress.ui.notify('Failed to set filter! ' + e);
+                    });
+            }
+            function applyCurrentIndicatorFilter(e) {
+                        var itm = e.split('|');
+                        $.ajax({
+                            beforeSend: function (request) {
+                                request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                            },
+
+                            url: "@Url.Action("SetCurrentIndicatorFilter", "Home")", method: 'POST', data: { functionalSubAreaId: itm[0], ny: itm[1],currencyId:itm[2],currencyMeasureId:itm[3],isLocked:itm[4] }
+
+                        }).done(function (result) {
+                            if (result.success === true) {
+                                redirectme("@Url.Action("Index", "CurrentIndicatorData")");
+                            }
+                            else {
+                                DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                            }
+                        })
+                            .fail(function (e) {
+                                DevExpress.ui.notify('Failed to set filter! ' + e);
+                            });
+             }
+                    
         function applyPeriodDataItemFilter(e) {
             var itm = e.split('|');
             $.ajax({

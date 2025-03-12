@@ -103,8 +103,11 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<DraftBudgetDataVm>> GetDraftBudgetDataByCourtIdAsync(int? courtId, int? ny);
         Task<int?> Sp_InitProgramDataAsync(int? programNum, int? ny);
         Task<int?> Sp_InitProgramDataCourtAsync(int? programNum, int? ny);
+        Task<int?> Sp_InitIndicatorDataAsync(int? programNum, int? ny,int? budgetPeriodId);
+        Task<int?> Sp_InitIndicatorDataCourtAsync(int? programNum, int? ny, int? budgetPeriodId);
         Task<int?> Sp_UpdateProgramDataAsync(int? programNum, int? ny);
         Task<int?> Sp_UpdateProgramDataCourtAsync(int? programNum, int? ny);
+     
         Task<IEnumerable<IdNames>> GetCourtsInProgramData(int? programNum);
         Task<string> GetKontoCodesFromProgramDef(int? functionalSubAreaId, int? rowNum);
         Task<string> GetKontoCodesFromDraftBudgetDefByParAsync(string sPar);
@@ -116,6 +119,8 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<KontoCourtsYearVm>> GetKontoCourtsYearAsync(int? institutionTypeId, int? courtTypeId, int? courtId, int? ny, int? nmonth, int? reportTypeId);
         Task<int> CalculateProgramDataValues(int functionalSubAreaId, int rowNum, int plannedYear, decimal val);
         Task<int?> sp_RecalculateProgramDataAsync(int? functionalSubAreaId, int? ny);
+        Task<int?> sp_RecalculateApprovedBudgetAsync(int? functionalSubAreaId, int? ny);
+        Task<int?> sp_RecalculateApprovedBudgetCourtAsync(int? functionalSubAreaId, int? ny, int? courtId);
         Task<int?> sp_RecalculateProgramDataCourtAsync(int? functionalSubAreaId, int? ny, int? courtId);
         Task<int?> sp_UpdateProgramsByProgramDefAsync(int? Id);
         Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataGridAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? currencyId);
@@ -158,6 +163,10 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<ProgramDef3Y>> GetProgramDataInstitution3YCommonCurrencyAsync(int? programDefNum, int? ny, int displayCurrencyId);
         Task<IEnumerable<ProgramDef3Y>> GetProgramDataCourt3YCommonCurrencyAsync(int? programDefNum, int? ny, int displayCurrencyId);
         Task GetProgramDataCourt3YAsync(int v, int ny);
+        Task<IEnumerable<MainDataGridReport>> GetIndicatorsGridByFilterAsync(int functionalSubAreaId, int nm1, int nm2, int ny);
+        Task<IEnumerable<IndicatorData3Y>> GetIndicatorData3YAsync(int functionalSubAreaId, int ny);
+        Task<IEnumerable<IndicatorData1Y>> GetIndicatorData1YAsync(int functionalSubAreaId, int ny);
+        Task<int> UpdateMainDataCalculationValueByIdAsync(int? Id, double? nValue);
     }
   
 }

@@ -1,0 +1,142 @@
+﻿@using System.Linq
+@{
+
+    ViewBag.Title = "AnalizeMAinData";
+    Layout = null;
+}
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="spacer_10"></div>
+<div class="header-container">
+    <h6 style="margin: 0;">Анализ за въведени данни</h6>
+    <p>Програма:@ViewBag.FunctionalSubAreaName</p>
+</div>
+<div class="spacer_5"></div>
+<div id="typeOfResultFilter" style="width:180px;display:inline-block;padding-left:5px;"></div><div id="activePeriodFilter" style="width:180px;display:inline-block;padding-left:5px;"></div><div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="image-indicator"></div>
+<div id="gridProgramDataAnalize"></div>
+<div class="spacer_10"></div>
+<script>
+
+
+        $('#image-indicator').dxLoadIndicator({
+            indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
+        });
+
+    $(()=>{
+         let selectedtypeOfResultId;
+
+         let loadIndicator;
+         let ny;
+       loadIndicator = $('#image-indicator').dxLoadIndicator({
+                visible: false,
+            }).dxLoadIndicator('instance');
+            loadIndicator.option('visible', false);
+
+            $('#typeOfResultFilter').dxSelectBox({
+                dataSource: selectBoxResultTypeData,
+                value: 0,
+                valueExpr: 'id',
+                displayExpr: 'name',
+                label: "Вид резултат",
+                labelMode: "floating",
+                stylingMode:"underlined",
+                onValueChanged(data) {
+                    selectedtypeOfResultId = data.value;
+                    $("#gridProgramDataAnalize").dxDataGrid("instance").refresh();
+                },
+            });
+             $('#activePeriodFilter').dxSelectBox({
+                dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
+                    }
+                }),
+            }),
+            valueExpr: 'Id',
+            displayExpr: 'Name',
+                label: "Година",
+                labelMode: "floating",
+                stylingMode:"underlined",
+                onValueChanged(data) {
+                    ny = data.value;
+                    $("#gridProgramDataAnalize").dxDataGrid("instance").refresh();
+                },
+            });
+
+        $('#gridProgramDataAnalize').dxDataGrid({
+            dataSource: new DevExpress.data.DataSource({
+                store: new DevExpress.data.CustomStore({
+                    key: 'Id',
+                    load() {
+                        return sendRequest(Ciela.baseUrl + "Noms/ShowIndicatorDataAnalize", 'Get', {typeOfResultId: selectedtypeOfResultId??0,  ny: ny,functionalSubAreaId: Number(@ViewBag.FunctionalSubAreaId)});
+                    }
+                }),
+            }),
+            paging: {
+                pageSize: 10,
+            },
+            selection: {
+                mode: "single"
+            },
+            showBorders: true,
+            showRowLines: true,
+            columns: [
+                { dataField: 'Name', caption: 'Отчетна единица', width: "80%" },
+
+            ],
+
+            focusedRowEnabled: true,
+
+        });
+         const menuData = [
+            {
+                id: '1',
+                name: 'Експорт',
+                icon: Ciela.baseUrl+'images/exporter.svg',
+
+
+            }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+
+                        case '1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("CourtNames");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#gridProgramDataAnalize").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "MainDataanalize.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+    });
+</script>

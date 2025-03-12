@@ -26,11 +26,13 @@
             filter: alpha(opacity=0);
         }
 </style>
-<div class="spacer_20"></div>
+<div class="spacer_5"></div>
+<div style="display:inline-block;" id="menu"></div>
+<div class="spacer_5"></div>
 <h4>Импорт на месечни данни от Конто</h4>
 <div class="container-flex">
     <div class="activeperiod-right">
-        <label for="currency" style="color:darkred;font-size:medium;">Активен период:@activePeriod?.Y1 г.(@cfg.OfficialCurrencyCode)</label>
+        <label for="currency" style="color:darkred;font-size:medium;">Текуща година:@cfg?.CurrentYear г.(@cfg.OfficialCurrencyCode)</label>
     </div>
 </div>
 <form id="anyForm">
@@ -63,6 +65,7 @@
                         <div class="content" id="selected-files">
                         </div>
                     </div>
+                    <div id="btnEnteredData" style="float:right;margin-right:10px;"></div>
                     <div id="btnLock" style="float:right;margin-right:10px;"></div>
                 </div>
             </div>
@@ -92,7 +95,20 @@
         }).dxButton("instance");
 
 
-
+           const buttonCourts = $("#btnEnteredData").dxButton({
+        visible: true,
+        icon:Ciela.baseUrl+'images/input-data.svg',
+        hint:'Въведени данни',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "ImportKonto/AnalizeKontoMonthDataPartial", { }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Анализ на въведени данни',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
 
         $('#divUploading').hide();
 
@@ -386,6 +402,38 @@
     function getRootUrl(url) {
         return url.toString().replace(/^(.*\/\/[^\/?#]*).*$/, "$1");
     }
+    const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: Ciela.baseUrl+'images/back.png',
+
+
+        }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+                          case '1':
+                            window.location.href = Ciela.baseUrl;
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
 </script>
 <form>
     <div id="file-manager"></div>

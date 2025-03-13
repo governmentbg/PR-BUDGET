@@ -26,6 +26,7 @@ using MediatR;
 using DevExpress.XtraPrinting.Native;
 using CielaDocs.Application;
 using CielaDocs.Shared.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CielaDocs.SjcWeb.Controllers
 {
@@ -332,11 +333,14 @@ namespace CielaDocs.SjcWeb.Controllers
                             if (!string.IsNullOrEmpty(code))
                             {
                                 dic.Add(new DraftBudgetRow { Id = row, Code = code, Value1 = nv1, Value2 = nv2, Value3 = nv3, Value4=nv4 });
+                                 s += $"Id={row},Code={code},values1={nv1},values2={nv2}, value3={nv3}" + Environment.NewLine;
                             }
                             row++;
 
                         }
                     }
+                    var r = s;
+
                     //list of programs by court
                     var courtInPrograms = await _sjcRepo.GetCourtInProgramByCourtIdAsync(court?.Id);
                     nCnt = 0;
@@ -450,7 +454,7 @@ namespace CielaDocs.SjcWeb.Controllers
                         return Json(new { msg = $"Година {nYear} е извън обхвата на активния период! Моля проверете!", success = false });
                     }
                     //------check locked period------------
-                    var checkLocked = await _sjcService.QueryRaw<KontoPbInstitutionTypeLockedVm>($@"SELECT TOP 1 a.Id,a.InstitutionTypeId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbInstitutionTypeLocked a where a.CourtId={inst?.Id ?? 0} and a.Nyear={nYear}");
+                    var checkLocked = await _sjcService.QueryRaw<KontoPbInstitutionTypeLockedVm>($@"SELECT TOP 1 a.Id,a.InstitutionTypeId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbInstitutionTypeLocked a where a.InstitutionTypeId={inst?.Id ?? 0} and a.Nyear={nYear}");
 
                     if (checkLocked != null)
                     {
@@ -494,7 +498,7 @@ namespace CielaDocs.SjcWeb.Controllers
 
                         }
                     }
-
+                    
 
                     //list of programs by court
                     var instInPrograms = await _sjcRepo.GetInstitutionInProgramByInstitutionTypeIdAsync(inst?.Id);
@@ -572,6 +576,101 @@ namespace CielaDocs.SjcWeb.Controllers
             
             return Json(new { msg = "", success = true });
         }
-      
+        [HttpPost]
+        public async Task<JsonResult> AnalizeDraftCodes(SpreadsheetClientState spreadsheetState, int? importType, string? fileName)
+        {
+
+            var id = $"{Guid.NewGuid().ToString("N")}{fileName}";
+            string file = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", id);
+            var spreadsheet = SpreadsheetRequestProcessor.GetSpreadsheetFromState(spreadsheetState);
+
+            spreadsheet.SaveCopy(file);
+          
+                try
+                {
+                    string s = string.Empty;
+                    // Check the File is received
+                    int nCnt = 0;
+                    if (string.IsNullOrWhiteSpace(id))
+                        return Json(new { msg = "Невалиден файл за зареждане на данни", success = false });
+
+
+                    var supportedTypes = new[] { "xlsm", "xlsx" };
+                    var fileExt = System.IO.Path.GetExtension(id).Substring(1);
+                    if (!supportedTypes.Contains(fileExt))
+                    {
+                        return Json(new { msg = "Невалиден файл за зареждане на данни. Задължително изберете файл с разширение .xlsm,.xlsx ", success = false });
+                    }
+                    string sFileNameOnly = System.IO.Path.GetFileNameWithoutExtension(id);
+                    var excelHeaderData = GetExcelFileHeaderByName(fileName);
+
+                    int nYear = (int)excelHeaderData.Item2;
+
+
+                    List<IdNames> excelProgCodes = new List<IdNames>();
+                    using (var excelWorkbook = new XLWorkbook(file))
+                    {
+                        var nonEmptyDataRows = excelWorkbook.Worksheet(1).RowsUsed();
+                        var rowCount = excelWorkbook.Worksheet(1).LastRowUsed().RowNumber();
+                        var columnCount = excelWorkbook.Worksheet(1).LastColumnUsed().ColumnNumber();
+                        int row = 9;
+                        string code = string.Empty;
+                        
+
+                        while (row <= rowCount)
+                        {
+                            code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 8).GetString();
+
+                            if (!string.IsNullOrEmpty(code))
+                            {
+                                excelProgCodes.Add(new IdNames { Id = row, Name = code?.Trim() });
+
+                            }
+                            row++;
+
+                        }
+                    }
+                    var r = s;
+
+
+                    nCnt = 0;
+                    
+
+                    var programDefCodes = await _sjcRepo.QueryRawListAsync<string>("Select ProgCode from ProgramDef where ProgCode is not null or progCode=''");
+                    StringBuilder sb = new StringBuilder();
+                    char[] delimiterChars = new char[] { ';', ',', ':' };
+                    foreach (var code in excelProgCodes) {
+                        string[] StringArray = code?.Name?.Split(delimiterChars, StringSplitOptions.RemoveEmptyEntries);
+                        foreach (var item in StringArray) {
+                            bool containsItem = programDefCodes.Contains(item?.Trim());
+                        if (!containsItem)
+                        {
+                            sb.AppendLine($"row:{code?.Id}, code:{item?.Trim()} doesn`t exists in ProgramCodes");
+                        }
+                            else {
+                            sb.AppendLine($"row:{code?.Id}, code:{item?.Trim()} is FOUND in ProgramCodes");
+                        }
+                        }
+                    }
+                    var resultfile = $"output_{Guid.NewGuid().ToString("N")}.txt";
+                    string resultfilepath = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", resultfile);
+                    using (StreamWriter writer = new StreamWriter(resultfilepath, false, Encoding.UTF8))
+                    {
+                        writer.Write(sb.ToString());
+                    }
+                    return Json(new { msg = resultfile, success = true });
+                }
+                catch (Exception ex) {
+                    return Json(new { msg = $"Грешка при анализ на кодове:{ex?.StackTrace?.ToString()} ", success = false });
+                }
+         }
+        [AllowAnonymous]
+        public FileResult DownloadFile(string id)
+        {
+
+            string pdfresult = Path.Combine(_env.WebRootPath, $"Temp/{id}");
+            byte[] data = System.IO.File.ReadAllBytes(pdfresult);
+            return File(data, "text/plain", id);
+        }
     }
 }

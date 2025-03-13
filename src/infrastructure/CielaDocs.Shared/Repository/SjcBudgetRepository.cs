@@ -1310,7 +1310,7 @@ namespace CielaDocs.Shared.Repository
 
                   left join Court co on a.CourtId=co.Id
 
-	              where a.FunctionalSubAreaId={programDefNum??0} and a.PlannedYear={ny} and a.CourtId={courtId ?? 0} and a.IsActive=1";
+	              where a.FunctionalSubAreaId={programDefNum??0} and a.PlannedYear={ny} and a.CourtId={courtId ?? 0} and a.IsActive=1 order by a.id";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
@@ -1351,7 +1351,7 @@ namespace CielaDocs.Shared.Repository
                                   ) t4
                           on      t4.FunctionalSubAreaId=a.FunctionalSubAreaId and t4.RowNum=a.RowNum and t4.PlannedYear={ny + 3}
 
-	              where a.FunctionalSubAreaId={programDefNum ?? 0}  and a.IsActive=1";
+	              where a.FunctionalSubAreaId={programDefNum ?? 0}  and a.IsActive=1 order by a.id";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
@@ -1532,7 +1532,7 @@ namespace CielaDocs.Shared.Repository
                                   ) t4
                           on      t4.FunctionalSubAreaId=a.FunctionalSubAreaId and t4.RowNum=a.RowNum and t4.PlannedYear=@NY3
 
-	              where a.FunctionalSubAreaId=@ProgramDefNum  and a.IsActive=1";
+	              where a.FunctionalSubAreaId=@ProgramDefNum  and a.IsActive=1 order by a.id";
 
 
             var parameters = new
@@ -1560,7 +1560,7 @@ namespace CielaDocs.Shared.Repository
                   left join ProgramDataInstitution d on a.FunctionalSubAreaId=d.FunctionalSubAreaId and a.RowNum=d.RowNum and a.InstitutionTypeId=d.InstitutionTypeId and d.PlannedYear=a.PlannedYear+3
                   left join InstitutionType co on a.InstitutionTypeId=co.Id
 
-	              where a.FunctionalSubAreaId={programDefNum ?? 0} and a.PlannedYear={ny} and a.InstitutionTypeId={institutionTypeId ?? 0} and a.IsActive=1";
+	              where a.FunctionalSubAreaId={programDefNum ?? 0} and a.PlannedYear={ny} and a.InstitutionTypeId={institutionTypeId ?? 0} and a.IsActive=1 order by a.id";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
@@ -1598,7 +1598,7 @@ namespace CielaDocs.Shared.Repository
                                         WHEN @DisplayCurrencyId = 1 AND c.CurrencyId = 0 THEN c.NValue / @OfficialEuroRate  -- BGN → EUR
                                         ELSE c.NValue 
                                     END, 2) AS Nval3,
-,
+
                                 ROUND(
                                     CASE 
                                         WHEN @DisplayCurrencyId = 0 AND d.CurrencyId = 1 THEN d.NValue * @OfficialEuroRate  -- EUR → BGN

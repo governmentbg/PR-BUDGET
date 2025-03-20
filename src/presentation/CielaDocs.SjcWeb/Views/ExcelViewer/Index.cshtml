@@ -102,6 +102,7 @@
                         }
                         else {
                             DevExpress.ui.dialog.alert('Данните бяха заредени', 'Информация');
+                             window.location = "@Url.Action("DownloadFile", "ExcelViewer")" + '?id=' + result.resultfile;
                         }
                     },
                     error: function (xhr, status, p3, p4) {

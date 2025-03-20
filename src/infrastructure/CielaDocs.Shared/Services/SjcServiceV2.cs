@@ -61,6 +61,7 @@ namespace CielaDocs.Shared.Services
         public async Task<int> UpdateIndicatorData1YValueByIdAsync(int? id, string fieldName, decimal? val, int? nYear) { return await _repo.UpdateIndicatorData1YValueByIdAsync(id,fieldName, val,nYear); }
         public async Task<int> UpdateIndicatorDataCourt1YValueByIdAsync(int? id, string fieldName, decimal? val) { return await _repo.UpdateIndicatorDataCourt1YValueByIdAsync(id, fieldName, val); }
         public async Task<IEnumerable<IndicatorDataCourt1Y>> GetIndicatorDataCourt1YByCourtIdAsync(int? functionalSubAreaId, int? ny, int? courtId) { return await _repo.GetIndicatorDataCourt1YByCourtIdAsync(functionalSubAreaId, ny, courtId); }
+        public async Task<int?> SpEndCurrentYearDataAsync() { return await _repo.SpEndCurrentYearDataAsync(); }
 
 
     }

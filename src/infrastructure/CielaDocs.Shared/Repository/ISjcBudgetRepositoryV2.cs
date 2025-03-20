@@ -30,6 +30,7 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<ProgramDataInstitutionHVm>> GetProgramDataInstitutionForEndingPeriod(int id);
         Task<int> InsertIntoProgramDataInstitutionHAsync(ProgramDataInstitutionHVm data, int periodId);
         Task<int?> SpDeleteEndPeriodDataAsync(int budgetPeriodId);
+        Task<int?> SpEndCurrentYearDataAsync();
         Task<IEnumerable<MetricsFieldInProgramVm>> GetMetricsFieldInProgramByMainIndicatorIdAsync(int? id);
         Task<IEnumerable<MetricsFieldInProgramItemVm>> CreateMetricsFieldInProgramItemExists(MainData md);
         Task<IEnumerable<MetricsFieldInProgramItemVm>> GetMetricsFieldInProgramItemByMainIndicatorsId(int id, int? courtId, int? nm, int? ny);

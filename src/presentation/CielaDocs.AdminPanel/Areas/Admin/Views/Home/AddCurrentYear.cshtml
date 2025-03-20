@@ -1,0 +1,110 @@
+﻿@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet2 = antiforgery.GetAndStoreTokens(Context);
+
+}
+<style>
+    .select2-container--open {
+        z-index: 9999999
+    }
+</style>
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+            <p style="color:red;">Текуща бюджетна година:@ViewBag.CurrentYear</p>
+            <div class="row">
+                <div class="col-6">
+                    <div class="form-group">
+                        <label for="nyear">Нова текуща бюджетна година</label>
+                        <div id="selectBoxYear"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="spacer_10"></div>
+        <div id="loading-indicator"></div>
+        <div style="float:right;margin-right:10px;margin-bottom:10px;">
+            <div id="okBtn"></div>
+            <div id="closeBtn"></div>
+        </div>
+    </div>
+</form>
+<script>
+      $('#loading-indicator').dxLoadIndicator({
+        indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
+    });
+    $(() => {
+        let ny = 0;
+         loadIndicator = $('#loading-indicator').dxLoadIndicator({
+            visible: false,
+        }).dxLoadIndicator('instance');
+        loadIndicator.option('visible', false);
+
+        $("#selectBoxYear").dxSelectBox({
+           dataSource: selectBoxYearData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            onValueChanged: function (e) {
+               ny=e.value;
+            }
+
+        });
+
+
+
+        //-------------buttons--------------
+        $('#okBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                if (ny<2025) {
+                    DevExpress.ui.dialog.alert('Изберете задължително година за новия текущ бюджетен период. Годината следва да е >2024 г.','Внимание');
+                    return;
+                }
+                addNewCurrentYear(ny)
+            },
+        });
+        $('#closeBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                mainPopup.hide();
+            },
+        });
+
+         function addNewCurrentYear(id){
+
+              var result = DevExpress.ui.dialog.confirm(`Потвърдете създаването на новия текущ бюджетен период ${id} г. Всички данни от текущия бюджетен период ще бъдат изтрити`, "Потвърждение");
+                             result.done(function (dialogResult) {
+                                 if (dialogResult === true) {
+                                       loadIndicator.option('visible', true);
+                                       $("#okBtn").dxButton("option", "disabled", true);
+                                     $.ajax({
+                                         beforeSend: function (request) {
+                                         request.setRequestHeader('@tokenSet2.HeaderName', '@tokenSet2.RequestToken')
+                                         },
+                                         url: EduDl.baseUrl + "Home/AddNewCurrentYear", data: {ny:id }, method: 'POST'
+                                     })
+                                         .done(function (result) {
+                                              loadIndicator.option('visible', false);
+                                              $("#okBtn").dxButton("option", "disabled", false);
+                                              DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                              loadIndicator.option('visible', false);
+                                              $("#okBtn").dxButton("option", "disabled", false);
+                                             DevExpress.ui.notify('Грешка при създаване на нов текущ период.');
+                                         });
+                                 }
+                             });
+        }
+    });
+
+</script>

@@ -1623,7 +1623,8 @@ namespace CielaDocs.Shared.Repository
                             WHERE a.FunctionalSubAreaId = @ProgramDefNum 
                             AND a.PlannedYear = @NY 
                             AND a.InstitutionTypeId = @InstitutionTypeId 
-                            AND a.IsActive = 1";
+                            AND a.IsActive = 1 
+                            Order by a.id ";
 
                                     var parameters = new
                                     {

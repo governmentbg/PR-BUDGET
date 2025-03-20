@@ -515,6 +515,15 @@ t1.PlannedYear as PlannedYear1,t2.PlannedYear as PlannedYear2,t3.PlannedYear as 
             var ret = await connection.ExecuteAsync("sp_DeleteEndPeriodData", parameters, commandType: CommandType.StoredProcedure);
             return ret;
         }
+        public async Task<int?> SpEndCurrentYearDataAsync()
+        {
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            DynamicParameters parameters = new DynamicParameters();
+            var ret = await connection.ExecuteAsync("sp_EndCurrentYear", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
+        }
         public async Task<IEnumerable<MetricsFieldInProgramVm>> GetMetricsFieldInProgramByMainIndicatorIdAsync(int? id)
         {
             string sql = $@"SELECT [Id]

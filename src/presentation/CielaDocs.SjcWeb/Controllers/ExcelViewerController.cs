@@ -243,7 +243,10 @@ namespace CielaDocs.SjcWeb.Controllers
         [HttpPost]
         public async Task<JsonResult> LoadExcelFileToTable(SpreadsheetClientState spreadsheetState, int? importType, string? fileName)
         {
-            
+  
+            StringBuilder sb = new StringBuilder();
+
+
             var id = $"{Guid.NewGuid().ToString("N")}{fileName}";
             string file = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", id);
             var spreadsheet = SpreadsheetRequestProcessor.GetSpreadsheetFromState(spreadsheetState);
@@ -367,7 +370,7 @@ namespace CielaDocs.SjcWeb.Controllers
                                     foreach (var prowDef in programDefCodes)
                                     {
 
-                                        var progCode = prowDef?.ProgCode;
+                                        var progCode = prowDef?.ProgCode?.Trim();
                                         if (string.IsNullOrWhiteSpace(progCode)) continue;
                                         decimal? nval = 0;
 
@@ -389,7 +392,7 @@ namespace CielaDocs.SjcWeb.Controllers
                                                 break;
 
                                         }
-
+                                        sb.AppendLine($"CourtId:{item?.CourtId}, FunctionalSubAreaId:{prowDef?.FunctionalSubAreaId ?? 0} rowNum={prowDef?.RowNum} year={yearItem} val={nval}, progCode='{progCode}'");
                                         // s += $"CourtId={item?.CourtId},FunctionalSubAreaId={prowDef?.FunctionalSubAreaId ?? 0},rowNum={prowDef?.RowNum},nYear={yearItem}, nval={nval}, progCode={progCode}" + Environment.NewLine;
                                         _ = await _sjcRepo.ProgramDataDraftBudgetCourtAsync(item?.CourtId, prowDef?.FunctionalSubAreaId ?? 0, prowDef?.RowNum, yearItem, nval);
                                         nCnt++;
@@ -401,7 +404,15 @@ namespace CielaDocs.SjcWeb.Controllers
                         }
                     }
                     // var z = s;
-                    return Json(new { msg = $"Бяха заредени данни за {nCnt} записа", success = true });
+                    //------------------------------------------------------------------------------
+                    var resultfile = $"import_{Guid.NewGuid().ToString("N")}.txt";
+                    string resultfilepath = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", resultfile);
+                    using (StreamWriter writer = new StreamWriter(resultfilepath, false, Encoding.UTF8))
+                    {
+                        writer.Write(sb.ToString());
+                    }
+                    //-------------------------------------------------------------------------------
+                    return Json(new { msg = $"Бяха заредени данни за {nCnt} записа", success = true, resultfile = resultfile });
 
 
                 }
@@ -526,14 +537,15 @@ namespace CielaDocs.SjcWeb.Controllers
                                     foreach (var prowDef in programDefCodes)
                                     {
 
-                                        var progCode = prowDef?.ProgCode;
-                                        if (string.IsNullOrWhiteSpace(progCode)) continue;
+                                        var progCode = prowDef?.ProgCode?.Trim();
+                                        if (string.IsNullOrWhiteSpace(progCode?.Trim())) continue;
                                         decimal? nval = 0;
                                         //test only
                                         //if (progCode == "01.01.03.K") {
                                         //    var dicTest = dic.Where(x => x.Code.ContainsWord(progCode)).ToList();
                                         //}
                                         //end test
+                                        
                                         var dicFiltered = dic.Where(x => x.Code.ContainsWord(progCode)).ToList();
 
                                         switch (nYIndex)
@@ -552,7 +564,7 @@ namespace CielaDocs.SjcWeb.Controllers
                                                 break;
 
                                         }
-
+                                        sb.AppendLine($"ItemTypeId:{item?.InstitutionTypeId}, FunctionalSubAreaId:{prowDef?.FunctionalSubAreaId ?? 0} rowNum={prowDef?.RowNum} year={yearItem} val={nval}, progCode='{progCode}'");
                                         // s += $"CourtId={item?.CourtId},FunctionalSubAreaId={prowDef?.FunctionalSubAreaId ?? 0},rowNum={prowDef?.RowNum},nYear={yearItem}, nval={nval}, progCode={progCode}" + Environment.NewLine;
                                         _ = await _sjcRepo.ProgramDataDraftBudgetInstitutionAsync(item?.InstitutionTypeId, prowDef?.FunctionalSubAreaId ?? 0, prowDef?.RowNum, yearItem, nval);
                                         nCnt++;
@@ -564,7 +576,15 @@ namespace CielaDocs.SjcWeb.Controllers
                         }
                     }
                     // var z = s;
-                    return Json(new { msg = $"Бяха заредени данни за {nCnt} записа", success = true });
+                    //------------------------------------------------------------------------------
+                    var resultfile = $"import_{Guid.NewGuid().ToString("N")}.txt";
+                    string resultfilepath = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", resultfile);
+                    using (StreamWriter writer = new StreamWriter(resultfilepath, false, Encoding.UTF8))
+                    {
+                        writer.Write(sb.ToString());
+                    }
+                    //-------------------------------------------------------------------------------
+                    return Json(new { msg = $"Бяха заредени данни за {nCnt} записа", success = true ,resultfile= resultfile });
 
 
                 }
@@ -574,7 +594,7 @@ namespace CielaDocs.SjcWeb.Controllers
                 }
             }
             
-            return Json(new { msg = "", success = true });
+            return Json(new { msg = "", success = false });
         }
         [HttpPost]
         public async Task<JsonResult> AnalizeDraftCodes(SpreadsheetClientState spreadsheetState, int? importType, string? fileName)

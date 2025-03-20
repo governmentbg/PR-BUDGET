@@ -46,6 +46,7 @@ namespace CielaDocs.Shared.Services
         Task<int> UpdateIndicatorData1YValueByIdAsync(int? id, string fieldName, decimal? val, int? nYear);
         Task<int> UpdateIndicatorDataCourt1YValueByIdAsync(int? id, string fieldName, decimal? val);
         Task<IEnumerable<IndicatorDataCourt1Y>> GetIndicatorDataCourt1YByCourtIdAsync(int? functionalSubAreaId, int? ny, int? courtId);
+        Task<int?> SpEndCurrentYearDataAsync();
 
 
 

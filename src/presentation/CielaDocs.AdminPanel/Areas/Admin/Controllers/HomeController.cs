@@ -240,6 +240,11 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         }
 
         public PartialViewResult AddBudgetPeriodPartial() => PartialView("AddBudgetPeriodPartial");
+        public async Task<PartialViewResult> AddCurrentYear()
+        {
+            ViewBag.CurrentYear = await _sjcService.QueryRaw<int>($"Select CurrentYear from Cfg");
+           return PartialView("AddCurrentYear"); 
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<JsonResult> AddNewActivePeriod(int ny)
@@ -300,6 +305,49 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             }
             catch (Exception ex) {
                 return Json(new { msg = $"Създаването на новия активен бюджетен период завърши с грешка {ex?.Message} ", success = false });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> AddNewCurrentYear(int ny)
+        {
+            var empl = await Mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if ((!empl.CanAdd) && (!empl.CanUpdate))
+            {
+                return Json(new { msg = "Нямате предоставени права да добавяте/редактирате данни ", success = false, id = 0 });
+            }
+
+            try
+            {
+                _ = await _sjcServiceV2.SpEndCurrentYearDataAsync();
+
+                int? newId = await _sjcService.ExecuteRawSql($@"Update Cfg set CurrentYear={ny}");
+            
+
+                    for (int i = 1; i <= 9; i++)
+                    {
+
+                        _ = await _sjcRepo.Sp_InitProgramDataAsync(i, ny);
+                       _ = await _sjcRepo.Sp_InitProgramDataInstitutionAsync(i, ny);
+
+                    }
+                    for (int i = 1; i <= 9; i++)
+                    {
+
+                        _ = await _sjcRepo.Sp_UpdateProgramDataAsync(i, ny);
+                        _ = await _sjcRepo.Sp_UpdateProgramDataInstitutionAsync(i, ny);
+
+                    }
+                
+
+
+                return Json(new { msg = $"Създаването на новата текуща бюджетна година завърши", success = true });
+
+            }
+            catch (Exception ex)
+            {
+                return Json(new { msg = $"Създаването на новата текуща бюджетна година завърши с грешка {ex?.Message} ", success = false });
             }
         }
     }

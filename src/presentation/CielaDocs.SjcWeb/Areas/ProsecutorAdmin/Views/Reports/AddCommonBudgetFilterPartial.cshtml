@@ -19,26 +19,7 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-4">
-                    <div class="form-group">
-                        <label for="m1">От месец</label>
-                        <div id="m1"></div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="form-group">
-                        <label for="m2">До месец</label>
-                        <div id="m2"></div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="form-group">
-                        <label for="nyear">За година</label>
-                        <div id="selectBoxYear"></div>
-                    </div>
-                </div>
-            </div>
+
         </div>
         <div class="spacer_10"></div>
         <div style="float:right;margin-right:10px;margin-bottom:10px;">
@@ -49,43 +30,8 @@
 </form>
 <script>
     $(() => {
-        let ny = 0;
-        let nm1 = 0;
-        let nm2 = 0;
-        $("#m1").dxSelectBox({
-            dataSource: selectBoxMonthData,
-            valueExpr: 'id',
-            displayExpr: 'name',
-            onValueChanged: function (e) {
-                nm1 = e.value;
-            }
 
-        });
-        $("#m2").dxSelectBox({
-            dataSource: selectBoxMonthData,
-            valueExpr: 'id',
-            displayExpr: 'name',
-            onValueChanged: function (e) {
-                nm2 = e.value;
-            }
 
-        });
-        $("#selectBoxYear").dxSelectBox({
-              dataSource: new DevExpress.data.DataSource({
-                store: new DevExpress.data.CustomStore({
-                    key: 'Id',
-                    load() {
-                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
-                    }
-                }),
-            }),
-            valueExpr: 'Id',
-            displayExpr: 'Name',
-            onValueChanged: function (e) {
-                ny = e.value;
-            }
-
-        });
            let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
              .then(data =>{
                 if(!isEmpty(data)){
@@ -102,11 +48,8 @@
             type: 'normal',
             width: 120,
             onClick() {
-                if ((nm1 == 0) || (nm2 == 0) || (ny == 0)) {
-                    DevExpress.ui.dialog.alert('Изберете задължително начален, краен месец и година', 'Внимание');
-                    return;
-                }
-                window.parent.OnClosePopupEventHandlerEx('commonBudgetFilterOk', ''.concat(nm1, "|", nm2, "|", ny));
+
+                window.parent.OnClosePopupEventHandlerEx('commonBudgetFilterOk', activeYear);
             },
         });
         $('#closeCommonFilterBtn').dxButton({

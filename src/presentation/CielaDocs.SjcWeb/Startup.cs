@@ -47,7 +47,10 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace CielaDocs.SjcWeb
 {
@@ -199,9 +202,10 @@ namespace CielaDocs.SjcWeb
                     throw new Exception("IdPSsoDescriptor not loaded from metadata.");
                 }
 
+               
                 return saml2Configuration;
             });
-            //services.AddSaml2(slidingExpiration: true);
+            //// do not add services.AddSaml2();
             services.AddHttpClient();
         }
 

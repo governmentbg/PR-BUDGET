@@ -12,16 +12,7 @@
 
         <div class="container-fluid">
           
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <div class="lock-container">
-                                <input type="text" readonly id="aciveperiodparams" class="lock-result">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-               <div class="row">
+           <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
                         <label for="cbFunctionalArea">Функционална област</label>
@@ -83,10 +74,11 @@
         </div>
         <div class="spacer_10"></div>
         <div style="float:right;margin-right:10px;margin-bottom:10px;">
-           
+            <div id="dxContextMenu"></div>
             <div id="btnLockedView"></div>
-        <div id="okFilterBtn"></div>
-        <div id="closeFilterBtn"></div>
+            <div id="btnEnteredData"></div>
+            <div id="okFilterBtn"></div>
+            <div id="closeFilterBtn"></div>
         </div>
     </div>
 </form>
@@ -108,6 +100,21 @@
                 height: $(window).height() - 150,
                 width: $(window).width() - 800,
                 title: 'Заключени периоди',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+
+         const buttonCourts = $("#btnEnteredData").dxButton({
+        visible: true,
+        icon:Ciela.baseUrl+'images/input-data.svg',
+        hint:'Въведени данни',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Home/AnalizeMainDataPartial", { functionalSubAreaId: functionalSubAreaId,courtTypeId:courtTypeId,nm:nm, ny: ny }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Анализ на въведени данни',
             });
             mainRightReadOnlyPopup.show();
         }
@@ -296,15 +303,6 @@
             },
         });
          async function checkData(){
-            let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
-             .then(data =>{
-                if(!isEmpty(data)){
-                    $('#aciveperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
-                }
-                else {
-                      $('#aciveperiodparams').val('');
-                }
-             });
       // Trigger your custom logic here
          let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod3Locked", { programId: functionalSubAreaId,courtId:courtId,nm:nm, ny: ny })
              .then(data =>{

@@ -17,6 +17,7 @@ namespace CielaDocs.Application.Common.Constants
         public const string LogMsgForbiddenAdd = "Нямате предоставени права да добавяте данни";
         public const string LogMsgForbiddenEdit = "Нямате предоставени права да редактирате данни";
         public const string LogMsgForbiddenDel = "Нямате предоставени права да изтривате данни";
-
+        public const string cryptKey = "124578";
+        public const string cryptIv = "securityword1!";
     }
 }

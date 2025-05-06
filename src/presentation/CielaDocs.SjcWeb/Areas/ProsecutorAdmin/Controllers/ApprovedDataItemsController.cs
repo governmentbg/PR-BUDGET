@@ -90,7 +90,6 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
         }
         private string ReplaceCalculationFormula(string Source, Dictionary<string, string> dic)
         {
-            // string result=string.Empty;
             foreach (var (key, value) in dic)
             {
                 int Place = Source.IndexOf(key);
@@ -155,6 +154,19 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
         {
             var data = await _sjcRepo.GetCourtsInProgramData(functionalSubAreaId);
             return Json(data.ToList());
+        }
+        public async Task<JsonResult> RecalculateGrid(int? functionalSubAreaId, int? nyear)
+        {
+            try
+            {
+                _ = await _sjcRepo.sp_RecalculateApprovedBudgetAsync(functionalSubAreaId ?? 0, nyear ?? 0);
+
+                return Json(new { error = string.Empty });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
         }
     }
 }

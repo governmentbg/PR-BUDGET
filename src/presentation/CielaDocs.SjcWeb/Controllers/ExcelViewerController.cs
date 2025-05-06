@@ -27,6 +27,7 @@ using DevExpress.XtraPrinting.Native;
 using CielaDocs.Application;
 using CielaDocs.Shared.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Text.RegularExpressions;
 
 namespace CielaDocs.SjcWeb.Controllers
 {
@@ -335,8 +336,8 @@ namespace CielaDocs.SjcWeb.Controllers
                             decimal.TryParse(value4, out nv4);
                             if (!string.IsNullOrEmpty(code))
                             {
-                                dic.Add(new DraftBudgetRow { Id = row, Code = code, Value1 = nv1, Value2 = nv2, Value3 = nv3, Value4=nv4 });
-                                 s += $"Id={row},Code={code},values1={nv1},values2={nv2}, value3={nv3}" + Environment.NewLine;
+                                dic.Add(new DraftBudgetRow { Id = row, Code = Regex.Replace(code, @"\s+", ""), Value1 = nv1, Value2 = nv2, Value3 = nv3, Value4 = nv4 });
+                                s += $"Id={row},Code={code},values1={nv1},values2={nv2}, value3={nv3}" + Environment.NewLine;
                             }
                             row++;
 
@@ -370,7 +371,8 @@ namespace CielaDocs.SjcWeb.Controllers
                                     foreach (var prowDef in programDefCodes)
                                     {
 
-                                        var progCode = prowDef?.ProgCode?.Trim();
+                                        if (prowDef?.ProgCode is null) continue;
+                                        var progCode = Regex.Replace(prowDef.ProgCode, @"\s+", "");
                                         if (string.IsNullOrWhiteSpace(progCode)) continue;
                                         decimal? nval = 0;
 
@@ -502,8 +504,8 @@ namespace CielaDocs.SjcWeb.Controllers
                             decimal.TryParse(value4, out nv4);
                             if (!string.IsNullOrEmpty(code))
                             {
-                                dic.Add(new DraftBudgetRow { Id = row, Code = code, Value1 = nv1, Value2 = nv2, Value3 = nv3 ,Value4=nv4});
-                                // s += $"Id={row},Code={code},values1={nv1},values2={nv2}, value3={nv3}" + Environment.NewLine;
+                                dic.Add(new DraftBudgetRow { Id = row, Code = Regex.Replace(code, @"\s+", ""), Value1 = nv1, Value2 = nv2, Value3 = nv3, Value4 = nv4 });
+
                             }
                             row++;
 
@@ -537,7 +539,8 @@ namespace CielaDocs.SjcWeb.Controllers
                                     foreach (var prowDef in programDefCodes)
                                     {
 
-                                        var progCode = prowDef?.ProgCode?.Trim();
+                                        if (prowDef?.ProgCode is null) continue;
+                                        var progCode = Regex.Replace(prowDef.ProgCode, @"\s+", "");
                                         if (string.IsNullOrWhiteSpace(progCode?.Trim())) continue;
                                         decimal? nval = 0;
                                         //test only

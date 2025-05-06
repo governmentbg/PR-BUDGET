@@ -25,7 +25,11 @@ using Microsoft.Graph;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using NuGet.Configuration;
+
 using System.Data;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CielaDocs.SjcWeb.Controllers
 {
@@ -74,6 +78,7 @@ namespace CielaDocs.SjcWeb.Controllers
         //[ValidateAntiForgeryToken]
         public async Task<JsonResult> LoadCustomExcelFile(string id, bool? isOverwrite)
         {
+            StringBuilder sb = new StringBuilder();
             try
             {
           
@@ -145,7 +150,7 @@ namespace CielaDocs.SjcWeb.Controllers
                             if (decimal.TryParse(value, out decimal d))
                             {
 
-                                dic.Add(new KontoRow { Id = row, Code = code, Value = d });
+                                dic.Add(new KontoRow { Id = row, Code = Regex.Replace(code, @"\s+", ""), Value = d });
                             }
                         }
  
@@ -163,10 +168,20 @@ namespace CielaDocs.SjcWeb.Controllers
                     if (string.IsNullOrWhiteSpace(kCodes)) continue;
                     decimal? nval = 0;
                     var KontoCodesList=kCodes.Split(',');
-                    foreach (var kCode in KontoCodesList) { 
-                        var foundItem=dic.Where(x=>x.Code==kCode).ToList();
-                        if (!foundItem.Any()) continue;
-                       nval+=foundItem.Sum(x => x.Value);
+                    foreach (var kCode in KontoCodesList) {
+                        var code = Regex.Replace(kCode, @"\s+", "");
+                        if (string.IsNullOrWhiteSpace(code)) continue;
+                        var foundItem=dic.Where(x=>x.Code.ContainsWord(code)).ToList();
+                        if (!foundItem.Any())
+                        {
+                            sb.AppendLine($"Not found code='{code}'");
+                            continue;
+                        }
+                        else
+                        {
+                            sb.AppendLine($"Found code='{code}', sum value={foundItem.Sum(x => x.Value)}");
+                            nval += foundItem.Sum(x => x.Value);
+                        }
                     }
                     KontoMonthDataVm dataVm = new KontoMonthDataVm()
                     {
@@ -182,12 +197,21 @@ namespace CielaDocs.SjcWeb.Controllers
                         CurrencyMeasureId = 0,
                         Datum = DateTime.Now,
                     };
+                  
                     _ = await _sjcRepo.AddUpdateKontoMonthData(dataVm);
                     _ = await _sjcRepo.ProgramDataCourtAsync(court?.Id, row?.FunctionalSubAreaId ?? 0, row?.RowNum,nYear);
                     nCnt++;
                 }
-              
-                return Json(new { msg = $"Бяха заредени данни за {nCnt} записа", success = true });
+
+                //------------------------------------------------------------------------------
+                var resultfile = $"import_{Guid.NewGuid().ToString("N")}.txt";
+                string resultfilepath = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", resultfile);
+                using (StreamWriter writer = new StreamWriter(resultfilepath, false, Encoding.UTF8))
+                {
+                    writer.Write(sb.ToString());
+                }
+                //-------------------------------------------------------------------------------
+                return Json(new { msg = $"Бяха заредени данни за {nCnt} записа", success = true, resultfile = resultfile });
 
 
             }
@@ -305,7 +329,7 @@ namespace CielaDocs.SjcWeb.Controllers
                     var KontoCodesList = kCodes.Split(',');
                     foreach (var kCode in KontoCodesList)
                     {
-                        var foundItem = dic.Where(x => x.Code == kCode).ToList();
+                        var foundItem = dic.Where(x => x.Code.ContainsWord(kCode)).ToList();
                         if (!foundItem.Any()) continue;
                         nval += foundItem.Sum(x => x.Value);
                     }

@@ -46,7 +46,12 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
 
         public UsersController(SignInManager<IdentityUser> signInManager,
              ILogger<UsersController> logger,
-             UserManager<IdentityUser> userManager, IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor,ISjcService sjcService)
+             UserManager<IdentityUser> userManager, IMediator mediator,
+             IMapper mapper, 
+             ILogRepository logRepo,
+             ISjcBudgetRepository sjcRepo, 
+             IHttpContextAccessor httpContextAccessor,
+             ISjcService sjcService)
             {
             _userManager = userManager;
             _signInManager = signInManager;

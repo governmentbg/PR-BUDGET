@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CielaDocs.Application.Models;
+using CielaDocs.Shared.Services;
 
 namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
 {
@@ -34,14 +35,22 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ISjcService _sjcService;
 
-        public MetricsFieldController(IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor)
+        public MetricsFieldController(IMediator mediator,
+            IMapper mapper, 
+            ILogRepository logRepo, 
+            ISjcBudgetRepository sjcRepo, 
+            IHttpContextAccessor httpContextAccessor,
+            ISjcService sjcService
+            )
         {
             _mediator = mediator;
             _mapper = mapper;
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _httpContextAccessor = httpContextAccessor;
+            _sjcService=sjcService;
         }
 
         public async Task<IActionResult> Index()
@@ -72,7 +81,9 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                 return PartialView("_ErrorPartialView", "Невалиден указател към съдебен орган!");
             }
             var court = await _mediator.Send(new GetMetricsFieldByIdQuery { Id = id ?? 0 });
-            return PartialView("AddMetricsFieldPartialView", court);
+            var selIds = await _sjcService.QueryRawList<int>($"Select InstitutionTypeId from MetricsInput where MetricsFieldId={id ?? 0}");
+            ViewBag.SelIds = string.Join(",", selIds.Select(n => n.ToString()).ToArray());
+            return PartialView("EditMetricsFieldPartialView", court);
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -171,7 +182,22 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             return ret;
         }
 
+        [HttpPost]
+        public async Task<ActionResult> SetMetricsFieldInput(int? metricsFieldId, string selectedIds)
+        {
+            if (metricsFieldId is null) return Json(new { success = false, msg = "Невалиден указател към потребител!" });
 
+            _ = await _sjcService.ExecuteRawSql($"Delete from MetricsInput where MetricsFieldId={metricsFieldId ?? 0}");
+            if (!string.IsNullOrWhiteSpace(selectedIds))
+            {
+                List<int> Ids = selectedIds.Split(',').Select(int.Parse).ToList();
+                foreach (var id in Ids)
+                {
+                    _ = await _sjcService.ExecuteRawSql($"Insert into MetricsInput(MetricsFieldId,InstitutionTypeId,IsActive) values({metricsFieldId ?? 0},{id},1)");
+                }
+            }
+            return Json(new { success = true, msg = "Данните са записани!" });
+        }
 
 
     }

@@ -1,10 +1,13 @@
-﻿using ITfoxtec.Identity.Saml2;
+﻿using CielaDocs.SjcWeb.Models;
+
+using ITfoxtec.Identity.Saml2;
 using ITfoxtec.Identity.Saml2.MvcCore;
 using ITfoxtec.Identity.Saml2.Schemas;
 using ITfoxtec.Identity.Saml2.Schemas.Metadata;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Graph.TermStore;
 
 using System;
 using System.Collections.Generic;
@@ -16,32 +19,42 @@ namespace CielaDocs.SjcWeb.Controllers
     [Route("Metadata")]
     public class MetadataController : Controller
     {
-        private readonly Saml2Configuration config;
+        private readonly Saml2Configuration _saml2Config;
+        private readonly IConfiguration _conf;
 
-        public MetadataController(Saml2Configuration config)
+        public MetadataController(Saml2Configuration config, IConfiguration conf)
         {
-            this.config = config;
+            this._saml2Config = config;
+            this._conf=conf;
         }
 
         public IActionResult Index()
         {
             var defaultSite = new Uri($"{Request.Scheme}://{Request.Host.ToUriComponent()}/");
+            var thumbprint = _conf.GetValue<string>("Saml2:SigningCertificateThumbprint");
+            var samlCert = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+            samlCert.Open(OpenFlags.ReadOnly);
+            var cert = samlCert.Certificates
+                .Find(X509FindType.FindByThumbprint, thumbprint, validOnly: false)[0];
 
-            var entityDescriptor = new EntityDescriptor(config);
+            var entityDescriptor = new EntityDescriptor(_saml2Config);
             entityDescriptor.ValidUntil = 365;
+
             entityDescriptor.SPSsoDescriptor = new SPSsoDescriptor
             {
-                AuthnRequestsSigned = config.SignAuthnRequest,
+                AuthnRequestsSigned = _saml2Config.SignAuthnRequest,
                 WantAssertionsSigned = true,
 
                 SigningCertificates = new X509Certificate2[]
                 {
-                    config.SigningCertificate
+                   // _saml2Config.SigningCertificate
+                   cert
                 },
-                //EncryptionCertificates = new X509Certificate2[]
-                //{
-                //    config.DecryptionCertificate
-                //},
+                EncryptionCertificates = new X509Certificate2[]
+                {
+                   // _saml2Config.SigningCertificate
+                   cert
+                },
                 SingleLogoutServices = new SingleLogoutService[]
                 {
                     new SingleLogoutService { Binding = ProtocolBindings.HttpPost, Location = new Uri(defaultSite, "Auth/SingleLogout"), ResponseLocation = new Uri(defaultSite, "Auth/LoggedOut") }
@@ -53,7 +66,9 @@ namespace CielaDocs.SjcWeb.Controllers
                 },
                 AttributeConsumingServices = new AttributeConsumingService[]
                 {
-                    new AttributeConsumingService { ServiceName = new ServiceName("Some SP", "en"), RequestedAttributes = CreateRequestedAttributes() }
+                  new AttributeConsumingService { ServiceNames = new[] { new LocalizedNameType("Some SP", "en") }, // Target-typed new expression
+                        RequestedAttributes = CreateRequestedAttributes()
+                  }
                 },
             };
             entityDescriptor.ContactPersons = new[] {
@@ -71,8 +86,12 @@ namespace CielaDocs.SjcWeb.Controllers
 
         private IEnumerable<RequestedAttribute> CreateRequestedAttributes()
         {
-            yield return new RequestedAttribute("urn:oid:2.16.100.1.1.7");
-            yield return new RequestedAttribute("urn:oid:2.16.100.1.1.7.1.11.1.1", false);
+            var configSection = _conf.GetSection("eAuth:RequestedAttributes");
+            var rawList = configSection.Get<List<RequestedAttributeDto>>();
+
+            return rawList?.Select(x => new RequestedAttribute(x.Name, x.IsRequired, x.NameFormat)).ToList()
+                ?? Enumerable.Empty<RequestedAttribute>();
         }
     }
+
 }

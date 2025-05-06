@@ -70,11 +70,19 @@ namespace CielaDocs.Shared.Repository
         }
         public async Task<IEnumerable<CourtsVm>> GetCourtsByCourtTypeIdAsync(int courtTypeId)
         {
-            string sql = $@"select c.Id,c.Num,c.CourtTypeId,c.Name,c.IsActive,c.CourtGuid,c.KontoCode ,t.Name as CourtTypeName,i.Name as InstitutionTypeName
+            string sql = string.Empty;
+            if (courtTypeId > 0)
+            {
+               sql= $@"select c.Id,c.Num,c.CourtTypeId,c.Name,c.IsActive,c.CourtGuid,c.KontoCode ,t.Name as CourtTypeName,i.Name as InstitutionTypeName
                             from Court c
                             join CourtType t on c.CourtTypeId=t.Id
                             join InstitutionType i on t.InstitutionTypeId=i.Id
                             where c.CourtTypeId=@CourtTypeId";
+            }
+            else sql = $@"select c.Id,c.Num,c.CourtTypeId,c.Name,c.IsActive,c.CourtGuid,c.KontoCode ,t.Name as CourtTypeName,i.Name as InstitutionTypeName
+                            from Court c
+                            join CourtType t on c.CourtTypeId=t.Id
+                            join InstitutionType i on t.InstitutionTypeId=i.Id";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             var result = await connection.QueryAsync<CourtsVm>(sql, new { CourtTypeId = courtTypeId });
@@ -320,7 +328,7 @@ namespace CielaDocs.Shared.Repository
         }
         public async Task<IEnumerable<ProgramDefVm>> GetProgramDefByProgramIdAsync(int programId) {
                         string sql = $@"SELECT Id,FunctionalAreaId,FunctionalSubAreaId,FunctionalActionId,RowNum,RowCode,PrnCode,Name,ParentRowNum
-                              ,Nvalue,EnteredDate,CurrencyId,CurrencyMeasureId,Datum,ValueAllowed,Num,IsActive,OrderNum,KontoCodes,Notes,IsCalculated,ProgCode,Formula
+                              ,Nvalue,EnteredDate,CurrencyId,CurrencyMeasureId,Datum,ValueAllowed,Num,IsActive,OrderNum,KontoCodes,Notes,IsCalculated,ProgCode,Formula,ActivityCode
                           FROM dbo.ProgramDef  where FunctionalSubAreaId=@FunctionalSubAreaId";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -330,7 +338,7 @@ namespace CielaDocs.Shared.Repository
         }
         public async Task<IEnumerable<ProgramDefVm>> GetProgramDefProgCodesByProgramIdAsync(int programId) {
             string sql = $@"SELECT Id,FunctionalAreaId,FunctionalSubAreaId,FunctionalActionId,RowNum,RowCode,PrnCode,Name,ParentRowNum
-                              ,Nvalue,EnteredDate,CurrencyId,CurrencyMeasureId,Datum,ValueAllowed,Num,IsActive,OrderNum,KontoCodes,Notes,IsCalculated,ProgCode,Formula
+                              ,Nvalue,EnteredDate,CurrencyId,CurrencyMeasureId,Datum,ValueAllowed,Num,IsActive,OrderNum,KontoCodes,Notes,IsCalculated,ProgCode,Formula,ActivityCode
                           FROM dbo.ProgramDef  where FunctionalSubAreaId=@FunctionalSubAreaId and ProgCode<>'' ";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -349,7 +357,7 @@ namespace CielaDocs.Shared.Repository
         public async Task<ProgramDefVm> GetProgramDefByIdAsync(int id)
         {
             string sql = $@"SELECT top 1 Id,FunctionalAreaId,FunctionalSubAreaId,FunctionalActionId,RowNum,RowCode,PrnCode,Name,ParentRowNum
-                              ,Nvalue,EnteredDate,CurrencyId,CurrencyMeasureId,Datum,ValueAllowed,Num,IsActive,OrderNum,KontoCodes,Notes,IsCalculated,ProgCode,Formula
+                              ,Nvalue,EnteredDate,CurrencyId,CurrencyMeasureId,Datum,ValueAllowed,Num,IsActive,OrderNum,KontoCodes,Notes,IsCalculated,ProgCode,Formula,ActivityCode
                           FROM dbo.ProgramDef  where Id=@Id";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -2714,74 +2722,17 @@ namespace CielaDocs.Shared.Repository
             if(m1==0||m2==0||nyear==0) return new List<ProgramDataExecutionVm>();
             int nMonthNum=m2-m1;
             if(nMonthNum<1) nMonthNum=1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1,m2,nyear,255,63);
-            nMagReal=Math.Round(nMagReal/nMonthNum,2,MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 255, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 255, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 255, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+          
             var programData = await GetProgramDataGridByFilterAsync(1, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any()) { 
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(1, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId??0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId??0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId??0);
-
-                    if (item.RowNum == 11) { 
-                        nVal=Math.Round((nCalculatedValue-p7r6),2,MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0)) { 
-                            nVal=Math.Round((nVal/nCourtEmplReal)*nMagReal,2,MidpointRounding.AwayFromZero) ;
-                        }
-                    }
-                     if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-                        
-                    }
-                    if (item.RowNum==32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
+                 
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId=item.FunctionalSubAreaId;
@@ -2790,53 +2741,57 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed=item.ValueAllowed??false;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()??0; }
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault()??0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 + r18;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16 + r18;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r11 + r14 + r16 + r18;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r11 + r14 + r16 + r18;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 +  r11 ;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18;
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault()??0; }
-               
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()??0+ ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault()??0+ ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()??0;  }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r17 = ret.Where(x => x.RowNum == 17).FirstOrDefault();
-                if (r17 != null) { r17.Nvalue = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ??0; }
-
-                var r30 = ret.Where(x => x.RowNum == 30).FirstOrDefault();
-                if (r30 != null) { r30.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ??0; }
-
-                var r31 = ret.Where(x => x.RowNum == 31).FirstOrDefault();
-                if (r31 != null) { r31.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ??0; }
-
-
+                var row30 = ret.FirstOrDefault(p => p.RowNum == 30);
+                if (row30 != null) row30.Nvalue = r10 + r13 + r11 + r14 + r16 + r18;
+                var row31 = ret.FirstOrDefault(p => p.RowNum == 31);
+                if (row31 != null) row31.Nvalue = r10 + r13 + r11 + r14 + r16 + r18;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34;
+                var row35 = ret.FirstOrDefault(p => p.RowNum == 35);
+                if (row35 != null) row35.Nvalue = r36 + r37;
             }
             return ret;
         }
@@ -2846,77 +2801,18 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 257, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 257, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 257, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 257, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+            
+           
             var programData = await GetProgramDataGridByFilterAsync(2, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+            
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                    
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(2, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId??0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId??0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId??0);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                    
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -2925,52 +2821,53 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                //var z = ret;
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()??0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault()??0; }
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 ;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
 
-
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault()??0;  }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue =   ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0;  }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                               
-                var r18 = ret.Where(x => x.RowNum == 18).FirstOrDefault();
-                if (r18 != null) { r18.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r19 = ret.Where(x => x.RowNum == 19).FirstOrDefault();
-                if (r19 != null) { r19.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
+                var row18 = ret.FirstOrDefault(p => p.RowNum == 18);
+                if (row18 != null) row18.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row19 = ret.FirstOrDefault(p => p.RowNum == 19);
+                if (row19 != null) row19.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34;
+                var row35 = ret.FirstOrDefault(p => p.RowNum == 35);
+                if (row35 != null) row35.Nvalue = r36 + r37;
 
             }
             return ret;
@@ -2981,77 +2878,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 179, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 179, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 179, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 179, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+          
             var programData = await GetProgramDataGridByFilterAsync(3, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                  
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(3, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -3060,53 +2897,62 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault()??0+ ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r19 = ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault();
+                var r20 = ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r35 = ret.Where(x => x.RowNum == 35).Select(x => x.Nvalue).FirstOrDefault();
+                var r38 = ret.Where(x => x.RowNum == 38).Select(x => x.Nvalue).FirstOrDefault();
+                var r39 = ret.Where(x => x.RowNum == 39).Select(x => x.Nvalue).FirstOrDefault();
 
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13+r18;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14+r19;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 + r20;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13+r18;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14+r19;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16 + r20;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 +r18+ r11 + r14 + r19 + r16+r20;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18+r19+r20;
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-             
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = (ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault())??0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = (ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()+ ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault()+ ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault())??0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r17 = ret.Where(x => x.RowNum == 17).FirstOrDefault();
-                if (r17 != null) { r17.Nvalue = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault()??0+ ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault()??0+ ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault()??0; }
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34+r35;
+                var row36 = ret.FirstOrDefault(p => p.RowNum == 36);
+                if (row36 != null) row36.Nvalue = r37 + r38+r39;
 
 
             }
@@ -3118,77 +2964,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 180, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 180, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 180, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 180, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+           
             var programData = await GetProgramDataGridByFilterAsync(4, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(4, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -3197,51 +2983,62 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault()??0+ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()??0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r19 = ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault();
+                var r20 = ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r35 = ret.Where(x => x.RowNum == 35).Select(x => x.Nvalue).FirstOrDefault();
+                var r38 = ret.Where(x => x.RowNum == 38).Select(x => x.Nvalue).FirstOrDefault();
+                var r39 = ret.Where(x => x.RowNum == 39).Select(x => x.Nvalue).FirstOrDefault();
 
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13 + r18;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14 + r19;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 + r20;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13 + r18;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14 + r19;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16 + r20;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18 + r19 + r20;
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue =ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r17 = ret.Where(x => x.RowNum == 17).FirstOrDefault();
-                if (r17 != null) { r17.Nvalue = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault()??0; }
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34 + r35;
+                var row36 = ret.FirstOrDefault(p => p.RowNum == 36);
+                if (row36 != null) row36.Nvalue = r37 + r38 + r39;
 
 
             }
@@ -3253,77 +3050,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataCommonItems(m1, m2, nyear, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataCommonItems(m1, m2, nyear, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataCommonItems(m1, m2, nyear, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataCommonItems(m1, m2, nyear, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+          
             var programData = await GetProgramDataGridByFilterAsync(5, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                    
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(5, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -3332,48 +3069,57 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()??0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+               
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault()??0; }
+            
 
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14 ;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 ;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14 ;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 +  r11 + r14 +  r16 ;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r11 + r14 + r16 ;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+               
+                var row18 = ret.FirstOrDefault(p => p.RowNum == 18);
+                if (row18 != null) row18.Nvalue = r10 + r13 +  r11 + r14 +  r16 ;
+                var row19 = ret.FirstOrDefault(p => p.RowNum == 19);
+                if (row19 != null) row19.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34 ;
+                var row35 = ret.FirstOrDefault(p => p.RowNum == 35);
+                if (row35 != null) row35.Nvalue = r36 + r37 ;
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()??0+ ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault()??0+ ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r18 = ret.Where(x => x.RowNum == 18).FirstOrDefault();
-                if (r18 != null) { r18.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r19 = ret.Where(x => x.RowNum == 19).FirstOrDefault();
-                if (r19 != null) { r19.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault()??0; }
 
 
             }
@@ -3385,77 +3131,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 254, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 254, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 254, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 254, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+          
             var programData = await GetProgramDataGridByFilterAsync(6, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+            
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(6, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -3464,52 +3150,62 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()??0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r19 = ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault();
+                var r20 = ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault()??0; }
+                var r35 = ret.Where(x => x.RowNum == 35).Select(x => x.Nvalue).FirstOrDefault();
+                var r38 = ret.Where(x => x.RowNum == 38).Select(x => x.Nvalue).FirstOrDefault();
+                var r39 = ret.Where(x => x.RowNum == 39).Select(x => x.Nvalue).FirstOrDefault();
 
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13 + r18;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14 + r19;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 + r20;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13 + r18;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14 + r19;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16 + r20;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18 + r19 + r20;
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r17 = ret.Where(x => x.RowNum == 17).FirstOrDefault();
-                if (r17 != null) { r17.Nvalue = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34 + r35;
+                var row36 = ret.FirstOrDefault(p => p.RowNum == 36);
+                if (row36 != null) row36.Nvalue = r37 + r38 + r39;
 
             }
             return ret;
@@ -3521,14 +3217,14 @@ namespace CielaDocs.Shared.Repository
            
             var programData = await GetProgramDataGridByFilterAsync(7, nyear);
             decimal nCalculatedValue = 0;
-            decimal nVal = 0;
+         
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                  
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(7, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal=nCalculatedValue;
+                   
                    
                   
                     var rec = new ProgramDataExecutionVm();
@@ -3539,26 +3235,30 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
 
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault()??0;  }
+                var r6 = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault();
+                var r7 = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault();
+               
 
-                               
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r6;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r7;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r6 + r7;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r6 + r7;
+               
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r6 + r7;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r6 + r7;
 
             }
             return ret;
@@ -3569,70 +3269,18 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 256, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 256, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 256, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 256, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+           
             var programData = await GetProgramDataGridByFilterAsync(8, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+          
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
-                    nCalculatedValue = await GetKontoMonthDataValueCurrency(8, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
-
                   
-                    if (item.RowNum == 7)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 8)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(8, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
+                   
 
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -3641,34 +3289,38 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-               
 
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()??0; }
+                var r6 = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault();
+                var r7 = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault();
+                var r8 = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r35 = ret.Where(x => x.RowNum == 35).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r6;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r7;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r8;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r6 + r7+r8;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r6 + r7+r8;
 
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault()??0; }
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault()??0; }
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r6 + r7 + r8;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r6 + r7+r8;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33;
+                var row34 = ret.FirstOrDefault(p => p.RowNum == 34);
+                if (row34 != null) row34.Nvalue = r35;
 
 
             }
@@ -3679,13 +3331,13 @@ namespace CielaDocs.Shared.Repository
             var ret = new List<ProgramDataExecutionVm>();
            
             var programData = await GetProgramDataGridByFilterAsync(9, nyear);
-            decimal nVal = 0;
+            decimal nCalculatedValue = 0;
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
-                    nVal = await GetKontoMonthDataValueCurrency(9, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
+                   
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(9, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
                    
 
 
@@ -3697,29 +3349,33 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 5).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault()??0+ ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()??0; }
 
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11= ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r8 = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault();
+                var r7 = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault();
+                var r6 = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault();
+                var r5 = ret.Where(x => x.RowNum == 5).Select(x => x.Nvalue).FirstOrDefault();
+                var r2 = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault();
+                var r3 = ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault()??0+ ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault()??0 + ret.Where(x => x.RowNum == 9).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault()??0; }
-
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10+r11;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r8 + r7+r6+r5;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r8 + r7 + r6 + r5+r10+r11+r13;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13+r3;
 
             }
             return ret;
@@ -3745,77 +3401,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 255, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 255, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 255, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 255, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+           
             var programData = await GetProgramDataCourtGridByFilterAsync(1,  nyear, rowNum);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                    
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(1, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId??0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -3824,53 +3420,57 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     rec.CourtName = item.CourtName ?? string.Empty;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 + r18;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16 + r18;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r11 + r14 + r16 + r18;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r11 + r14 + r16 + r18;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18;
 
-
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r17 = ret.Where(x => x.RowNum == 17).FirstOrDefault();
-                if (r17 != null) { r17.Nvalue = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r30 = ret.Where(x => x.RowNum == 30).FirstOrDefault();
-                if (r30 != null) { r30.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r31 = ret.Where(x => x.RowNum == 31).FirstOrDefault();
-                if (r31 != null) { r31.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
+                var row30 = ret.FirstOrDefault(p => p.RowNum == 30);
+                if (row30 != null) row30.Nvalue = r10 + r13 + r11 + r14 + r16 + r18;
+                var row31 = ret.FirstOrDefault(p => p.RowNum == 31);
+                if (row31 != null) row31.Nvalue = r10 + r13 + r11 + r14 + r16 + r18;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34;
+                var row35 = ret.FirstOrDefault(p => p.RowNum == 35);
+                if (row35 != null) row35.Nvalue = r36 + r37;
 
             }
             return ret;
@@ -3881,77 +3481,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 257, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 257, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 257, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 257, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+           
             var programData = await GetProgramDataCourtGridByFilterAsync(2, nyear, rowNum);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(2, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                  
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -3960,53 +3500,54 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     rec.CourtName = item.CourtName ?? string.Empty;
                     ret.Add(rec);
                 }
-                //var z = ret;
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
 
-
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r18 = ret.Where(x => x.RowNum == 18).FirstOrDefault();
-                if (r18 != null) { r18.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r19 = ret.Where(x => x.RowNum == 19).FirstOrDefault();
-                if (r19 != null) { r19.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
+                var row18 = ret.FirstOrDefault(p => p.RowNum == 18);
+                if (row18 != null) row18.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row19 = ret.FirstOrDefault(p => p.RowNum == 19);
+                if (row19 != null) row19.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34;
+                var row35 = ret.FirstOrDefault(p => p.RowNum == 35);
+                if (row35 != null) row35.Nvalue = r36 + r37;
 
             }
             return ret;
@@ -4017,77 +3558,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 179, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 179, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 179, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 179, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+           
             var programData = await GetProgramDataCourtGridByFilterAsync(3, nyear, rowNum);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(3, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                  
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -4096,54 +3577,63 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     rec.CourtName = item.CourtName ?? string.Empty;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r19 = ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault();
+                var r20 = ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r35 = ret.Where(x => x.RowNum == 35).Select(x => x.Nvalue).FirstOrDefault();
+                var r38 = ret.Where(x => x.RowNum == 38).Select(x => x.Nvalue).FirstOrDefault();
+                var r39 = ret.Where(x => x.RowNum == 39).Select(x => x.Nvalue).FirstOrDefault();
 
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13 + r18;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14 + r19;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 + r20;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13 + r18;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14 + r19;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16 + r20;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18 + r19 + r20;
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = (ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault()) ?? 0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = (ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()) ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r17 = ret.Where(x => x.RowNum == 17).FirstOrDefault();
-                if (r17 != null) { r17.Nvalue = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34 + r35;
+                var row36 = ret.FirstOrDefault(p => p.RowNum == 36);
+                if (row36 != null) row36.Nvalue = r37 + r38 + r39;
 
 
             }
@@ -4155,77 +3645,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 180, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 180, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 180, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 180, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+           
             var programData = await GetProgramDataCourtGridByFilterAsync(4, nyear, rowNum);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                    
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(4, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -4234,52 +3664,63 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     rec.CourtName = item.CourtName ?? string.Empty;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r19 = ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault();
+                var r20 = ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r35 = ret.Where(x => x.RowNum == 35).Select(x => x.Nvalue).FirstOrDefault();
+                var r38 = ret.Where(x => x.RowNum == 38).Select(x => x.Nvalue).FirstOrDefault();
+                var r39 = ret.Where(x => x.RowNum == 39).Select(x => x.Nvalue).FirstOrDefault();
 
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13 + r18;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14 + r19;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 + r20;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13 + r18;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14 + r19;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16 + r20;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18 + r19 + r20;
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r17 = ret.Where(x => x.RowNum == 17).FirstOrDefault();
-                if (r17 != null) { r17.Nvalue = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34 + r35;
+                var row36 = ret.FirstOrDefault(p => p.RowNum == 36);
+                if (row36 != null) row36.Nvalue = r37 + r38 + r39;
 
 
             }
@@ -4291,77 +3732,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataCommonItems(m1, m2, nyear, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataCommonItems(m1, m2, nyear, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataCommonItems(m1, m2, nyear, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataCommonItems(m1, m2, nyear, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+           
             var programData = await GetProgramDataCourtGridByFilterAsync(5, nyear, rowNum);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+          
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(5, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -4370,49 +3751,59 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     rec.CourtName = item.CourtName ?? string.Empty;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
 
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
 
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row18 = ret.FirstOrDefault(p => p.RowNum == 18);
+                if (row18 != null) row18.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row19 = ret.FirstOrDefault(p => p.RowNum == 19);
+                if (row19 != null) row19.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34;
+                var row35 = ret.FirstOrDefault(p => p.RowNum == 35);
+                if (row35 != null) row35.Nvalue = r36 + r37;
 
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r18 = ret.Where(x => x.RowNum == 18).FirstOrDefault();
-                if (r18 != null) { r18.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r19 = ret.Where(x => x.RowNum == 19).FirstOrDefault();
-                if (r19 != null) { r19.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
 
 
             }
@@ -4424,77 +3815,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 254, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 254, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 254, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 254, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+          
             var programData = await GetProgramDataCourtGridByFilterAsync(6, nyear, rowNum);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(6, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -4503,53 +3834,63 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     rec.CourtName = item.CourtName ?? string.Empty;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r19 = ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault();
+                var r20 = ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r35 = ret.Where(x => x.RowNum == 35).Select(x => x.Nvalue).FirstOrDefault();
+                var r38 = ret.Where(x => x.RowNum == 38).Select(x => x.Nvalue).FirstOrDefault();
+                var r39 = ret.Where(x => x.RowNum == 39).Select(x => x.Nvalue).FirstOrDefault();
 
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13 + r18;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14 + r19;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 + r20;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13 + r18;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14 + r19;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16 + r20;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18 + r19 + r20;
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r17 = ret.Where(x => x.RowNum == 17).FirstOrDefault();
-                if (r17 != null) { r17.Nvalue = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34 + r35;
+                var row36 = ret.FirstOrDefault(p => p.RowNum == 36);
+                if (row36 != null) row36.Nvalue = r37 + r38 + r39;
 
             }
             return ret;
@@ -4561,16 +3902,12 @@ namespace CielaDocs.Shared.Repository
 
             var programData = await GetProgramDataCourtGridByFilterAsync(7, nyear, rowNum);
             decimal nCalculatedValue = 0;
-            decimal nVal = 0;
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(7, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal = nCalculatedValue;
-
-
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -4579,7 +3916,7 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
@@ -4587,18 +3924,23 @@ namespace CielaDocs.Shared.Repository
                     ret.Add(rec);
                 }
 
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r6 = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault();
+                var r7 = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault();
 
 
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r6;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r7;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r6 + r7;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r6 + r7;
 
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r6 + r7;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r6 + r7;
 
 
             }
@@ -4610,70 +3952,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 256, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 256, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 256, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 256, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+           
             var programData = await GetProgramDataCourtGridByFilterAsync(8, nyear, rowNum);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataValueCurrency(8, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValueCurrency(7, 6, m1, m2, nyear, displayCurrencyId ?? 0);
-                    p7r7 = await GetKontoMonthDataValueCurrency(7, 7, m1, m2, nyear, displayCurrencyId ?? 0);
-
-
-                    if (item.RowNum == 7)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 8)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -4682,7 +3971,7 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
@@ -4690,28 +3979,31 @@ namespace CielaDocs.Shared.Repository
                     ret.Add(rec);
                 }
 
+                var r6 = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault();
+                var r7 = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault();
+                var r8 = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r35 = ret.Where(x => x.RowNum == 35).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r6;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r7;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r8;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r6 + r7 + r8;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r6 + r7 + r8;
 
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r6 + r7 + r8;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r6 + r7 + r8;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33;
+                var row34 = ret.FirstOrDefault(p => p.RowNum == 34);
+                if (row34 != null) row34.Nvalue = r35;
 
             }
             return ret;
@@ -4721,13 +4013,13 @@ namespace CielaDocs.Shared.Repository
             var ret = new List<ProgramDataExecutionVm>();
 
             var programData = await GetProgramDataCourtGridByFilterAsync(9, nyear, rowNum);
-            decimal nVal = 0;
+            decimal nCalculatedValue = 0;
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
-                    nVal = await GetKontoMonthDataValueCurrency(9, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
+                   
+                    nCalculatedValue = await GetKontoMonthDataValueCurrency(9, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
 
 
 
@@ -4739,31 +4031,33 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     rec.CourtName = item?.CourtName ?? string.Empty;
                     ret.Add(rec);
                 }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 5).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r8 = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault();
+                var r7 = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault();
+                var r6 = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault();
+                var r5 = ret.Where(x => x.RowNum == 5).Select(x => x.Nvalue).FirstOrDefault();
+                var r2 = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault();
+                var r3 = ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault();
 
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 9).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r8 + r7 + r6 + r5;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13 + r3;
             }
             return ret;
         }
@@ -4788,77 +4082,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 255, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 255, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 255, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 255, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+          
             var programData = await GetProgramDataGridByFilterAsync(1, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataByCourtIdsValue(1, item?.RowNum ?? 0, m1, m2, nyear,courtIds);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -4867,51 +4101,57 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 + r18;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16 + r18;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r11 + r14 + r16 + r18;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r11 + r14 + r16 + r18;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18;
 
+                var row30 = ret.FirstOrDefault(p => p.RowNum == 30);
+                if (row30 != null) row30.Nvalue = r10 + r13 + r11 + r14 + r16 + r18;
+                var row31 = ret.FirstOrDefault(p => p.RowNum == 31);
+                if (row31 != null) row31.Nvalue = r10 + r13 + r11 + r14 + r16 + r18;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34;
+                var row35 = ret.FirstOrDefault(p => p.RowNum == 35);
+                if (row35 != null) row35.Nvalue = r36 + r37;
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r17 = ret.Where(x => x.RowNum == 17).FirstOrDefault();
-                if (r17 != null) { r17.Nvalue = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r30 = ret.Where(x => x.RowNum == 30).FirstOrDefault();
-                if (r30 != null) { r30.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r31 = ret.Where(x => x.RowNum == 31).FirstOrDefault();
-                if (r31 != null) { r31.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
 
 
             }
@@ -4923,77 +4163,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 257, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 257, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 257, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 257, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+         
             var programData = await GetProgramDataGridByFilterAsync(2, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataByCourtIdsValue(2, item?.RowNum ?? 0, m1, m2, nyear,courtIds);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                 
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -5002,53 +4182,53 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                //var z = ret;
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
 
-
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r18 = ret.Where(x => x.RowNum == 18).FirstOrDefault();
-                if (r18 != null) { r18.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r19 = ret.Where(x => x.RowNum == 19).FirstOrDefault();
-                if (r19 != null) { r19.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
+                var row18 = ret.FirstOrDefault(p => p.RowNum == 18);
+                if (row18 != null) row18.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row19 = ret.FirstOrDefault(p => p.RowNum == 19);
+                if (row19 != null) row19.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34;
+                var row35 = ret.FirstOrDefault(p => p.RowNum == 35);
+                if (row35 != null) row35.Nvalue = r36 + r37;
             }
             return ret;
         }
@@ -5058,77 +4238,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 179, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 179, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 179, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 179, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+           
             var programData = await GetProgramDataGridByFilterAsync(3, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataByCourtIdsValue(3, item?.RowNum ?? 0, m1, m2, nyear,courtIds);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -5137,55 +4257,63 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r19 = ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault();
+                var r20 = ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
+                var r35 = ret.Where(x => x.RowNum == 35).Select(x => x.Nvalue).FirstOrDefault();
+                var r38 = ret.Where(x => x.RowNum == 38).Select(x => x.Nvalue).FirstOrDefault();
+                var r39 = ret.Where(x => x.RowNum == 39).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13 + r18;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14 + r19;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 + r20;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13 + r18;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14 + r19;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16 + r20;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18 + r19 + r20;
 
-
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = (ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault()) ?? 0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = (ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault()) ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r17 = ret.Where(x => x.RowNum == 17).FirstOrDefault();
-                if (r17 != null) { r17.Nvalue = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34 + r35;
+                var row36 = ret.FirstOrDefault(p => p.RowNum == 36);
+                if (row36 != null) row36.Nvalue = r37 + r38 + r39;
             }
             return ret;
         }
@@ -5195,77 +4323,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 180, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 180, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 180, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 180, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+          
             var programData = await  GetProgramDataGridByFilterAsync(4, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+          
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataByCourtIdsValue(4, item?.RowNum ?? 0, m1, m2, nyear,courtIds);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -5274,53 +4342,62 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r19 = ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault();
+                var r20 = ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r35 = ret.Where(x => x.RowNum == 35).Select(x => x.Nvalue).FirstOrDefault();
+                var r38 = ret.Where(x => x.RowNum == 38).Select(x => x.Nvalue).FirstOrDefault();
+                var r39 = ret.Where(x => x.RowNum == 39).Select(x => x.Nvalue).FirstOrDefault();
 
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13 + r18;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14 + r19;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 + r20;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13 + r18;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14 + r19;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16 + r20;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18 + r19 + r20;
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r17 = ret.Where(x => x.RowNum == 17).FirstOrDefault();
-                if (r17 != null) { r17.Nvalue = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34 + r35;
+                var row36 = ret.FirstOrDefault(p => p.RowNum == 36);
+                if (row36 != null) row36.Nvalue = r37 + r38 + r39;
             }
             return ret;
         }
@@ -5330,77 +4407,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItemsByCourtIds(m1, m2, nyear,courtIds, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItemsByCourtIds(m1, m2, nyear, courtIds, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItemsByCourtIds(m1, m2, nyear, courtIds, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItemsByCourtIds(m1, m2, nyear, courtIds, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+           
             var programData = await GetProgramDataGridByFilterAsync(5, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataByCourtIdsValue(5, item?.RowNum ?? 0, m1, m2, nyear,courtIds);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                    
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -5409,49 +4426,56 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
 
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
 
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r18 = ret.Where(x => x.RowNum == 18).FirstOrDefault();
-                if (r18 != null) { r18.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r19 = ret.Where(x => x.RowNum == 19).FirstOrDefault();
-                if (r19 != null) { r19.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
+                var row18 = ret.FirstOrDefault(p => p.RowNum == 18);
+                if (row18 != null) row18.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row19 = ret.FirstOrDefault(p => p.RowNum == 19);
+                if (row19 != null) row19.Nvalue = r10 + r13 + r11 + r14 + r16;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34;
+                var row35 = ret.FirstOrDefault(p => p.RowNum == 35);
+                if (row35 != null) row35.Nvalue = r36 + r37;
 
             }
             return ret;
@@ -5462,77 +4486,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 254, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 254, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 254, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 254, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+            
             var programData = await GetProgramDataGridByFilterAsync(6, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+          
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataByCourtIdsValue(6, item?.RowNum ?? 0, m1, m2, nyear,courtIds);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
-
-                    if (item.RowNum == 11)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nMagReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 14)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 18)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -5541,52 +4505,63 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                var r6 = ret.Where(x => x.RowNum == 6).FirstOrDefault();
-                if (r6 != null) { r6.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
 
-                var r7 = ret.Where(x => x.RowNum == 7).FirstOrDefault();
-                if (r7 != null) { r7.Nvalue = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r19 = ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault();
+                var r20 = ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r34 = ret.Where(x => x.RowNum == 34).Select(x => x.Nvalue).FirstOrDefault();
+                var r36 = ret.Where(x => x.RowNum == 36).Select(x => x.Nvalue).FirstOrDefault();
+                var r37 = ret.Where(x => x.RowNum == 37).Select(x => x.Nvalue).FirstOrDefault();
 
+                var r35 = ret.Where(x => x.RowNum == 35).Select(x => x.Nvalue).FirstOrDefault();
+                var r38 = ret.Where(x => x.RowNum == 38).Select(x => x.Nvalue).FirstOrDefault();
+                var r39 = ret.Where(x => x.RowNum == 39).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r8 = ret.Where(x => x.RowNum == 8).FirstOrDefault();
-                if (r8 != null) { r8.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row6 = ret.FirstOrDefault(p => p.RowNum == 6);
+                if (row6 != null) row6.Nvalue = r10 + r13 + r18;
+                var row7 = ret.FirstOrDefault(p => p.RowNum == 7);
+                if (row7 != null) row7.Nvalue = r11 + r14 + r19;
+                var row8 = ret.FirstOrDefault(p => p.RowNum == 8);
+                if (row8 != null) row8.Nvalue = r16 + r20;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r10 + r13 + r18;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r11 + r14 + r19;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r16 + r20;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13 + r14;
+                var row15 = ret.FirstOrDefault(p => p.RowNum == 15);
+                if (row15 != null) row15.Nvalue = r16;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18 + r19 + r20;
 
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r15 = ret.Where(x => x.RowNum == 15).FirstOrDefault();
-                if (r15 != null) { r15.Nvalue = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r17 = ret.Where(x => x.RowNum == 17).FirstOrDefault();
-                if (r17 != null) { r17.Nvalue = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r10 + r13 + r18 + r11 + r14 + r19 + r16 + r20;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33 + r34 + r35;
+                var row36 = ret.FirstOrDefault(p => p.RowNum == 36);
+                if (row36 != null) row36.Nvalue = r37 + r38 + r39;
 
             }
             return ret;
@@ -5598,14 +4573,14 @@ namespace CielaDocs.Shared.Repository
 
             var programData = await GetProgramDataGridByFilterAsync(7, nyear);
             decimal nCalculatedValue = 0;
-            decimal nVal = 0;
+          
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                   
                     nCalculatedValue = await GetKontoMonthDataByCourtIdsValue(7, item?.RowNum ?? 0, m1, m2, nyear,courtIds);
-                    nVal = nCalculatedValue;
+                   
 
 
                     var rec = new ProgramDataExecutionVm();
@@ -5616,26 +4591,29 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
+                var r6 = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault();
+                var r7 = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
 
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r6;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r7;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r6 + r7;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r6 + r7;
 
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r6 + r7;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r6 + r7;
 
             }
             return ret;
@@ -5646,70 +4624,17 @@ namespace CielaDocs.Shared.Repository
             if (m1 == 0 || m2 == 0 || nyear == 0) return new List<ProgramDataExecutionVm>();
             int nMonthNum = m2 - m1;
             if (nMonthNum < 1) nMonthNum = 1;
-            decimal nMagReal = await GetValueFromMainDataItems(m1, m2, nyear, 256, 63);
-            nMagReal = Math.Round(nMagReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmplReal = await GetValueFromMainDataItems(m1, m2, nyear, 256, 64);
-            nEmplReal = Math.Round(nEmplReal / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmplReal = nMagReal + nEmplReal;
-
-            decimal nMag = await GetValueFromMainDataItems(m1, m2, nyear, 256, 74);
-            nMag = Math.Round(nMag / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nEmpl = await GetValueFromMainDataItems(m1, m2, nyear, 256, 75);
-            nEmpl = Math.Round(nEmpl / nMonthNum, 2, MidpointRounding.AwayFromZero);
-            decimal nCourtEmpl = nMag + nEmpl;
+           
             var programData = await GetProgramDataGridByFilterAsync(8, nyear);
             decimal nCalculatedValue = 0;
-            decimal p7r6 = 0;
-            decimal p7r7 = 0;
-            decimal nVal = 0;
+           
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
+                  
                     nCalculatedValue = await GetKontoMonthDataByCourtIdsValue(8, item?.RowNum ?? 0, m1, m2, nyear, courtIds);
-                    nVal = nCalculatedValue;
-                    p7r6 = await GetKontoMonthDataValue(7, 6, m1, m2, nyear);
-                    p7r7 = await GetKontoMonthDataValue(7, 7, m1, m2, nyear);
-
-
-                    if (item.RowNum == 7)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r6), 2, MidpointRounding.AwayFromZero);
-                        if ((nMagReal > 0) && (nEmplReal > 0))
-                        {
-                            nVal = Math.Round((nVal / nCourtEmplReal) * nEmplReal, 2, MidpointRounding.AwayFromZero);
-                        }
-                    }
-                    if (item.RowNum == 8)
-                    {
-                        nVal = Math.Round((nCalculatedValue - p7r7), 2, MidpointRounding.AwayFromZero);
-
-                    }
-                    if (item.RowNum == 32)
-                    {
-                        nVal = nCourtEmpl;
-                    }
-                    if (item.RowNum == 33)
-                    {
-                        nVal = nMag;
-                    }
-                    if (item.RowNum == 34)
-                    {
-                        nVal = nEmpl;
-                    }
-                    if (item.RowNum == 35)
-                    {
-                        nVal = nCourtEmplReal;
-                    }
-                    if (item.RowNum == 36)
-                    {
-                        nVal = nMagReal;
-                    }
-                    if (item.RowNum == 37)
-                    {
-                        nVal = nEmplReal;
-                    }
+                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
@@ -5718,36 +4643,38 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
 
+                var r6 = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault();
+                var r7 = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault();
+                var r8 = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault();
+                var r33 = ret.Where(x => x.RowNum == 33).Select(x => x.Nvalue).FirstOrDefault();
+                var r35 = ret.Where(x => x.RowNum == 35).Select(x => x.Nvalue).FirstOrDefault();
 
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r6;
+                var row3 = ret.FirstOrDefault(p => p.RowNum == 3);
+                if (row3 != null) row3.Nvalue = r7;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r8;
+                var row5 = ret.FirstOrDefault(p => p.RowNum == 5);
+                if (row5 != null) row5.Nvalue = r6 + r7 + r8;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r6 + r7 + r8;
 
-                var r3 = ret.Where(x => x.RowNum == 3).FirstOrDefault();
-                if (r3 != null) { r3.Nvalue = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-                var r5 = ret.Where(x => x.RowNum == 5).FirstOrDefault();
-                if (r5 != null) { r5.Nvalue = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r22 = ret.Where(x => x.RowNum == 22).FirstOrDefault();
-                if (r22 != null) { r22.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r23 = ret.Where(x => x.RowNum == 23).FirstOrDefault();
-                if (r23 != null) { r23.Nvalue = ret.Where(x => x.RowNum == 1).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
+                var row22 = ret.FirstOrDefault(p => p.RowNum == 22);
+                if (row22 != null) row22.Nvalue = r6 + r7 + r8;
+                var row23 = ret.FirstOrDefault(p => p.RowNum == 23);
+                if (row23 != null) row23.Nvalue = r6 + r7 + r8;
+                var row32 = ret.FirstOrDefault(p => p.RowNum == 32);
+                if (row32 != null) row32.Nvalue = r33;
+                var row34 = ret.FirstOrDefault(p => p.RowNum == 34);
+                if (row34 != null) row34.Nvalue = r35;
             }
             return ret;
         }
@@ -5756,13 +4683,13 @@ namespace CielaDocs.Shared.Repository
             var ret = new List<ProgramDataExecutionVm>();
 
             var programData = await GetProgramDataGridByFilterAsync(9, nyear);
-            decimal nVal = 0;
+            decimal nCalculatedValue = 0;
             if (programData.Any())
             {
                 foreach (var item in programData)
                 {
-                    nVal = 0;
-                    nVal = await GetKontoMonthDataByCourtIdsValue(9, item?.RowNum ?? 0, m1, m2, nyear, courtIds);
+     
+                    nCalculatedValue = await GetKontoMonthDataByCourtIdsValue(9, item?.RowNum ?? 0, m1, m2, nyear, courtIds);
 
 
 
@@ -5774,30 +4701,32 @@ namespace CielaDocs.Shared.Repository
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
                     rec.Name = item.Name;
-                    rec.Nvalue = nVal;
+                    rec.Nvalue = nCalculatedValue;
                     rec.ApprovedValue = 0;
                     rec.CalculatedValue = 0;
                     rec.ValueAllowed = item.ValueAllowed ?? false;
                     ret.Add(rec);
                 }
-                var r4 = ret.Where(x => x.RowNum == 4).FirstOrDefault();
-                if (r4 != null) { r4.Nvalue = ret.Where(x => x.RowNum == 5).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
+                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                var r8 = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault();
+                var r7 = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault();
+                var r6 = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault();
+                var r5 = ret.Where(x => x.RowNum == 5).Select(x => x.Nvalue).FirstOrDefault();
+                var r2 = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault();
+                var r3 = ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault();
 
-
-                var r12 = ret.Where(x => x.RowNum == 12).FirstOrDefault();
-                if (r12 != null) { r12.Nvalue = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r9 = ret.Where(x => x.RowNum == 9).FirstOrDefault();
-                if (r9 != null) { r9.Nvalue = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-                var r2 = ret.Where(x => x.RowNum == 2).FirstOrDefault();
-                if (r2 != null) { r2.Nvalue = ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 9).Select(x => x.Nvalue).FirstOrDefault() ?? 0 + ret.Where(x => x.RowNum == 4).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
-                var r1 = ret.Where(x => x.RowNum == 1).FirstOrDefault();
-                if (r1 != null) { r1.Nvalue = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault() ?? 0; }
-
-
+                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                if (row12 != null) row12.Nvalue = r13;
+                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                if (row9 != null) row9.Nvalue = r10 + r11;
+                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                if (row4 != null) row4.Nvalue = r8 + r7 + r6 + r5;
+                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                if (row2 != null) row2.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13;
+                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                if (row1 != null) row1.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13 + r3;
             }
             return ret;
         }

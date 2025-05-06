@@ -27,10 +27,13 @@
 <div class="modal-body form-horizontal">
 
     <div class="row">
-
         <label>
             &nbsp; <input type="radio" name="ImportType" value="0">
             &nbsp;За отчетна единица
+        </label>
+        <label>
+            &nbsp; <input type="radio" name="ImportType" value="1">
+            &nbsp;Експертен бюджет
         </label>
     </div>
 
@@ -66,9 +69,14 @@
         <p>Моля изчакайте . . . <img src="@Url.Content("~/images/ajax_loader.gif")"></p>
     </div>
     <div class="header-container">
+        <div id="btnDraftDownload"></div>
+        <div id="btnDraftUpload"></div>
         <div id="buttonExcelViewer"></div>
         <div id="buttonGridCourtViewer"></div>
         <div id="btnLockedView"></div>
+        <div id="btnEnteredData"></div>
+        <!-- Hidden file input -->
+        <input type="file" id="fileInput" style="display: none;" />
     </div>
 
 
@@ -92,7 +100,7 @@
 
 
 
-        let selectedFnSubAreaId = 0;
+       let selectedFnSubAreaId = 0;
         $("#divProcessing").hide();
         $("input[name=ImportType][value=" + importType + "]").prop('checked', true);
         ImportTypeChanged(importType);
@@ -113,10 +121,76 @@
             mainRightReadOnlyPopup.show();
         }
         }).dxButton("instance");
+
+         const buttonCourts = $("#btnEnteredData").dxButton({
+        visible: true,
+        icon:Ciela.rootUrl+'images/input-data.svg',
+        hint:'Въведени данни',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "ImportPbKonto/AnalizeDraftBudgetPartial", {importTypeId:importType,functionalSubAreaId:selectedFnSubAreaId, institutionTypeId:institutionTypeId, courtTypeId:courtTypeId,ny:ny }),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Анализ на въведени данни',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+
+
+        const buttonDownload = $("#btnDraftDownload").dxButton({
+        visible: true,
+        icon:Ciela.rootUrl+'images/download.svg',
+        hint:'Изтегли образец',
+        onClick: function () {
+             window.location = "@Url.Action("DownloadDraftBudgetFile", "ImportPbKonto", new { area = "ProsecutorAdmin" })" + '?importType=' + importType;
+         }
+        }).dxButton("instance");
+
+         const buttonUpload = $("#btnDraftUpload").dxButton({
+        visible: true,
+        icon:Ciela.rootUrl+'images/upload.svg',
+        hint:'Прикачи образец с данни',
+        onClick: function () {
+             $("#fileInput").click();
+         }
+        }).dxButton("instance");
+
+       $("#fileInput").on("change", function (event) {
+                let file = event.target.files[0];
+                if (file) {
+                     var data = new FormData();
+                      data.append("file", file);
+                    $.ajax({
+                        type: "POST",
+                        url: "@Url.Action("UploadFile", "BufferedFileUpload",  new { area = "ProsecutorAdmin" })",
+                        contentType: false,
+                        processData: false,
+                        data: data,
+                        success: function (result) {
+                            $('#divUploading').hide();
+                            if (result.success != true) {
+                                DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                            }
+                            else {
+                                loadCustomDraftBudgetExcelFile(result.filename);
+                            }
+                        },
+                        error: function (xhr, status, p3, p4) {
+                            $('#divUploading').hide();
+                            DevExpress.ui.dialog.alert('Something is going to wrong please try agan!', 'Грешка');
+                        }
+                    });
+                }
+        });
+
+
+
+
        let isLocked=false;
         $('#lock-result').val('');
         $('#lock-result').addClass("hideme")
-       
+         
 
         $("#selectBoxYear").dxSelectBox({
            dataSource: new DevExpress.data.DataSource({
@@ -197,13 +271,66 @@
                     }
                     redirectme3New("@Url.Action("Index", "ProgramDataCourtItems", new { area = "ProsecutorAdmin" })", "programNum", selectedFnSubAreaId, "courtId", courtId, "nyear", ny)
                 }
+                 if (importType == 1) {
+                    if ((institutionTypeId == 0) || (ny == 0) || (selectedFnSubAreaId == 0)) {
+                        DevExpress.ui.dialog.alert('Изберете задължително институция и начална година', 'Внимание');
+                        return;
+                    }
+                    redirectme3New("@Url.Action("Index", "ProgramDataInstitutionItems", new { area = "ProsecutorAdmin" })", "programNum", selectedFnSubAreaId, "institutionTypeId", institutionTypeId, "nyear", ny)
+                }
            },
         });
         function viewExcelFile(courtId, ny, importType, institutionTypeId) {
                 redirectme1New("@Url.Action("Index", "ExcelViewer", new {area=""})", "id", ''.concat("", "|", courtId, "|", ny, "|", 0,"|",importType,"|",institutionTypeId));
 
         }
-       
+        //  ---------get dynamic action if selected two evalues
+           const dropdowns = [
+            {  type: 'dxDropDown', element: $('#selectBoxYear').dxSelectBox('instance') }
+        ];
+
+            dropdowns.forEach(dropdown => {
+             if (dropdown.type === 'dxDropDown') {
+                dropdown.element.option('onValueChanged', checkAllSelected);
+            } else {
+                dropdown.element.addEventListener('change', checkAllSelected);
+            }
+        });
+
+        function getValue(dropdown) {
+            if (dropdown.type === 'dxDropDown') {
+                return dropdown.element.option('value');
+            } else {
+                return dropdown.element.value;
+            }
+        }
+
+        async function  checkAllSelected() {
+            const allSelected = dropdowns.every(d => {
+                const value = getValue(d);
+                return value !== null && value !== undefined && value !== '';
+            });
+
+            if (allSelected) {
+
+               ny=$("#selectBoxYear").dxSelectBox("option", "value");
+
+                let res=await fetchDataAsync(Ciela.baseUrl + "Noms/CheckPeriod7Locked", { importType: importType,courtId:courtId,institutionTypeId:institutionTypeId, ny: ny })
+                 .then(data =>{
+                    if(!isEmpty(data)){
+                        $('#lock-result').val('Заключен период от '+data?.LockedByUserName);
+                        $('#lock-result').removeClass("hideme");
+                        isLocked=true;
+                    }
+                    else {
+                          $('#lock-result').val('');
+                        $('#lock-result').addClass("hideme");
+                        isLocked=false;
+                    }
+                 });
+
+            }
+        }
 
     });
     function ImportTypeChanged(uTypeId) {
@@ -260,4 +387,46 @@
             name: 'onClick',
             delay: { show: 0, hide: 300 },
         }];
+      function loadCustomDraftBudgetExcelFile(id) {
+           console.log('id='+id);
+            console.log('courtId='+courtId);
+             console.log('ny='+ny);
+              console.log('importType='+importType);
+                console.log('institutionTypeId='+institutionTypeId);
+
+        $('#divUploading').show();
+        var inputData={id: id,
+            courtId:courtId,
+            ny:ny,
+            importType:importType,
+            institutionTypeId:institutionTypeId};
+         $.ajax(
+             {
+             beforeSend: function (request) {
+                 request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+             },
+            url: "@Url.Action("LoadCustomDraftBudgetExcelFile", "ImportPbKonto", new { area = "ProsecutorAdmin" })", method: 'POST', data: inputData
+
+        })
+            .done(function (result) {
+                if (result.success === true) {
+
+                    $('#divUploading').hide();
+                    window.location = "@Url.Action("DownloadFile", "ExcelViewer")" + '?id=' + result.resultfile;
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+                else {
+                    $('#divUploading').hide();
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+
+            })
+            .fail(function (e) {
+
+                $('#divUploading').hide();
+                DevExpress.ui.dialog.alert('Failed to load! ' + e);
+            });
+
+
+    };
 </script>

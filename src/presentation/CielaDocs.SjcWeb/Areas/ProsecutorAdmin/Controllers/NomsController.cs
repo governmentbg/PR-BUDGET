@@ -48,6 +48,23 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
             _sjcServiceV2 = sjcServiceV2;
         }
         [HttpGet]
+        public async Task<JsonResult> GetCurrentYear()
+        {
+            try
+            {
+                var y = await _sjcService.QueryRaw<int?>($"Select CurrentYear from Cfg");
+                var items = new List<IdNames>() {
+                    new IdNames() { Id=y??0, Name=y.ToString() },
+                };
+
+                return Json(items);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
         public async Task<JsonResult> GetActivePeriodYear()
         {
             try
@@ -1130,6 +1147,162 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
             return Json(new { success = true, msg = "Периодът бе отключен" });
         }
 
+        [HttpGet]
+        public async Task<JsonResult> ShowProgramDataAnalize(int? typeOfResultId, int? ny, int? functionalSubAreaId)
+        {
+            try
+            {
+                if (typeOfResultId == 1)
+                {
+                    var data = await _sjcService.QueryRawList<IdNames>($@"SELECT DISTINCT c.Id, c.Name 
+                                    FROM Court c
+                                    LEFT JOIN ProgramDataCourt  t ON c.Id = t.CourtId 
+                                        AND t.FunctionalSubAreaId = {functionalSubAreaId ?? 0}
+                                        AND t.PlannedYear = {ny ?? 0}
+	                                    left join CourtInProgram a on c.Id=a.CourtId and a.FunctionalSubAreaId={functionalSubAreaId ?? 0}
+                                    WHERE  (t.CourtId IS NULL or t.Nvalue is null )  and a.FunctionalSubAreaId={functionalSubAreaId ?? 0}");
+                    return Json(data);
+                }
+                else
+                {
+                    var data = await _sjcService.QueryRawList<IdNames>($@"SELECT DISTINCT c.Id, c.Name 
+                                        FROM Court c
+                                        JOIN ProgramDataCourt t ON c.Id = t.CourtId
+                                        left join CourtInProgram a on c.Id=a.CourtId and a.FunctionalSubAreaId={functionalSubAreaId ?? 0}
+                                        WHERE  t.FunctionalSubAreaId = {functionalSubAreaId ?? 0}
+                                        AND t.PlannedYear = {ny ?? 0} and t.Nvalue>0");
+                    return Json(data);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
 
+        [HttpGet]
+        public async Task<JsonResult> ShowProgramDataAllAnalize(int? typeOfResultId, int? ny)
+        {
+            try
+            {
+                if (typeOfResultId == 1)
+                {
+                    var data = await _sjcService.QueryRawList<IdNames>($@"SELECT DISTINCT c.Id, c.Name 
+                                    FROM Court c
+                                    LEFT JOIN ProgramDataCourt  t ON c.Id = t.CourtId 
+                                        AND t.PlannedYear = {ny ?? 0}
+	                                    left join CourtInProgram a on c.Id=a.CourtId 
+                                    WHERE  (t.CourtId IS NULL or t.Nvalue is null ) ");
+                    return Json(data);
+                }
+                else
+                {
+                    var data = await _sjcService.QueryRawList<IdNames>($@"SELECT DISTINCT c.Id, c.Name 
+                                        FROM Court c
+                                        JOIN ProgramDataCourt t ON c.Id = t.CourtId
+                                        left join CourtInProgram a on c.Id=a.CourtId 
+                                        where t.PlannedYear = {ny ?? 0} and t.Nvalue>0");
+                    return Json(data);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+
+        public async Task<JsonResult> ShowKontoMonthDataAllAnalize(int? typeOfResultId, int? ny, int? nm)
+        {
+            if ((ny is null) || (ny < 2000)) return Json(new List<IdNames>());
+            if ((nm is null) || (nm < 1)) return Json(new List<IdNames>());
+            try
+            {
+                if (typeOfResultId == 1)
+                {
+                    var data = await _sjcService.QueryRawList<IdNames>($@"SELECT DISTINCT c.Id, c.Name 
+                                    FROM Court c
+                                    LEFT JOIN KontoMonthData  t ON c.Id = t.CourtId 
+                                        AND t.NYear = {ny ?? 0}
+                                        AND t.NMonth = {nm ?? 0}
+                                    WHERE   t.CourtId IS NULL;");
+                    return Json(data);
+                }
+                else
+                {
+                    var data = await _sjcService.QueryRawList<IdNames>($@"SELECT DISTINCT c.Id, c.Name 
+                                        FROM Court c
+                                        JOIN KontoMonthData t ON c.Id = t.CourtId
+                                        WHERE t.NYear = {ny ?? 0}
+                                        AND  t.NMonth = {nm ?? 0} and t.CourtId is not null");
+                    return Json(data);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+
+        public async Task<JsonResult> ShowDraftBudgetAnalize(int? typeOfResultId, int? importTypeId, int? courtTypeId, int? institutionTypeId, int? ny, int? functionalSubAreaId)
+        {
+            if ((ny is null) || (ny < 2000)) return Json(new List<IdNames>());
+            if (importTypeId is null) return Json(new List<IdNames>());
+            try
+            {
+                if (typeOfResultId == 1)
+                {
+                    if (importTypeId == 1)
+                    {
+                        var data = await _sjcService.QueryRawList<IdNames>($@"SELECT DISTINCT c.Id, c.Name 
+                                    FROM InstitutionType c
+                                    LEFT JOIN ProgramDataInstitution  t ON c.Id = t.InstitutionTypeId
+                                         AND t.FunctionalSubAreaId = {functionalSubAreaId ?? 0}
+                                        AND t.PlannedYear = {ny ?? 0}
+                                    WHERE c.id={institutionTypeId ?? 0} and (t.InstitutionTypeId IS NULL or t.Nvalue is null )");
+                        return Json(data);
+                    }
+                    else
+                    {
+                        var data = await _sjcService.QueryRawList<IdNames>($@"SELECT DISTINCT c.Id, c.Name 
+                                    FROM Court c
+                                    LEFT JOIN ProgramDataCourt  t ON c.Id = t.CourtId 
+                                        AND t.FunctionalSubAreaId = {functionalSubAreaId ?? 0}
+                                        AND t.PlannedYear = {ny ?? 0}
+	                                    left join CourtType a on c.CourtTypeId=a.Id
+                                    WHERE a.id={courtTypeId ?? 0} and (t.CourtId IS NULL or t.Nvalue is null )");
+                        return Json(data);
+                    }
+                }
+                else
+                {
+                    if (importTypeId == 1)
+                    {
+                        var data = await _sjcService.QueryRawList<IdNames>($@"SELECT DISTINCT c.Id, c.Name 
+                                        FROM InstitutionType c
+                                        JOIN ProgramDataInstitution t ON c.Id = t.InstitutionTypeId
+                                        AND t.FunctionalSubAreaId = {functionalSubAreaId ?? 0}
+                                        WHERE c.Id={institutionTypeId ?? 0} and t.InstitutionTypeId = {institutionTypeId ?? 0}
+                                        AND t.PlannedYear = {ny ?? 0} and t.nvalue is not null ");
+                        return Json(data);
+                    }
+                    else
+                    {
+                        var data = await _sjcService.QueryRawList<IdNames>($@"SELECT DISTINCT c.Id, c.Name 
+                                        FROM Court c
+                                        JOIN ProgramDataCourt t ON c.Id = t.CourtId
+                                        left join CourtType a on c.CourtTypeId=a.Id
+                                        WHERE a.id={courtTypeId ?? 0} and t.FunctionalSubAreaId = {functionalSubAreaId ?? 0}
+                                        AND t.PlannedYear = {ny ?? 0} and t.nvalue is not null ");
+                        return Json(data);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
     }
 }

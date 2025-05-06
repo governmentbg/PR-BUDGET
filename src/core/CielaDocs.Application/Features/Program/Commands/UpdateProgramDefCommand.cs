@@ -41,6 +41,7 @@ namespace CielaDocs.Application
         public bool? IsCalculated { get; set; }
         public string? ProgCode { get; set; }
         public string? Formula { get; set; }
+        public string? ActivityCode { get; set; }
 
     }
     public class UpdateProgramDefCommandHandler : IRequestHandler<UpdateProgramDefCommand>
@@ -78,6 +79,7 @@ namespace CielaDocs.Application
                 entity.IsCalculated = request?.IsCalculated ?? false;
                 entity.ProgCode = request?.ProgCode ?? string.Empty;
                 entity.Formula = request?.Formula ?? string.Empty;
+                entity.ActivityCode = request?.ActivityCode ?? string.Empty;
             }
             await _context.SaveChangesAsync(cancellationToken);
             return Unit.Value;

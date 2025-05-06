@@ -110,6 +110,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                             IsCalculated = record?.IsCalculated ?? false,
                             ProgCode= record?.ProgCode ?? string.Empty,
                             Formula=record?.Formula ?? string.Empty,
+                            ActivityCode=record?.ActivityCode ?? string.Empty,
                         };
                         var ret = await _mediator.Send(command);
 
@@ -155,7 +156,8 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                         Notes = record?.Notes ?? string.Empty,
                         IsCalculated = record?.IsCalculated ?? false,
                         ProgCode= record?.ProgCode ?? string.Empty,
-                        Formula= record?.Formula ?? string.Empty
+                        Formula= record?.Formula ?? string.Empty,
+                        ActivityCode= record?.ActivityCode ?? string.Empty,
 
                     };
                     var ret = await _mediator.Send(command);

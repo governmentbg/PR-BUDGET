@@ -1,4 +1,6 @@
-﻿using CielaDocs.Application;
+﻿using AspNetCoreGeneratedDocument;
+
+using CielaDocs.Application;
 using CielaDocs.Application.Models;
 using CielaDocs.Domain.Entities;
 using CielaDocs.Shared.ExpressionEngine;
@@ -8,6 +10,8 @@ using CielaDocs.SjcWeb.Extensions;
 using CielaDocs.SjcWeb.Models;
 
 using ClosedXML.Excel;
+
+using DevExpress.Export;
 
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Vml;
@@ -23,6 +27,8 @@ using Microsoft.Graph;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+using System.Text;
 
 namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
 {
@@ -414,8 +420,8 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
         {
 
             return PartialView("AddImportPbKontoLockedPartial");
-
         }
+       
     }
 }
 

@@ -1,0 +1,6 @@
+﻿@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">
+        @Html.Raw(ViewBag.ErrorMessage) <!-- Use Html.Raw to support line breaks or <br/> -->
+    </div>
+}

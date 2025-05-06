@@ -31,9 +31,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="itext7" Version="7.2.4" />
-    <PackageReference Include="ITfoxtec.Identity.Saml2" Version="4.8.8" />
-    <PackageReference Include="ITfoxtec.Identity.Saml2.MvcCore" Version="4.8.8" />
-    <PackageReference Include="MailKit" Version="3.2.0" />
+    <PackageReference Include="ITfoxtec.Identity.Saml2" Version="4.15.3" />
+    <PackageReference Include="ITfoxtec.Identity.Saml2.MvcCore" Version="4.15.3" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="6.0.11" />
@@ -87,6 +86,7 @@
     <Folder Include="Areas\ProsecutorAdmin\Models\" />
     <Folder Include="Filters\" />
     <Folder Include="Logs\" />
+    <Folder Include="SamlUtils\" />
     <Folder Include="temp-keys\" />
     <Folder Include="ViewComponents\" />
     <Folder Include="wwwroot\localdocarchive\Docs\" />

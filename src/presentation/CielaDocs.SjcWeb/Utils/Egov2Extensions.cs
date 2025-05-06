@@ -25,7 +25,7 @@ namespace CielaDocs.SjcWeb.Utils
 
             yield return new XElement(egovNamespaceX + "RequestedService",
                new XElement(egovNamespaceX + "Service", _configuration.GetValue<string>("eAuth:ServiceOid")),
-               new XElement(egovNamespaceX + "Provider", _configuration.GetValue<string>("eAuth:ServiceOid")),
+               new XElement(egovNamespaceX + "Provider", _configuration.GetValue<string>("eAuth:ProviderOid")),
                new XElement(egovNamespaceX + "LevelOfAssurance", _configuration.GetValue<string>("eAuth:LevelOfAssurance")));
 
             yield return new XElement(egovNamespaceX + "RequestedAttributes",

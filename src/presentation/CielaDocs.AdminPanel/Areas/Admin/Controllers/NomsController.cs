@@ -100,7 +100,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             try
             {
                 var data = await _sjcRepo.GetInstitutionsAsync();
-                return Json(data.ToList());
+                return Json(data.Where(x=>x.Id>0).ToList());
             }
             catch (Exception ex)
             {

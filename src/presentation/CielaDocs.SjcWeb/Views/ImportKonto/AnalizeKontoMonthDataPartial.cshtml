@@ -57,7 +57,7 @@
                 store: new DevExpress.data.CustomStore({
                     key: 'Id',
                     load() {
-                        return sendRequest(Ciela.baseUrl + "Noms/GetActivePeriodYear", 'Get', { });
+                        return sendRequest(Ciela.baseUrl + "Noms/GetCurrentYear", 'Get', { });
                     }
                 }),
             }),

@@ -97,7 +97,7 @@
                     width: "10%",
                     caption: 'Отчетни данни',
                     alllowEditing: true,
-                    valueFormat: '0.00',
+                    valueFormat: '#0.00',
                         dataType: 'number',
                         format: function (value) { return value.toFixed(2); },
                             setCellValue: function (rowData, value) {
@@ -132,7 +132,7 @@
                         .text(`${currentRowData.PrnCode} ,№ ${currentRowData.Name} Отчетни единици:`)
                         .appendTo(container);
 
-                    $('<div>')
+                    $('<div id="detailgrid">')
                         .dxDataGrid({
                             columnAutoWidth: true,
                             allowColumnReordering: true,
@@ -166,7 +166,7 @@
                                 width: "10%",
                                 caption: 'Отчетни данни',
                                 alllowEditing: true,
-                                valueFormat: '0.00',
+                                valueFormat: '#0.00',
                                 dataType: 'number',
                                 format: function (value) { return value.toFixed(2); },
                                     setCellValue: function (rowData, value) {
@@ -183,7 +183,7 @@
                                 }, {
                                     column: 'Nvalue',
                                     summaryType: 'sum',
-                                     valueFormat: '0.00',
+                                     valueFormat: '#0.00',
                                     dataType: 'number',
                                     format: function (value) { return value.toFixed(2); },
                                         setCellValue: function (rowData, value) {
@@ -192,7 +192,55 @@
                                 }],
                             },
                             toolbar: {
-                                items: [
+                                items: [  {
+            location: "after",
+            widget: "dxButton",
+            options: {
+                icon: "exportxlsx",
+                text: "Export All",
+                onClick: function () {
+                    const detailgrid = $("#detailgrid").dxDataGrid("instance");
+                     const workbook = new ExcelJS.Workbook();
+                                      DevExpress.excelExporter.exportDataGrid({
+                        component: detailgrid,
+                        worksheet: workbook.addWorksheet("All Data"),
+                        autoFilterEnabled: true
+                    }).then(() => {
+                        workbook.xlsx.writeBuffer().then((buffer) => {
+                            saveAs(new Blob([buffer], { type: "application/octet-stream" }), "AllData.xlsx");
+                        });
+                    });
+                }
+            }
+        },
+        {
+            location: "after",
+            widget: "dxButton",
+            options: {
+                icon: "exportselected",
+                text: "Export Selected",
+                onClick: function () {
+                      const detailGrid = $("#detailgrid").dxDataGrid("instance");
+                        const selectedRows = detailGrid.getSelectedRowKeys();
+
+                        if (selectedRows.length === 0) {
+                            DevExpress.ui.notify("Please select at least one row.", "warning", 2000);
+                            return;
+                        }
+                         const workbook = new ExcelJS.Workbook();
+                        DevExpress.excelExporter.exportDataGrid({
+                            component: detailGrid,
+                            selectedRowsOnly: true,
+                            worksheet: workbook.addWorksheet("Selected Data"),
+                            autoFilterEnabled: true
+                        }).then(() => {
+                            workbook.xlsx.writeBuffer().then((buffer) => {
+                                saveAs(new Blob([buffer], { type: "application/octet-stream" }), "SelectedData.xlsx");
+                            });
+                        });
+                }
+            }
+        },
                                     {
                                         location: 'after',
                                         name: 'searchPanel',
@@ -216,7 +264,7 @@
                             },
                             pager: {
                                 visible: true,
-                                allowedPageSizes: [5, 10, 'Всички'],
+                                allowedPageSizes: [5, 10,50,100,200, 0],
                                 showPageSizeSelector: true,
                                 showInfo: false,
                                 showNavigationButtons: true,
@@ -227,6 +275,17 @@
                                     info.rowElement.css('background', '#ffcc99');
                                 }
                             },
+                              selection: {
+                              mode: 'multiple',
+                            },
+                            groupPanel: {
+                              visible: true,
+                            },
+                             export: {
+                              enabled: true,
+                              allowExportSelectedData: true,
+                            },
+
                         }).appendTo(container);
                 },
             },

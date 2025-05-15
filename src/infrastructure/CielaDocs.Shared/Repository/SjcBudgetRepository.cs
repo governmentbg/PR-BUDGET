@@ -1,29 +1,15 @@
 ﻿using CielaDocs.Application.Models;
+using CielaDocs.Domain.Entities;
+using CielaDocs.Shared.DataAccess;
 
 using Dapper;
 
-using CielaDocs.Domain.Entities;
-
-using CielaDocs.Application.Dtos;
-using CielaDocs.Shared.DataAccess;
-
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using static System.Collections.Specialized.BitVector32;
-using System.Security.Cryptography;
-using System.Data;
-using static System.Net.Mime.MediaTypeNames;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using DocumentFormat.OpenXml.Vml;
-using DocumentFormat.OpenXml.Bibliography;
-using System.Net.Http.Headers;
-using DocumentFormat.OpenXml.Office2010.ExcelAc;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 
 namespace CielaDocs.Shared.Repository
 {
@@ -383,6 +369,7 @@ namespace CielaDocs.Shared.Repository
             var result = await connection.QueryAsync<InstitutionInProgramVm>(sql);
             return result?.ToList();
         }
+       
         public async Task<IEnumerable<IdNames>> GetProgramByCourtIdAsync(int? courtId) {
             string sql = $@"select Id,Name FROM dbo.FunctionalSubArea  where Id in(select distinct(FunctionalSubAreaId) from CourtInProgram where CourtId={courtId??0})";
 
@@ -1025,85 +1012,205 @@ namespace CielaDocs.Shared.Repository
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            DynamicParameters parameters = new DynamicParameters();
-            parameters.Add("ProgramDefNum", programNum ?? 0);
-            parameters.Add("nYear", ny);
-            var ret = await connection.ExecuteAsync("sp_InitProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
-            return ret;
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                DynamicParameters parameters = new DynamicParameters();
+                parameters.Add("ProgramDefNum", programNum ?? 0);
+                parameters.Add("nYear", ny);
+                var ret = await connection.ExecuteAsync("sp_InitProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
+                await transaction.CommitAsync();
+                return ret;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
         public async Task<int?> Sp_InitIndicatorDataAsync(int? programNum, int? ny, int? budgetPeriodId)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            DynamicParameters parameters = new DynamicParameters();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
             parameters.Add("nBudgetPeriodId", budgetPeriodId??0);
             var ret = await connection.ExecuteAsync("sp_InitIndicatorData", parameters, commandType: CommandType.StoredProcedure);
-            return ret;
+                await transaction.CommitAsync();
+                return ret;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
         public async Task<int?> Sp_InitIndicatorDataCourtAsync(int? programNum, int? ny, int? budgetPeriodId)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            DynamicParameters parameters = new DynamicParameters();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
             parameters.Add("nBudgetPeriodId", budgetPeriodId ?? 0);
             var ret = await connection.ExecuteAsync("sp_InitIndicatorDataCourt", parameters, commandType: CommandType.StoredProcedure);
-            return ret;
+                await transaction.CommitAsync();
+                return ret;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
         public async Task<int?> Sp_InitProgramDataCourtByIdAsync(int? programNum,int? courtId, int? ny)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            DynamicParameters parameters = new DynamicParameters();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("CourtId", courtId ?? 0);
             parameters.Add("nYear", ny);
             var ret =await connection.ExecuteAsync("sp_InitProgramDataCourtById", parameters, commandType: CommandType.StoredProcedure);
-            return ret;
+                await transaction.CommitAsync();
+                return ret;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
         public async Task<int?> Sp_InitProgramDataInstitutionAsync(int? programNum, int? ny)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            DynamicParameters parameters = new DynamicParameters();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
             var ret =await connection.ExecuteAsync("sp_InitProgramDataInstitution", parameters, commandType: CommandType.StoredProcedure);
-            return ret;
+                await transaction.CommitAsync();
+                return ret;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        public async Task<int?> Sp_InitProgramDataProsecutorAsync(int? programNum, int? ny)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("ProgramDefNum", programNum ?? 0);
+            parameters.Add("nYear", ny);
+            var ret = await connection.ExecuteAsync("sp_InitProgramDataProsecutor", parameters, commandType: CommandType.StoredProcedure);
+                 await transaction.CommitAsync();
+                return ret;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
         public async Task<int?> Sp_UpdateProgramDataAsync(int? programNum, int? ny)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            DynamicParameters parameters = new DynamicParameters();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
             var ret = await connection.ExecuteAsync("sp_UpdateProgramData", parameters, commandType: CommandType.StoredProcedure);
-            return ret;
+                await transaction.CommitAsync();
+                return ret;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
         public async Task<int?> Sp_UpdateProgramDataCourtAsync(int? programNum, int? ny)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            DynamicParameters parameters = new DynamicParameters();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
             var ret = await connection.ExecuteAsync("sp_UpdateProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
-            return ret;
+                await transaction.CommitAsync();
+                return ret;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
       
         public async Task<int?> Sp_UpdateProgramDataInstitutionAsync(int? programNum, int? ny)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            DynamicParameters parameters = new DynamicParameters();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
             var ret = await connection.ExecuteAsync("sp_UpdateProgramDataInstitution", parameters, commandType: CommandType.StoredProcedure);
-            return ret;
+                await transaction.CommitAsync();
+                return ret;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+        public async Task<int?> Sp_UpdateProgramDataProsecutorAsync(int? programNum, int? ny)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("ProgramDefNum", programNum ?? 0);
+            parameters.Add("nYear", ny);
+            var ret = await connection.ExecuteAsync("sp_UpdateProgramDataProsecutor", parameters, commandType: CommandType.StoredProcedure);
+                await transaction.CommitAsync();
+                return ret;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
         public async Task<IEnumerable<ProgramDataGridVm>> GetProgramDataGridByFilterAsync(int functionalSubAreaId, int ny)
         {
@@ -2407,6 +2514,15 @@ namespace CielaDocs.Shared.Repository
 
             return affectedRows;
         }
+        public async Task<int> ProgramDataDraftBudgetProsecutorAsync(int? institutionTypeId, int? functionalSubAreaId, int? rowNum, int? nYear, decimal? nValue)
+        {
+            var sql = $@"Update ProgramDataProsecutor set NValue={nValue ?? 0} where InstitutionTypeId={institutionTypeId ?? 0} and FunctionalSubAreaId={functionalSubAreaId ?? 0} and PlannedYear={nYear ?? 0} and rowNum={rowNum ?? 0} ";
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var affectedRows = await connection.ExecuteAsync(sql);
+
+            return affectedRows;
+        }
         public async Task<int> FirstInitProgramDataDraftBudgetCourtAsync(int? courtId, int? functionalSubAreaId, int? nYear) {
             var sql = $@"Update ProgramDataCourt set NValue=0 where courtid={courtId ?? 0} and FunctionalSubAreaId={functionalSubAreaId ?? 0} and PlannedYear={nYear ?? 0} ";
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -2422,6 +2538,14 @@ namespace CielaDocs.Shared.Repository
             await connection.OpenAsync();
             var affectedRows =await connection.ExecuteAsync(sql);
 
+            return affectedRows;
+        }
+        public async Task<int> FirstInitProgramDataDraftBudgetProsecutorAsync(int? institutionTypeId, int? functionalSubAreaId, int? nYear)
+        {
+            var sql = $@"Update ProgramDataProsecutor set NValue=0 where InstitutionTypeId={institutionTypeId ?? 0} and FunctionalSubAreaId={functionalSubAreaId ?? 0} and PlannedYear={nYear ?? 0} ";
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            var affectedRows = await connection.ExecuteAsync(sql);
             return affectedRows;
         }
         public async Task<IEnumerable<KontoCourtsYearVm>> GetKontoCourtsYearAsync(int? institutionTypeId, int? courtTypeId,int? courtId, int? ny, int? nmonth, int? reportTypeId) {
@@ -2498,7 +2622,7 @@ namespace CielaDocs.Shared.Repository
                                 ELSE SUM(k.NValue) 
                             END, 2) AS NValue,  c.Name as CourtName,f.Name as ProgramName, p.NAme as RowName
                                       from    KontoMonthData k 
-									   left join Court c on k.CourtId=c.Id
+						  left join Court c on k.CourtId=c.Id
                           left join FunctionalSubArea f on k.FunctionalSubAreaId=f.id
                           left join ProgramDef p on k.FunctionalSubAreaId=p.FunctionalSubAreaId and k.RowNum=p.RowNum
 						  where k.NYear={ny ?? 0} and k.NMonth<={nmonth ?? 0} and c.courtTypeId in( select distinct Id from courtType where InstitutionTypeId={institutionTypeId ?? 0}) ";
@@ -2508,7 +2632,7 @@ namespace CielaDocs.Shared.Repository
                 {
                     sql += $" and k.CourtId={courtId ?? 0} ";
                 }
-                sql += " group by  k.CourtId,k.FunctionalSubAreaId,k.RowNum,k.NYear,c.Name,f.Name,p.Name ";
+                sql += " group by  k.CourtId,k.FunctionalSubAreaId,k.RowNum,k.NYear,k.CurrencyId,c.Name,f.Name,p.Name ";
 
 
             }
@@ -2530,7 +2654,7 @@ namespace CielaDocs.Shared.Repository
                 {
                     sql += $" and k.CourtId={courtId ?? 0} ";
                 }
-
+                sql += " group by k.id, k.CourtId,k.FunctionalSubAreaId,k.RowNum,k.NYear,k.Nmonth,k.Nvalue,k.CurrencyId,c.Name,f.Name,p.Name ";
             }
             else
             {
@@ -2554,8 +2678,9 @@ namespace CielaDocs.Shared.Repository
                 {
                     sql += $" and k.Nmonth={nmonth ?? 0} ";
                 }
+                sql += " group by k.id, k.CourtId,k.FunctionalSubAreaId,k.RowNum,k.NYear,k.Nmonth,k.Nvalue,k.CurrencyId,c.Name,f.Name,p.Name ";
             }
-
+           
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
             var result = await connection.QueryAsync<KontoCourtsYearVm>(sql);
@@ -2618,6 +2743,17 @@ namespace CielaDocs.Shared.Repository
             parameters.Add("nYear", ny);
             parameters.Add("InstitutionTypeId", institutionTypeId ?? 0);
             var ret = await connection.ExecuteAsync("sp_RecalculateProgramDataInstitution", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
+        }
+        public async Task<int?> sp_RecalculateProgramDataProsecutorAsync(int? functionalSubAreaId, int? ny, int? institutionTypeId)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("functionalSubAreaId", functionalSubAreaId ?? 0);
+            parameters.Add("nYear", ny);
+            parameters.Add("InstitutionTypeId", institutionTypeId ?? 0);
+            var ret = await connection.ExecuteAsync("sp_RecalculateProgramDataProsecutor", parameters, commandType: CommandType.StoredProcedure);
             return ret;
         }
         public async Task<int?> sp_UpdateProgramsByProgramDefAsync(int? Id)
@@ -2706,6 +2842,40 @@ namespace CielaDocs.Shared.Repository
             await connection.OpenAsync();
             decimal? totalValue = await connection.QueryFirstOrDefaultAsync<decimal?>(sql, parameters);
              return (totalValue != null) ? Math.Round((decimal)totalValue,2) : 0;
+        }
+        private async Task<decimal> GetKontoMonthDataValueByCourtIdCurrency(int functionalSubAreaId, int rowNum, int m1, int m2, int ny, int displayCurrencyId, int courtId)
+        {
+
+            string sql = @"
+                SELECT 
+                    SUM(
+                        CASE 
+                            WHEN @DisplayCurrencyId = 0 AND CurrencyId = 1 THEN NValue * @OfficialEuroRate
+                            WHEN @DisplayCurrencyId = 1 AND CurrencyId = 0 THEN NValue / @OfficialEuroRate
+                            ELSE NValue 
+                        END
+                    ) AS TotalValue
+                FROM KontoMonthData
+                WHERE FunctionalSubAreaId = @FunctionalSubAreaId and CourtId=@CourtId
+                AND RowNum = @RowNum
+                AND NMonth BETWEEN @M1 AND @M2
+                AND NYear = @NY";
+
+            var parameters = new
+            {
+                FunctionalSubAreaId = functionalSubAreaId,
+                RowNum = rowNum,
+                M1 = m1,
+                M2 = m2,
+                NY = ny,
+                DisplayCurrencyId = displayCurrencyId,
+                OfficialEuroRate = 1.95583,
+                CourtId=courtId
+            };
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            decimal? totalValue = await connection.QueryFirstOrDefaultAsync<decimal?>(sql, parameters);
+            return (totalValue != null) ? Math.Round((decimal)totalValue, 2) : 0;
         }
         private async Task<decimal> GetKontoMonthDataByCourtIdsValue(int functionalSubAreaId, int rowNum, int m1, int m2, int ny,IEnumerable<int> courtIds)
         {
@@ -3409,13 +3579,13 @@ namespace CielaDocs.Shared.Repository
             {
                 foreach (var item in programData)
                 {
-                    
-                    nCalculatedValue = await GetKontoMonthDataValueCurrency(1, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId??0);
-                   
+
+                    nCalculatedValue = await GetKontoMonthDataValueByCourtIdCurrency(1, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0, item?.CourtId ?? 0);
+
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
-                    rec.CourtId = 0;
+                    rec.CourtId = item?.CourtId ?? 0;
                     rec.RowNum = item.RowNum;
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
@@ -3489,13 +3659,13 @@ namespace CielaDocs.Shared.Repository
             {
                 foreach (var item in programData)
                 {
-                   
-                    nCalculatedValue = await GetKontoMonthDataValueCurrency(2, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                  
+
+                    nCalculatedValue = await GetKontoMonthDataValueByCourtIdCurrency(2, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0, item?.CourtId ?? 0);
+
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
-                    rec.CourtId = 0;
+                    rec.CourtId = item?.CourtId ?? 0;
                     rec.RowNum = item.RowNum;
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
@@ -3567,12 +3737,12 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                    
-                    nCalculatedValue = await GetKontoMonthDataValueCurrency(3, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
+                    nCalculatedValue = await GetKontoMonthDataValueByCourtIdCurrency(3, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0, item?.CourtId ?? 0);
                   
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
-                    rec.CourtId = 0;
+                    rec.CourtId = item?.CourtId ?? 0;
                     rec.RowNum = item.RowNum;
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
@@ -3653,13 +3823,13 @@ namespace CielaDocs.Shared.Repository
             {
                 foreach (var item in programData)
                 {
-                    
-                    nCalculatedValue = await GetKontoMonthDataValueCurrency(4, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
-                   
+
+                    nCalculatedValue = await GetKontoMonthDataValueByCourtIdCurrency(4, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0, item?.CourtId ?? 0);
+
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
-                    rec.CourtId = 0;
+                    rec.CourtId = item?.CourtId ?? 0;
                     rec.RowNum = item.RowNum;
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
@@ -3741,12 +3911,12 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                    
-                    nCalculatedValue = await GetKontoMonthDataValueCurrency(5, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
+                    nCalculatedValue = await GetKontoMonthDataValueByCourtIdCurrency(5, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0,item?.CourtId??0);
                    
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
-                    rec.CourtId = 0;
+                    rec.CourtId = item?.CourtId??0;
                     rec.RowNum = item.RowNum;
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
@@ -3824,12 +3994,12 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                    
-                    nCalculatedValue = await GetKontoMonthDataValueCurrency(6, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
+                    nCalculatedValue = await GetKontoMonthDataValueByCourtIdCurrency(6, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0, item?.CourtId ?? 0);
                    
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
-                    rec.CourtId = 0;
+                    rec.CourtId = item?.CourtId ?? 0;
                     rec.RowNum = item.RowNum;
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
@@ -3907,11 +4077,11 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                    
-                    nCalculatedValue = await GetKontoMonthDataValueCurrency(7, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
+                    nCalculatedValue = await GetKontoMonthDataValueByCourtIdCurrency(7, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0, item?.CourtId ?? 0);
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
-                    rec.CourtId = 0;
+                    rec.CourtId = item?.CourtId ?? 0;
                     rec.RowNum = item.RowNum;
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
@@ -3961,12 +4131,12 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                    
-                    nCalculatedValue = await GetKontoMonthDataValueCurrency(8, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
+                    nCalculatedValue = await GetKontoMonthDataValueByCourtIdCurrency(8, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0, item?.CourtId ?? 0);
                    
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
-                    rec.CourtId = 0;
+                    rec.CourtId = item?.CourtId ?? 0;
                     rec.RowNum = item.RowNum;
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;
@@ -4019,14 +4189,14 @@ namespace CielaDocs.Shared.Repository
                 foreach (var item in programData)
                 {
                    
-                    nCalculatedValue = await GetKontoMonthDataValueCurrency(9, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0);
+                    nCalculatedValue = await GetKontoMonthDataValueByCourtIdCurrency(9, item?.RowNum ?? 0, m1, m2, nyear, displayCurrencyId ?? 0, item?.CourtId ?? 0);
 
 
 
                     var rec = new ProgramDataExecutionVm();
                     rec.Id = item.Id;
                     rec.FunctionalSubAreaId = item.FunctionalSubAreaId;
-                    rec.CourtId = 0;
+                    rec.CourtId = item?.CourtId ?? 0;
                     rec.RowNum = item.RowNum;
                     rec.PlannedYear = item.PlannedYear;
                     rec.PrnCode = item.PrnCode;

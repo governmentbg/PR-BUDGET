@@ -112,7 +112,6 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             try
             {
-                
                 var data = await _sjcRepo.GetKontoCourtsYearCurrencyAsync(institutionTypeId, courtTypeId,courtId,nyear,nmonth,reportTypeId, displayCurrencyId??0);
                 return Json(data.ToList());
             }

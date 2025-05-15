@@ -16,8 +16,6 @@
     @Html.HiddenFor(x => x.CurrencyMeasureId)
     @Html.HiddenFor(x => x.ValueAllowed)
     @Html.HiddenFor(x => x.IsCalculated)
-    @Html.HiddenFor(x => x.RowNum)
-    @Html.HiddenFor(x => x.ParentRowNum)
     @Html.HiddenFor(x => x.Num)
     <div class="modal-body form-horizontal">
 
@@ -53,14 +51,14 @@
                 <div class="col-4">
                     <div class="form-group">
                         <label for="RowNum" class="required">Ред</label>
-                        <input asp-for="RowNum" class="form-control" type="number" disabled="disabled" />
+                        <input asp-for="RowNum" class="form-control" type="number" />
                         <span asp-validation-for="RowNum" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-4">
                     <div class="form-group">
                         <label for="ParentRowNum" class="required">Към ред</label>
-                        <input asp-for="ParentRowNum" class="form-control" type="number" disabled="disabled" />
+                        <input asp-for="ParentRowNum" class="form-control" type="number"  />
                         <span asp-validation-for="ParentRowNum" class="text-danger"></span>
                     </div>
                 </div>

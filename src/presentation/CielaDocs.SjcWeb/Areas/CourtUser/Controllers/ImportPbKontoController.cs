@@ -116,7 +116,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                 string kontoCode = par[2];
 
                 int.TryParse("20" + ny, out int nYear);
-                if ((nYear < 2022) && (nYear > 2040))
+                if ((nYear < 2022) && (nYear > 2050))
                 {
                     return Json(new { msg = $"Неразпозната година:{ny} от формата на файла", success = false });
                 }
@@ -300,7 +300,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                 string kontoCode = par[3];
                 int.TryParse(nm, out int nMonth);
                 int.TryParse("20" + ny, out int nYear);
-                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2040))
+                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2050))
                 {
                     return (0, 0);
                 }

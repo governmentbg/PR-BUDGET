@@ -664,7 +664,7 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
                     }
 
 
-                    if ((nYear < 2022) && (nYear > 2040))
+                    if ((nYear < 2022) && (nYear > 2050))
                     {
                         return Json(new { msg = $"Неразпозната година:{nYear} от данните във файла", success = false });
                     }

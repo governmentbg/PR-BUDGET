@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using CielaDocs.Application.Models;
 using CielaDocs.Domain.Entities;
 using CielaDocs.Shared.Services;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
 {
@@ -519,16 +520,34 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         {
             try
             {
+                var cfg = await _sjcService.QueryRaw<Cfg>($"Select * from cfg");
+                if (cfg?.CurrentYear > 0) { 
+                    _=await _sjcRepo.Sp_UpdateProgramDataAsync(id, cfg?.CurrentYear??0);
+                    _ = await _sjcRepo.Sp_UpdateProgramDataCourtAsync(id, cfg?.CurrentYear ?? 0);
+                    _ = await _sjcRepo.Sp_UpdateProgramDataInstitutionAsync(id, cfg?.CurrentYear ?? 0);
+                    _ = await _sjcRepo.Sp_UpdateProgramDataProsecutorAsync(id, cfg?.CurrentYear ?? 0);
+                }
+                var abp =await  _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                List<int?> years= new List<int?> { abp.Y1, abp.Y2, abp.Y3, abp.Y4 };
+                for (int i = 0; i < years.Count; i++)
+                {
+                    _ = await _sjcRepo.Sp_UpdateProgramDataAsync(id, years[i]);
+                    _ = await _sjcRepo.Sp_UpdateProgramDataCourtAsync(id, years[i]);
+                    _ = await _sjcRepo.Sp_UpdateProgramDataInstitutionAsync(id, years[i]);
+                    _ = await _sjcRepo.Sp_UpdateProgramDataProsecutorAsync(id, years[i]);
+                }
                 var data = await _sjcRepo.GetProgramDefByProgramIdAsync(id ?? 0);
                 if (data.Any()) {
                     _ = await _sjcService.ExecuteRawSql($"Update ProgramData set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
                     _ = await _sjcService.ExecuteRawSql($"Update ProgramDataCourt set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
                     _ = await _sjcService.ExecuteRawSql($"Update ProgramDataInstitution set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
+                    _ = await _sjcService.ExecuteRawSql($"Update ProgramDataProsecutor set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
                     foreach (var itemVm in data) {
                         if (itemVm.ValueAllowed == true) {
                             _ = await _sjcService.ExecuteRawSql($"Update ProgramData set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum??0}");
                             _ = await _sjcService.ExecuteRawSql($"Update ProgramDataCourt set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum ?? 0}");
                             _ = await _sjcService.ExecuteRawSql($"Update ProgramDataInstitution set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum ?? 0}");
+                            _ = await _sjcService.ExecuteRawSql($"Update ProgramDataProsecutor set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum ?? 0}");
                         }
                     }
                     return Json(new { msg = "Данните бяха актуализирани", success = false });

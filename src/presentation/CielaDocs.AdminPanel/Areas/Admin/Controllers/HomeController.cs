@@ -105,6 +105,8 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                     var res = await _sjcRepo.Sp_InitProgramDataAsync(i, id ?? 0);
                     var res2 = await _sjcRepo.Sp_InitProgramDataCourtAsync(i, id ?? 0);
                     var res3 = await _sjcRepo.Sp_InitProgramDataInstitutionAsync(i, id ?? 0);
+                    var res4 = await _sjcRepo.Sp_InitProgramDataProsecutorAsync(i, id ?? 0);
+
                 }
                 catch (Exception ex)
                 {

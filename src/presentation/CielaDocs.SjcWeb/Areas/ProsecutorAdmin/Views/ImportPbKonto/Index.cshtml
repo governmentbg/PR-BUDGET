@@ -163,7 +163,7 @@
                       data.append("file", file);
                     $.ajax({
                         type: "POST",
-                        url: "@Url.Action("UploadFile", "BufferedFileUpload",  new { area = "ProsecutorAdmin" })",
+                        url: "@Url.Action("UploadFile", "BufferedFileUpload", new { area = "" })",
                         contentType: false,
                         processData: false,
                         data: data,
@@ -281,7 +281,7 @@
            },
         });
         function viewExcelFile(courtId, ny, importType, institutionTypeId) {
-                redirectme1New("@Url.Action("Index", "ExcelViewer", new {area=""})", "id", ''.concat("", "|", courtId, "|", ny, "|", 0,"|",importType,"|",institutionTypeId));
+                redirectme1New("@Url.Action("Index", "ExcelViewer", new { area = "ProsecutorAdmin" })", "id", ''.concat("", "|", courtId, "|", ny, "|", 0,"|",importType,"|",institutionTypeId));
 
         }
         //  ---------get dynamic action if selected two evalues
@@ -412,7 +412,7 @@
                 if (result.success === true) {
 
                     $('#divUploading').hide();
-                    window.location = "@Url.Action("DownloadFile", "ExcelViewer")" + '?id=' + result.resultfile;
+                    window.location = "@Url.Action("DownloadFile", "ExcelViewer", new { area = "ProsecutorAdmin" })" + '?id=' + result.resultfile;
                     DevExpress.ui.dialog.alert(result.msg);
                 }
                 else {

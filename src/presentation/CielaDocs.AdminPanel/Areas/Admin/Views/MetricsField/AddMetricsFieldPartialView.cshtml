@@ -62,7 +62,7 @@
 </form>
 <script>
     $(() => {
-
+        let selectedMetricsFieldId='@Model.Id';
         $('#cbIsActive').prop('checked', ($('#IsActive').val().toLowerCase() == 'true') ? true : false);
         $("#cbIsActive").change(function () {
             $('#IsActive').val($(this).prop("checked"));
@@ -107,5 +107,6 @@
         }).on('change', function (e) {
             $('#TypeOfIndicatorId').val($(e.currentTarget).val());
         });
+              
     });
 </script>

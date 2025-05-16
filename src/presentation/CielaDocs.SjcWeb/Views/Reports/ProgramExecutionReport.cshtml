@@ -75,7 +75,7 @@
                 pager: {
                     visible: true,
                     showNavigationButtons: true,
-                    allowedPageSizes: [10, 25, 50, 100],
+                    allowedPageSizes: [10, 25, 50, 100,0],
                     showPageSizeSelector: true,
                     showInfo: true,
                     showNavigationButtons: true,
@@ -112,7 +112,7 @@
                         dataField: "Nvalue",
                         width: "10%",
                         caption: "Прогнозна С-ст",
-                        valueFormat: '0.00',
+                        valueFormat: '#0.00',
                         dataType: 'number',
                         format: function (value) { return value.toFixed(2); },
                             setCellValue: function (rowData, value) {
@@ -125,7 +125,7 @@
                         dataField: "ApprovedValue",
                         width: "10%",
                         caption: "Утвърден бюджет",
-                       valueFormat: '0.00',
+                       valueFormat: '#0.00',
                         dataType: 'number',
                         format: function (value) { return value.toFixed(2); },
                             setCellValue: function (rowData, value) {
@@ -138,7 +138,7 @@
                         dataField: "CalculatedValue",
                         width: "10%",
                         caption: "Конто С-ст",
-                        valueFormat: '0.00',
+                        valueFormat: '#0.00',
                         dataType: 'number',
                         format: function (value) { return value.toFixed(2); },
                             setCellValue: function (rowData, value) {
@@ -240,7 +240,7 @@
                                     }, {
                                         column: 'Nvalue',
                                         summaryType: 'sum',
-                                        valueFormat: '0.00',
+                                        valueFormat: '#0.00',
                                         dataType: 'number',
                                         format: function (value) { return value.toFixed(2); },
                                             setCellValue: function (rowData, value) {
@@ -249,7 +249,7 @@
                                     }, {
                                         column: 'ApprovedValue',
                                         summaryType: 'sum',
-                                        valueFormat: '0.00',
+                                        valueFormat: '#0.00',
                                         dataType: 'number',
                                         format: function (value) { return value.toFixed(2); },
                                             setCellValue: function (rowData, value) {
@@ -258,7 +258,7 @@
                                     }, {
                                         column: 'CalculatedValue',
                                         summaryType: 'sum',
-                                        valueFormat: '0.00',
+                                        valueFormat: '#0.00',
                                         dataType: 'number',
                                         format: function (value) { return value.toFixed(2); },
                                             setCellValue: function (rowData, value) {
@@ -292,7 +292,7 @@
                                 },
                                 pager: {
                                     visible: true,
-                                    allowedPageSizes: [5, 10, 'Всички'],
+                                    allowedPageSizes: [5, 10,50 ,100,200,0],
                                     showPageSizeSelector: true,
                                     showInfo: false,
                                     showNavigationButtons: true,

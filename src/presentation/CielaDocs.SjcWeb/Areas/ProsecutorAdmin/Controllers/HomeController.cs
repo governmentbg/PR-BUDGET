@@ -47,6 +47,7 @@ using System.Threading.Tasks;
 namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
 {
     [Area("ProsecutorAdmin")]
+
     [Authorize(Policy = "ProsecutorAdminOnly")]
     public class HomeController : Controller
     {
@@ -81,11 +82,11 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
         }
 
        
-        [Route("/Home/HandleError/{code:int}")]
+        [Route("/ProsecutorAdmin/Home/HandleError/{code:int}")]
         public IActionResult HandleError(int code)
         {
             ViewData["ErrorMessage"] = $"Нямате права за достъп до този ресурс: {code}";
-            return View("~/Views/Shared/HandleError.cshtml");
+            return View("~/Areas/ProsecutorAdmin/Views/Shared/HandleError.cshtml");
         }
         
         [AllowAnonymous]
@@ -153,6 +154,7 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
         }
         [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+  
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
@@ -402,7 +404,27 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
         public PartialViewResult AddMainDataPeriodLockedPartial() => PartialView("AddMainDataPeriodLockedPartial");
         public PartialViewResult AddApprovedDataItemLockedPartial() => PartialView("AddApprovedDataItemLockedPartial");
 
+        public async Task<PartialViewResult> AnalizeMainDataPartial(int? functionalSubAreaId, int? courtTypeId, int? nm, int? ny)
+        {
+            ViewBag.FunctionalSubAreaId = functionalSubAreaId ?? 0;
+            ViewBag.FunctionalSubAreaName = await _sjcRepo.QueryRawAsync<String>($"Select Name from FunctionalSubArea where id={functionalSubAreaId ?? 0}");
+            ViewBag.CourtTypeId = courtTypeId ?? 0;
+            ViewBag.CourtTypeName = await _sjcRepo.QueryRawAsync<String>($"Select Name from CourtType where id={courtTypeId ?? 0}");
+            ViewBag.Nm = nm ?? 0;
+            ViewBag.Ny = ny ?? 0;
+            return PartialView("AnalizeMainDataPartial");
+        }
 
+        public async Task<PartialViewResult> AnalizeProgramDataPartial(int? functionalSubAreaId)
+        {
+            ViewBag.FunctionalSubAreaId = functionalSubAreaId ?? 0;
+            ViewBag.FunctionalSubAreaName = await _sjcRepo.QueryRawAsync<String>($"Select Name from FunctionalSubArea where id={functionalSubAreaId ?? 0}");
+            return PartialView("AnalizeProgramDataPartial");
+        }
+        public async Task<PartialViewResult> AnalizeProgramDataAllPartial()
+        {
+            return PartialView("AnalizeProgramDataAllPartial");
+        }
 
     }
 }

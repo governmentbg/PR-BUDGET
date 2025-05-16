@@ -23,7 +23,7 @@
         }
 </style>
 <div class="spacer_5"></div>
-<h4>Бюджетна прогноза по ведомствени и администрирани разходни параграфи на програмата за @title</h4>
+<h4>Утвърден бюджет на програмата за @title</h4>
 <h4>@ViewBag.ProgramName</h4>
 <h5>Валута:@ViewBag.CurrencyName, Мярка:@ViewBag.CurrencyMeasureName</h5>
 <div class="row">
@@ -50,7 +50,7 @@
         const commonContent = $('#commonContent');
         const commonTitle = $('#titleLabel');
         var selectedId = 0;
-
+          currentYear=Number(@ViewBag.Year)||0;
         $('#btnAnyCancel').on('click', function () {
             anyModal.modal('hide');
             $("#grid").dxDataGrid("instance").refresh();
@@ -95,7 +95,21 @@
         function editCourtRow(id) {
             DevExpress.ui.dialog.alert('Тази функционалност е в процес на обсъждане към момента', 'Внимание');
         }
+         function recalculateGrid() {
 
+            $.ajax({
+                url: Ciela.baseUrl + "ApprovedDataItems/RecalculateGrid", data: { functionalSubAreaId: $('#FunctionalSubAreaId').val(), nyear: currentYear }
+
+            }).done(function (result) {
+                $("#grid").dxDataGrid("instance").refresh();
+
+            })
+                .fail(function (e) {
+                    DevExpress.ui.notify('Failed to recalculate data! ' + e);
+
+                });
+            return false;
+        }
 
         $(() => {
              let bIsLocked = '@(ViewBag.IsLocked ?? "false")'.toLowerCase() === 'true';
@@ -199,20 +213,28 @@
                     {
                         dataField: "CalculatedValue",
                         width: "10%",
-                        caption: "Конто С-ст",
+                        caption: "Отчет",
                         alllowEditing: false,
-                        valueFormat: '#0.00',
+                       valueFormat: '#0.00',
                         dataType: 'number',
-                        visible: false,
                         format: function (value) { return value.toFixed(2); },
                             setCellValue: function (rowData, value) {
                                 rowData.CalculatedValue = value.toFixed(2);
                             },
 
-                    },
+                    }
                 ],
                 toolbar: {
-                    items: [
+                    items: [  {
+                            location: 'after',
+                            widget: 'dxButton',
+                            options: {
+                                icon: 'formula',
+                                onClick() {
+                                    recalculateGrid();
+                                },
+                            },
+                        },
 
                         {
                             location: 'after',
@@ -298,7 +320,7 @@
                                     {
                                         dataField: "CalculatedValue",
                                         width: "10%",
-                                        caption: "Конто С-ст",
+                                        caption: "Отчет",
                                         alllowEditing: false,
                                         valueFormat: '0.00',
                                         dataType: 'number',
@@ -389,7 +411,7 @@
                                 },
                                 pager: {
                                     visible: true,
-                                    allowedPageSizes: [5, 10, 'Всички'],
+                                    allowedPageSizes: [5, 10, 50,100,200,0],
                                     showPageSizeSelector: true,
                                     showInfo: false,
                                     showNavigationButtons: true,
@@ -463,7 +485,10 @@
                     if (info.rowType === "data" && info.data.ValueAllowed === false) {
                         info.rowElement.css('background', '#ffcc99');
                     }
-                }
+                },
+                onRowUpdated() {
+                    recalculateGrid();
+                },
 
             });
 

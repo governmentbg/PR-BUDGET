@@ -54,6 +54,7 @@
         <div style="float:right;margin-right:10px;margin-bottom:10px;">
 
             <div id="btnLockedView"></div>
+            <div id="btnEnteredData"></div>
             <div id="okFilterBtn"></div>
             <div id="closeFilterBtn"></div>
         </div>
@@ -76,6 +77,21 @@
                 height: $(window).height() - 150,
                 width: $(window).width() - 800,
                 title: 'Заключени периоди',
+            });
+            mainRightReadOnlyPopup.show();
+        }
+        }).dxButton("instance");
+
+        const buttonCourts = $("#btnEnteredData").dxButton({
+        visible: true,
+        icon:Ciela.rootUrl+'images/input-data.svg',
+        hint:'Въведени данни',
+        onClick: function () {
+                mainRightReadOnlyPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Home/AnalizeProgramDataPartial", { functionalSubAreaId: functionalSubAreaId}),
+                height: $(window).height() - 150,
+                width: $(window).width() - 800,
+                title: 'Анализ на въведени данни',
             });
             mainRightReadOnlyPopup.show();
         }

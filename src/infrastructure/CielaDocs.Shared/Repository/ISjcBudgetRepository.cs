@@ -125,7 +125,7 @@ namespace CielaDocs.Shared.Repository
         Task<int?> sp_UpdateProgramsByProgramDefAsync(int? Id);
         Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataGridAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? currencyId);
         Task<IEnumerable<ProgramDataExecutionVm>> GetProgramDataCourtGridByFilterAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? rowNum,int? displayCurrencyId);
-
+       
         Task<IEnumerable<string>> GetCourtNamesByIds(IEnumerable<int> ids);
         Task<IEnumerable<ProgramDataExecutionVm>> GetProgramDataCourtGridByIdsAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, IEnumerable<int> courtIds);
         Task<IEnumerable<ProgramDataCourtGridVm>> GetProgramDataCourtGridByCourtIdsAsync(int? programDefNum, int? ny, IEnumerable<int> Ids);
@@ -136,12 +136,18 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<IdNames>> GetProgramsAsync();
         Task<IEnumerable<ProgramDataInstitution3Y>> GetProgramDataInstitution3YByInstitutionTypeIdAsync(int? programDefNum, int? ny, int? institutionTypeId);
         Task<int?> sp_RecalculateProgramDataInstitutionAsync(int? functionalSubAreaId, int? ny, int? institutionTypeId);
+        Task<int?> sp_RecalculateProgramDataProsecutorAsync(int? functionalSubAreaId, int? ny, int? institutionTypeId);
         Task<int> UpdateProgramDataInstitution3YValueByIdAsync(int? id, string fieldName, decimal? val);
         Task<int?> Sp_InitProgramDataInstitutionAsync(int? programNum, int? ny);
+        Task<int?> Sp_InitProgramDataProsecutorAsync(int? programNum, int? ny);
         Task<int?> Sp_UpdateProgramDataInstitutionAsync(int? programNum, int? ny);
+        Task<int?> Sp_UpdateProgramDataProsecutorAsync(int? programNum, int? ny);
         Task<IEnumerable<InstitutionInProgramVm>> GetInstitutionInProgramByInstitutionTypeIdAsync(int? institutionTypeId);
+      
         Task<int> FirstInitProgramDataDraftBudgetInstitutionAsync(int? institutionTypeId, int? functionalSubAreaId, int? nYear);
+        Task<int> FirstInitProgramDataDraftBudgetProsecutorAsync(int? institutionTypeId, int? functionalSubAreaId, int? nYear);
         Task<int> ProgramDataDraftBudgetInstitutionAsync(int? institutionTypeId, int? functionalSubAreaId, int? rowNum, int? nYear, decimal? nValue);
+        Task<int> ProgramDataDraftBudgetProsecutorAsync(int? institutionTypeId, int? functionalSubAreaId, int? rowNum, int? nYear, decimal? nValue);
         Task<IEnumerable<IdNames>> GetProgramByInstitutionTypeIdAsync(int? institutionTypeId);
         Task<IEnumerable<ProgramData3Y>> GetProgramData3YTotalAsync(int? programDefNum, int? ny, int? institutionTypeId);
         Task<IEnumerable<IdNames>> GetAllProgramsAsync();

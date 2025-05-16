@@ -143,11 +143,7 @@
              .Id("dbusers")
              .Text("Потребители")
              .Icon("user");
-                    @* not used anymore  items.Add()
-                    .Id("ebk")
-                    .Text("Ебк")
-                    .Icon("textdocument"); *@
-                    items.Add()
+              items.Add()
                     .Id("fnarea")
                     .Text("Функционални области")
                     .Icon("detailslayout");
@@ -167,6 +163,10 @@
                     .Id("applog")
                     .Text("Потребителски действия")
                     .Icon("event");
+                    items.Add()
+                    .Id("utils")
+                    .Text("Помощни функции")
+                    .Icon("textdocument");
               items.Add()
               .Id("close")
               .Text("Затвори")
@@ -269,6 +269,7 @@
                 const metricsFieldUrl = "@Url.Action("Index","MetricsField", new {area="Admin"})";
                 const institutionsUrl = "@Url.Action("Index", "Institution", new { area = "Admin" })";
                 const appLogUrl = "@Url.Action("Index", "ApplicationLog", new { area = "Admin" })";
+                 const utilsUrl = "@Url.Action("Index", "Utils", new { area = "Admin" })";
              
                 var drawer = getDrawer();
                 var savedOpened = restoreDrawerOpened();
@@ -307,6 +308,8 @@
                         case 'institutions': navigate(institutionsUrl, willHide ? 400 : 0);
                             break;
                         case 'applog': navigate(appLogUrl, willHide ? 400 : 0);
+                            break;
+                        case 'utils': navigate(utilsUrl, willHide ? 400 : 0);
                             break;
                          case 'close': navigate(backUrl, willHide ? 400 : 0);
                                 break;

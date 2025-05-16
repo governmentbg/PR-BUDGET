@@ -1,0 +1,74 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+<h4>Помощни функции</h4>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="image-indicator"></div>
+@section scripts {
+
+    <script>
+        let loadIndicator;
+        $('#image-indicator').dxLoadIndicator({
+            indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
+        });
+          $(() => {
+            loadIndicator = $('#image-indicator').dxLoadIndicator({
+                visible: false,
+            }).dxLoadIndicator('instance');
+            loadIndicator.option('visible', false);
+
+          });
+          const menuData = [{
+            id: '1',
+            name: 'Нулиране на всички данни от импорт на Конто',
+            icon: '../images/sync16.png',
+
+        }];
+        var dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+                        case '1': nullifyKontoTables();
+                            break;
+                      
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+          function nullifyKontoTables() {
+            if (confirmDlg('Потвърдете изтриването на заредените данни от Конто за акивната година ', function (ret) {
+                if (ret) {
+                     loadIndicator.option('visible', true);
+                    $.ajax({
+                        url: "@Url.Action("NullifyKontoTable", "Utils", new { area = "Admin" })", data: {  }, method: 'POST'
+                    })
+                        .done(function (result) {
+                             loadIndicator.option('visible', false);
+                            DevExpress.ui.notify(result.msg);
+                        })
+                        .fail(function () {
+                              loadIndicator.option('visible', false);
+                            DevExpress.ui.notify('Грешка при изтриване на данните.');
+                        });
+                }
+            }));
+        }
+        </script>
+}

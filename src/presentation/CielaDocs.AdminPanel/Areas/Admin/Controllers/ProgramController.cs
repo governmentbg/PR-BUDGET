@@ -18,6 +18,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using CielaDocs.Application.Models;
 using DocumentFormat.OpenXml.Office2010.Excel;
+using CielaDocs.Shared.Services;
+using CielaDocs.Domain.Entities;
 
 
 namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
@@ -30,14 +32,21 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ISjcService _sjcService;
 
-        public ProgramController(IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor)
+        public ProgramController(IMediator mediator, 
+            IMapper mapper,
+            ILogRepository logRepo,
+            ISjcBudgetRepository sjcRepo,
+            IHttpContextAccessor httpContextAccessor,
+            ISjcService sjcService)
         {
             _mediator = mediator;
             _mapper = mapper;
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _httpContextAccessor = httpContextAccessor;
+            _sjcService= sjcService;
         }
         public IActionResult Index()
         {
@@ -46,9 +55,11 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         [HttpGet]
         public async Task<PartialViewResult> AddProgramPartial(int? functionalSubAreaId)
         {
+            int funcSubAreaId = await _sjcService.QueryRaw<int>($"Select FunctionalAreaId from FunctionalSubArea where id={functionalSubAreaId}");
+           var cfg= await _sjcService.GetCfg();
             var functionalSubAreaName = await _mediator.Send(new GetFnSubAreaByIdQuery { Id = functionalSubAreaId ?? 0 });
             ViewBag.FnSubName = functionalSubAreaName?.Name ?? string.Empty;
-            return PartialView("AddProgramPartialView", new ProgramDefVm { Id = 0, FunctionalSubAreaId = functionalSubAreaId ?? 0  });
+            return PartialView("AddProgramPartialView", new ProgramDefVm { Id = -1,FunctionalAreaId= funcSubAreaId, FunctionalSubAreaId = functionalSubAreaId ?? 0, CurrencyId=cfg?.OfficialCurrencyId??0 ,IsActive=true, CurrencyMeasureId=0});
 
 
         }
@@ -110,6 +121,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                             IsCalculated = record?.IsCalculated ?? false,
                             ProgCode= record?.ProgCode ?? string.Empty,
                             Formula=record?.Formula ?? string.Empty,
+                            ActivityCode=record?.ActivityCode ?? string.Empty,
                         };
                         var ret = await _mediator.Send(command);
 
@@ -117,7 +129,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                         string logmsg = $"Добавен бе нов ред {record?.Name} от {User.GetUserName()} към програма";
                         await _logRepo.AddToUserLogAsync(new Domain.Entities.Ulog { OnrId = record?.Id ?? 0, EmplId = User.GetEmplIdValue(), CardId = 0, MsgId = (int?)CommonConstants.LogMessageType.Add, Msg = logmsg, IP = ip });
 
-                        return Json(new { msg = "Добавен бе нов орган на съдебна власт ", success = true, id = ret });
+                        return Json(new { msg = "Добавен бе нов ред към програма ", success = true, id = ret });
                     }
                     catch (Exception ex)
                     {
@@ -155,7 +167,8 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                         Notes = record?.Notes ?? string.Empty,
                         IsCalculated = record?.IsCalculated ?? false,
                         ProgCode= record?.ProgCode ?? string.Empty,
-                        Formula= record?.Formula ?? string.Empty
+                        Formula= record?.Formula ?? string.Empty,
+                        ActivityCode= record?.ActivityCode ?? string.Empty,
 
                     };
                     var ret = await _mediator.Send(command);

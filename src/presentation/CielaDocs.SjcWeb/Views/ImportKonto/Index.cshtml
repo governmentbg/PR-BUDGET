@@ -351,6 +351,7 @@
                 if (result.success === true) {
 
                     $('#divUploading').hide();
+                     window.location = "@Url.Action("DownloadFile", "ExcelViewer")" + '?id=' + result.resultfile;
                     DevExpress.ui.dialog.alert(result.msg);
                 }
                 else {
@@ -384,10 +385,12 @@
                 if (result.success === true) {
 
                     $('#divUploading').hide();
+                       window.location = "@Url.Action("DownloadFile", "ExcelViewer")" + '?id=' + result.resultfile;
                     DevExpress.ui.dialog.alert(result.msg);
                 }
                 else {
                     $('#divUploading').hide();
+                  
                     DevExpress.ui.dialog.alert(result.msg);
                 }
 

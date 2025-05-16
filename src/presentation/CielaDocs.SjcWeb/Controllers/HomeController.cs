@@ -48,6 +48,7 @@ namespace CielaDocs.SjcWeb.Controllers
 {
     //[Authorize]
     [Authorize]
+   
     public class HomeController : Controller
     {
         private const int ChunkSize = 1024 * 32; // 32 KB
@@ -90,12 +91,12 @@ namespace CielaDocs.SjcWeb.Controllers
             
             return View(new FeedbackDto());
         }
-        [Route("/Home/HandleError/{code:int}")]
-        public IActionResult HandleError(int code)
-        {
-            ViewData["ErrorMessage"] = $"Нямате права за достъп до този ресурс: {code}";
-            return View("~/Views/Shared/HandleError.cshtml");
-        }
+        //[Route("/Home/HandleError/{code:int}")]
+        //public IActionResult HandleError(int code)
+        //{
+        //    ViewData["ErrorMessage"] = $"Нямате права за достъп до този ресурс: {code}";
+        //    return View("~/Views/Shared/HandleError.cshtml");
+        //}
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddFeedback(FeedbackDto model)
@@ -188,6 +189,7 @@ namespace CielaDocs.SjcWeb.Controllers
         }
         [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });

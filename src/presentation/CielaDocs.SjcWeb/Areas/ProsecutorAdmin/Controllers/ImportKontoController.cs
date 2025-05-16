@@ -103,7 +103,7 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
                 string kontoCode = par[3];
                 int.TryParse(nm, out int nMonth);
                 int.TryParse("20" + ny, out int nYear);
-                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2040))
+                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2050))
                 {
                     return Json(new { msg = $"Неразпознат месец: {nm} от формата на файла или година:{ny}", success = false });
                 }
@@ -244,7 +244,7 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
                 string kontoCode = par[3];
                 int.TryParse(nm, out int nMonth);
                 int.TryParse("20" + ny, out int nYear);
-                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2040))
+                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2050))
                 {
                     return (0, 0);
                 }

@@ -1,4 +1,6 @@
-﻿using CielaDocs.Application;
+﻿using AspNetCoreGeneratedDocument;
+
+using CielaDocs.Application;
 using CielaDocs.Application.Models;
 using CielaDocs.Domain.Entities;
 using CielaDocs.Shared.ExpressionEngine;
@@ -8,6 +10,8 @@ using CielaDocs.SjcWeb.Extensions;
 using CielaDocs.SjcWeb.Models;
 
 using ClosedXML.Excel;
+
+using DevExpress.Export;
 
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Vml;
@@ -23,6 +27,8 @@ using Microsoft.Graph;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+using System.Text;
 
 namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
 {
@@ -110,7 +116,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                 string kontoCode = par[2];
 
                 int.TryParse("20" + ny, out int nYear);
-                if ((nYear < 2022) && (nYear > 2040))
+                if ((nYear < 2022) && (nYear > 2050))
                 {
                     return Json(new { msg = $"Неразпозната година:{ny} от формата на файла", success = false });
                 }
@@ -294,7 +300,7 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
                 string kontoCode = par[3];
                 int.TryParse(nm, out int nMonth);
                 int.TryParse("20" + ny, out int nYear);
-                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2040))
+                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2050))
                 {
                     return (0, 0);
                 }
@@ -414,8 +420,8 @@ namespace CielaDocs.SjcWeb.Areas.CourtUser.Controllers
         {
 
             return PartialView("AddImportPbKontoLockedPartial");
-
         }
+       
     }
 }
 

@@ -25,7 +25,11 @@ using Microsoft.Graph;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using NuGet.Configuration;
+
 using System.Data;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CielaDocs.SjcWeb.Controllers
 {
@@ -74,6 +78,7 @@ namespace CielaDocs.SjcWeb.Controllers
         //[ValidateAntiForgeryToken]
         public async Task<JsonResult> LoadCustomExcelFile(string id, bool? isOverwrite)
         {
+            StringBuilder sb = new StringBuilder();
             try
             {
           
@@ -102,7 +107,7 @@ namespace CielaDocs.SjcWeb.Controllers
                 string kontoCode = par[3];
                 int.TryParse(nm, out int nMonth);
                 int.TryParse("20" + ny, out int nYear);
-                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2040))
+                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2050))
                 {
                     return Json(new { msg = $"Неразпознат месец: {nm} от формата на файла или година:{ny}", success = false });
                 }
@@ -145,13 +150,10 @@ namespace CielaDocs.SjcWeb.Controllers
                             if (decimal.TryParse(value, out decimal d))
                             {
 
-                                dic.Add(new KontoRow { Id = row, Code = code, Value = d });
+                                dic.Add(new KontoRow { Id = row, Code = Regex.Replace(code, @"\s+", ""), Value = d });
                             }
                         }
- 
-
                         row++;
-            
                     }
                 }
                 var courtData = await _sjcRepo.GetProgramDataCourtByCourtIdAsync(court?.Id,nYear);
@@ -163,10 +165,20 @@ namespace CielaDocs.SjcWeb.Controllers
                     if (string.IsNullOrWhiteSpace(kCodes)) continue;
                     decimal? nval = 0;
                     var KontoCodesList=kCodes.Split(',');
-                    foreach (var kCode in KontoCodesList) { 
-                        var foundItem=dic.Where(x=>x.Code==kCode).ToList();
-                        if (!foundItem.Any()) continue;
-                       nval+=foundItem.Sum(x => x.Value);
+                    foreach (var kCode in KontoCodesList) {
+                        var code = Regex.Replace(kCode, @"\s+", "");
+                        if (string.IsNullOrWhiteSpace(code)) continue;
+                        var foundItem=dic.Where(x=>x.Code.ContainsWord(code)).ToList();
+                        if (!foundItem.Any())
+                        {
+                            sb.AppendLine($"Not found code='{code}'");
+                            continue;
+                        }
+                        else
+                        {
+                            sb.AppendLine($"Found code='{code}', sum value={foundItem.Sum(x => x.Value)}");
+                            nval += foundItem.Sum(x => x.Value);
+                        }
                     }
                     KontoMonthDataVm dataVm = new KontoMonthDataVm()
                     {
@@ -182,12 +194,21 @@ namespace CielaDocs.SjcWeb.Controllers
                         CurrencyMeasureId = 0,
                         Datum = DateTime.Now,
                     };
+                  
                     _ = await _sjcRepo.AddUpdateKontoMonthData(dataVm);
                     _ = await _sjcRepo.ProgramDataCourtAsync(court?.Id, row?.FunctionalSubAreaId ?? 0, row?.RowNum,nYear);
                     nCnt++;
                 }
-              
-                return Json(new { msg = $"Бяха заредени данни за {nCnt} записа", success = true });
+
+                //------------------------------------------------------------------------------
+                var resultfile = $"import_{Guid.NewGuid().ToString("N")}.txt";
+                string resultfilepath = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", resultfile);
+                using (StreamWriter writer = new StreamWriter(resultfilepath, false, Encoding.UTF8))
+                {
+                    writer.Write(sb.ToString());
+                }
+                //-------------------------------------------------------------------------------
+                return Json(new { msg = $"Бяха заредени данни за {nCnt} записа", success = true, resultfile = resultfile });
 
 
             }
@@ -199,7 +220,7 @@ namespace CielaDocs.SjcWeb.Controllers
         public async Task<JsonResult> LoadFromFolderKontoFile() {
             try
             {
-                int nCnt=0;int fileCnt = 0;
+                int nCnt=0;int fileCnt = 0;StringBuilder sb = new StringBuilder();
                 string[] filePaths = System.IO.Directory.GetFiles(System.IO.Path.Combine(_env.WebRootPath + "/uploads/"));
                 foreach (string filePath in filePaths)
                 {
@@ -207,15 +228,23 @@ namespace CielaDocs.SjcWeb.Controllers
                    var res = await LoadKontoFile(System.IO.Path.GetFileName(filePath));
                     fileCnt += res.Item1;
                     nCnt += res.Item2;
+                    sb.AppendLine(res.Item3);
+                    
                 }
-                return Json(new { msg = $"Процедурата по зареждане на месечни данни от Конто приключи. Файлове с данни {fileCnt}, заредени записи: {nCnt}", success = true });
+                var resultfile = $"import_konto{Guid.NewGuid().ToString("N")}.txt";
+                string resultfilepath = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", resultfile);
+                using (StreamWriter writer = new StreamWriter(resultfilepath, false, Encoding.UTF8))
+                {
+                    writer.Write(sb.ToString());
+                }
+                return Json(new { msg = $"Процедурата по зареждане на месечни данни от Конто приключи. Файлове с данни {fileCnt}, заредени записи: {nCnt}", success = true, resultfile = resultfile });
             }
             catch (Exception ex )
             {
                 return Json(new { msg = "Грешка при импорт на файлове: " + ex?.Message, success = false });
             }
         }
-        private async Task<(int,int)> LoadKontoFile(string fileName)
+        private async Task<(int,int,string)> LoadKontoFile(string fileName)
         {
             try
             {
@@ -223,14 +252,14 @@ namespace CielaDocs.SjcWeb.Controllers
                 // Check the File is received
 
                 if (string.IsNullOrWhiteSpace(fileName))
-                    return (0, 0);
+                    return (0, 0,"Липсва име на файл");
 
                 string file = System.IO.Path.Combine(_env.WebRootPath + "/uploads/", fileName);
                 var supportedTypes = new[] { "xlsm", "xls", "xlsx" };
                 var fileExt = System.IO.Path.GetExtension(fileName).Substring(1);
                 if (!supportedTypes.Contains(fileExt))
                 {
-                    return (0,0);
+                    return (0,0,$"Невалиден файл за зареждане на данни {fileName}");
                 }
                 string sFileNameOnly = System.IO.Path.GetFileNameWithoutExtension(fileName);
                 string[] par = sFileNameOnly.Split('_');
@@ -240,15 +269,15 @@ namespace CielaDocs.SjcWeb.Controllers
                 string kontoCode = par[3];
                 int.TryParse(nm, out int nMonth);
                 int.TryParse("20" + ny, out int nYear);
-                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2040))
+                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2050))
                 {
-                    return (0, 0);
+                    return (0, 0, $"Неразпознат месец: {nm} от формата на файла или година:{ny} файл:{fileName}");
                 }
                 //===========check active period restriction========================
                 var currentY = await _sjcServiceV2.GetCurrentYearAsync();
                 if ((nYear < currentY) || (nYear > currentY))
                 {
-                    return (0, 0);
+                    return (0, 0, $"Година {nYear} е извън обхвата на текущия период! Моля проверете! файл:{fileName}");
                 }
                 //------check locked period------------
                 var checkLocked = await _sjcService.QueryRaw<KontoMonthDataLockedVm>($@"SELECT TOP 1 a.Id,a.Nmonth,a.Nyear,a.LockedBy,a.LockedOn, CONCAT( u.FirstName,' ', u.LastName) as LockedByUserName 
@@ -257,13 +286,13 @@ namespace CielaDocs.SjcWeb.Controllers
                     where a.Nmonth={nMonth} and a.Nyear={nYear} ");
                 if (checkLocked != null)
                 {
-                    return (0,0);
+                    return (0,0, $"Този период е заключен! Моля проверете! файл:{fileName} ");
                 }
                 //-------end check locked period------------------------
                 var court = await _sjcRepo.GetCourtByKontoCodeAsync(kontoCode);
                 if (court == null)
                 {
-                    return (0, 0);
+                    return (0, 0, $"Неоткрит код {kontoCode} на отчетна единица,файл:{fileName}");
                 }
 
                 List<KontoRow> dic = new();
@@ -285,7 +314,7 @@ namespace CielaDocs.SjcWeb.Controllers
                             if (decimal.TryParse(value, out decimal d))
                             {
 
-                                dic.Add(new KontoRow { Id = row, Code = code, Value = d });
+                                dic.Add(new KontoRow { Id = row, Code = Regex.Replace(code, @"\s+", ""), Value = d });
                             }
                         }
 
@@ -305,7 +334,9 @@ namespace CielaDocs.SjcWeb.Controllers
                     var KontoCodesList = kCodes.Split(',');
                     foreach (var kCode in KontoCodesList)
                     {
-                        var foundItem = dic.Where(x => x.Code == kCode).ToList();
+                        var code = Regex.Replace(kCode, @"\s+", "");
+                        if (string.IsNullOrWhiteSpace(code)) continue;
+                        var foundItem = dic.Where(x => x.Code.ContainsWord(code)).ToList();
                         if (!foundItem.Any()) continue;
                         nval += foundItem.Sum(x => x.Value);
                     }
@@ -328,13 +359,13 @@ namespace CielaDocs.SjcWeb.Controllers
                     nCnt++;
                 }
 
-                return (1,nCnt);
+                return (1,nCnt,$"Обработен файл {fileName}");
 
 
             }
             catch (Exception ex)
             {
-                return (0, 0);
+                return (0, 0,$"Грешка при обработка на файл:{fileName}, грешка:{ex?.ToString()}");
             }
         }
         [HttpGet]

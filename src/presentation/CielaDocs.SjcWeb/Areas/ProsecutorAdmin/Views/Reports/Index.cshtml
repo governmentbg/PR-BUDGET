@@ -33,10 +33,10 @@
             <div class="col-md-3">
 
                 <div class="capsule-at">
-                    <span id="cntExpiredCardMsg" class="badge badge-pill badge-info" title="Изпълнение на бюджета" style="cursor:pointer;"></span>
+                    <span id="cntExpiredCardMsg" class="badge badge-pill badge-info" title="Изпълнение на бюджетни програми" style="cursor:pointer;"></span>
                     <div id="reportBudget" style="margin-top:10px;">
                         <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/DateTime.png")" alt="." />
-                        <p class="button_text-at">Изпълнение на бюджета</p>
+                        <p class="button_text-at">Изпълнение на бюджетни програми I</p>
                         <p>Отчет по изпълнение на бюджета</p>
                     </div>
                 </div>
@@ -45,8 +45,8 @@
                 <div class="capsule-at">
                     <div id="reportProgram" style="margin-top:10px;">
                         <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/DateTime_01.png")" alt="." />
-                        <p class="button_text-at">Изпълнение на бюджетни програми</p>
-                        <p>Отчет за изпълнение по бюджетни програми...</p>
+                        <p class="button_text-at">Изпълнение на бюджетни програми II</p>
+                        <p>Отчет за изпълнение по бюджетни програми II...</p>
                     </div>
                 </div>
             </div>
@@ -76,6 +76,24 @@
                         <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Graph-03.png")" alt="." />
                         <p class="button_text-at">Резултати от проектобюджети по програми</p>
                         <p>Сумарен отчет за резултати от проектобюджети по програми...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="capsule-at">
+                    <div id="reportCommonBudget" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Graph-01.png")" alt="." />
+                        <p class="button_text-at">Резултати от проектобюджети по програми(Excel)</p>
+                        <p>Сумарен отчет за резултати от проектобюджети по програми в Excel формат</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="capsule-at">
+                    <div id="endedBudgetPeriod" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Auto-Archive-WF.png")" alt="." />
+                        <p class="button_text-at">Приключени периоди</p>
+                        <p>Справки и отчети за приключени периоди за бюджетни програми</p>
                     </div>
                 </div>
             </div>
@@ -217,6 +235,12 @@ else
                   });
                   popup.show();
               });
+               $("#endedBudgetPeriod").on("click", function () {
+                  popup.option({
+                      contentTemplate: () => popupContentTemplate(8)
+                  });
+                  popup.show();
+              });
          });
 
 
@@ -277,6 +301,8 @@ else
                  case 6: cnturl = "@Url.Action("AddProgramYearFilterPartial", "Reports", new { area = "ProsecutorAdmin" })";
                      break;
                  case 7: cnturl = "@Url.Action("AddCommonBudgetFilterPartial", "Reports", new { area = "ProsecutorAdmin" })";
+                      break;
+                 case 8: cnturl = "@Url.Action("EndedBudgetPeriodFilterPartial", "Reports", new { area = "ProsecutorAdmin" })";
                       break;
 
              }
@@ -342,6 +368,9 @@ else
            function  applyCommonBudget(e){
                redirectme2("@Url.Action("Index", "CommonBudget", new { area = "ProsecutorAdmin" })", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
            }
+            function  applyEndedBudget(e){
+              redirectme2("@Url.Action("Index", "EndedBudget", new { area = "ProsecutorAdmin" })", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
+         }
          const reportmenuData = [{
                     id: '1',
                     name: 'Начало',

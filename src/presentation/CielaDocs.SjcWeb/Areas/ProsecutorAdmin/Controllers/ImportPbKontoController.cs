@@ -9,6 +9,8 @@ using CielaDocs.SjcWeb.Models;
 
 using ClosedXML.Excel;
 
+using DevExpress.Export;
+
 using DocumentFormat.OpenXml.Spreadsheet;
 using DocumentFormat.OpenXml.Vml;
 
@@ -25,6 +27,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using System.Data;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
 {
@@ -409,6 +413,396 @@ namespace CielaDocs.SjcWeb.Areas.ProsecutorAdmin.Controllers
 
             return PartialView("AddImportPbKontoLockedPartial");
 
+        }
+        [HttpGet]
+        public async Task<PartialViewResult> AnalizeDraftBudgetPartial(int? importTypeId, int? functionalSubAreaId, int? institutionTypeId, int? courtTypeId, int? ny)
+        {
+            ViewBag.FunctionalSubAreaId = functionalSubAreaId ?? 0;
+            ViewBag.FunctionalSubAreaName = await _sjcRepo.QueryRawAsync<String>($"Select Name from FunctionalSubArea where id={functionalSubAreaId ?? 0}");
+            ViewBag.CourtTypeId = courtTypeId ?? 0;
+            ViewBag.CourtTypeName = await _sjcRepo.QueryRawAsync<String>($"Select Name from CourtType where id={courtTypeId ?? 0}");
+            ViewBag.InstitutionTypeId = institutionTypeId ?? 0;
+            ViewBag.InstitutionTypeIName = await _sjcRepo.QueryRawAsync<String>($"Select Name from InstitutionType where id={institutionTypeId ?? 0}");
+            ViewBag.ImportTypeId = importTypeId ?? 0;
+            ViewBag.ImportTypeName = (importTypeId == 1) ? "Експертен проектобюджет" : "Проектобюджет на отчетни единици";
+            ViewBag.Ny = ny ?? 0;
+            return PartialView("AnalizeDraftBudgetPartial");
+        }
+        [AllowAnonymous]
+        public FileResult DownloadDraftBudgetFile(int importType)
+        {
+            string excelFile = (importType == 1) ? System.IO.Path.Combine(_env.WebRootPath + "/templates/DraftExpertBudget.xlsx") : System.IO.Path.Combine(_env.WebRootPath + "/templates/DraftBudget.xlsx");
+            byte[] data = System.IO.File.ReadAllBytes(excelFile);
+            string fileName = $"DraftBudget_{new Random().Next(1, 1000)}.xlsx";
+            return File(data, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+        private Tuple<string, int> GetExcelFileHeaderByName(string tempFileName)
+        {
+            string excelFilePath = System.IO.Path.Combine(_env.WebRootPath + $"/Temp/{tempFileName}");
+            int ny = 0;
+            string kontoCode = string.Empty;
+            using (var excelWorkbook = new XLWorkbook(excelFilePath))
+            {
+                kontoCode = excelWorkbook.Worksheets.Worksheet(1).Cell("H5").GetString();
+                string sy = excelWorkbook.Worksheets.Worksheet(1).Cell("D8").GetString();
+                int.TryParse(new String(sy.Where(Char.IsDigit).ToArray()), out ny);
+            }
+            return new(kontoCode, ny);
+        }
+        private Tuple<string, int> GetExcelFileInstitutionHeaderByName(string tempFileName)
+        {
+            string excelFilePath = System.IO.Path.Combine(_env.WebRootPath + $"/Temp/{tempFileName}");
+            int ny = 0;
+            string institutionTypeId = string.Empty;
+            using (var excelWorkbook = new XLWorkbook(excelFilePath))
+            {
+                institutionTypeId = excelWorkbook.Worksheets.Worksheet(1).Cell("H5").GetString();
+                string sy = excelWorkbook.Worksheets.Worksheet(1).Cell("D8").GetString();
+                int.TryParse(new String(sy.Where(Char.IsDigit).ToArray()), out ny);
+            }
+            return new(institutionTypeId, ny);
+        }
+        [HttpPost]
+        [IgnoreAntiforgeryToken] // Add this to bypass CSRF protection
+        public IActionResult CheckBudgetExcelFile(int id, int courtId, int ny, int importType, int institutionTypeId)
+        {
+            return Json(new { success = true, resultfile = "example.xlsx", msg = "File processed successfully!" });
+        }
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        public async Task<JsonResult> LoadCustomDraftBudgetExcelFile(string id, int? courtId, int? ny, int? importType, int? institutionTypeId)
+        {
+            string s = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(id)) return Json(new { msg = "Невалиден файл за зареждане на данни", success = false });
+
+
+            string file = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", id);
+            var supportedTypes = new[] { "xlsm", "xlsx" };
+            var fileExt = System.IO.Path.GetExtension(id).Substring(1);
+            if (!supportedTypes.Contains(fileExt))
+            {
+                return Json(new { msg = "Невалиден файл за зареждане на данни. Задължително изберете файл с разширение .xlsm,.xlsx ", success = false });
+            }
+            if ((ny is null) || (ny < 2024))
+            {
+                return Json(new { msg = "Изберете година преди да прикачите фаила", success = false });
+            }
+            if (importType is null) { return Json(new { msg = "Изберете вида за отчетна единица или експертен", success = false }); }
+
+            if ((importType == 0) && ((courtId is null) || (courtId < 1)))
+            {
+                return Json(new { msg = "Неизбрана отчетна единица", success = false });
+            }
+            if ((importType == 1) && ((institutionTypeId is null) || (institutionTypeId < 1)))
+            {
+                return Json(new { msg = "Неизбран вид институция за експертен бюджет", success = false });
+            }
+            string sFileNameOnly = System.IO.Path.GetFileNameWithoutExtension(id);
+            int nCnt = 0;
+            StringBuilder sb = new StringBuilder();
+            if (importType == 0)
+            {
+                try
+                {
+
+                    var excelHeaderData = GetExcelFileHeaderByName(id);
+
+                    int nYear = ny ?? 0;
+                    //var court = await _sjcRepo.GetCourtByKontoCodeAsync(excelHeaderData.Item1);
+                    //if ((court == null) || (court?.Id < 1))
+                    //{
+                    //    return Json(new { msg = $"Неоткрит код {excelHeaderData.Item1} на отчетна единица", success = false });
+                    //}
+                    List<int> yearsLst = new List<int> {
+                    nYear, nYear+1, nYear+2, nYear+3
+                    };
+                    //===========check active period restriction========================
+                    var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                    if ((nYear < actuvePeriod.Y1) || (nYear > actuvePeriod.Y4))
+                    {
+                        return Json(new { msg = $"Година {nYear} е извън обхвата на активния период! Моля проверете!", success = false });
+                    }
+
+                    //------check locked period------------
+                    var checkLocked = await _sjcService.QueryRaw<KontoPbCourtLockedVm>($@"SELECT TOP 1 a.Id,a.CourtId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbCourtLocked a where a.CourtId={courtId ?? 0} and a.Nyear={nYear}");
+
+                    if (checkLocked != null)
+                    {
+                        return Json(new { msg = $"Този период е заключен! Моля проверете!", success = false });
+                    }
+                    //-------end check locked period------------------------
+                    List<DraftBudgetRow> dic = new();
+                    using (var excelWorkbook = new XLWorkbook(file))
+                    {
+                        var nonEmptyDataRows = excelWorkbook.Worksheet(1).RowsUsed();
+                        var rowCount = excelWorkbook.Worksheet(1).LastRowUsed().RowNumber();
+                        var columnCount = excelWorkbook.Worksheet(1).LastColumnUsed().ColumnNumber();
+                        int row = 9;
+                        string code = string.Empty;
+                        string value1 = string.Empty;
+                        string value2 = string.Empty;
+                        string value3 = string.Empty;
+                        string value4 = string.Empty;
+                        decimal nv1 = 0;
+                        decimal nv2 = 0;
+                        decimal nv3 = 0;
+                        decimal nv4 = 0;
+
+                        while (row <= rowCount)
+                        {
+
+                            value1 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 4).GetString();
+                            value2 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 5).GetString();
+                            value3 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 6).GetString();
+                            value4 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 7).GetString();
+                            code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 8).GetString();
+                            decimal.TryParse(value1, out nv1);
+                            decimal.TryParse(value2, out nv2);
+                            decimal.TryParse(value3, out nv3);
+                            decimal.TryParse(value4, out nv4);
+                            if (!string.IsNullOrEmpty(code))
+                            {
+                                dic.Add(new DraftBudgetRow { Id = row, Code = Regex.Replace(code, @"\s+", ""), Value1 = nv1, Value2 = nv2, Value3 = nv3, Value4 = nv4 });
+                            }
+                            row++;
+
+                        }
+                    }
+                    var r = s;
+
+                    //list of programs by court
+                    var courtInPrograms = await _sjcRepo.GetCourtInProgramByCourtIdAsync(courtId);
+                    nCnt = 0;
+                    if (courtInPrograms.Any())
+                    {
+                        foreach (var item in courtInPrograms)
+                        {
+                            //-------------
+                            int nYIndex = 0;
+
+                            foreach (var yearItem in yearsLst)
+                            {
+
+                                //always do this nullify values
+                                _ = await _sjcRepo.FirstInitProgramDataDraftBudgetCourtAsync(item?.CourtId, item?.FunctionalSubAreaId ?? 0, yearItem);
+
+                                nYIndex++;
+
+                                var programDefCodes = await _sjcRepo.GetProgramDefProgCodesByProgramIdAsync(item?.FunctionalSubAreaId ?? 0);
+
+                                if (programDefCodes.Any())
+                                {
+
+                                    foreach (var prowDef in programDefCodes)
+                                    {
+
+                                        if (prowDef?.ProgCode is null) continue;
+                                        var progCode = Regex.Replace(prowDef.ProgCode, @"\s+", "");
+                                        if (string.IsNullOrWhiteSpace(progCode)) continue;
+                                        decimal? nval = 0;
+
+                                        var dicFiltered = dic.Where(x => x.Code.ContainsWord(progCode)).ToList();
+
+                                        switch (nYIndex)
+                                        {
+                                            case 1:
+                                                { nval += dicFiltered.Sum(x => x.Value1); }
+                                                break;
+                                            case 2:
+                                                { nval += dicFiltered.Sum(x => x.Value2); }
+                                                break;
+                                            case 3:
+                                                { nval += dicFiltered.Sum(x => x.Value3); }
+                                                break;
+                                            case 4:
+                                                { nval += dicFiltered.Sum(x => x.Value4); }
+                                                break;
+
+                                        }
+                                        sb.AppendLine($"CourtId:{item?.CourtId}, FunctionalSubAreaId:{prowDef?.FunctionalSubAreaId ?? 0} rowNum={prowDef?.RowNum} year={yearItem} val={nval}, progCode='{progCode}'");
+                                        _ = await _sjcRepo.ProgramDataDraftBudgetCourtAsync(item?.CourtId, prowDef?.FunctionalSubAreaId ?? 0, prowDef?.RowNum, yearItem, nval);
+                                        nCnt++;
+                                    }
+                                }
+                                _ = await _sjcRepo.sp_RecalculateProgramDataCourtAsync(item?.FunctionalSubAreaId, yearItem, item?.CourtId);
+                            }
+                            //-------------
+                        }
+                    }
+
+                    //------------------------------------------------------------------------------
+                    var resultfile = $"import_{Guid.NewGuid().ToString("N")}.txt";
+                    string resultfilepath = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", resultfile);
+                    using (StreamWriter writer = new StreamWriter(resultfilepath, false, Encoding.UTF8))
+                    {
+                        writer.Write(sb.ToString());
+                    }
+                    //-------------------------------------------------------------------------------
+                    return Json(new { msg = $"Бяха заредени данни за {nCnt} записа", success = true, resultfile = resultfile });
+
+
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { msg = "Грешка при четене на файл: " + ex?.Message, success = false });
+                }
+            }
+            else if (importType == 1)
+            {
+
+                try
+                {
+
+                    var excelHeaderData = GetExcelFileInstitutionHeaderByName(id);
+
+                    int nYear = ny ?? 0;
+                    var inst = await _sjcRepo.GetInstitutionTypeByIdAsync(institutionTypeId);
+                    if (inst == null)
+                    {
+                        return Json(new { msg = $"Неоткрит код {excelHeaderData.Item1} на отчетна единица", success = false });
+                    }
+
+
+                    if ((nYear < 2022) && (nYear > 2050))
+                    {
+                        return Json(new { msg = $"Неразпозната година:{nYear} от данните във файла", success = false });
+                    }
+
+                    List<int> yearsLst = new List<int> {
+                    nYear, nYear+1, nYear+2, nYear+3
+                    };
+                    //===========check active period restriction========================
+                    var actuvePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                    if ((nYear < actuvePeriod.Y1) || (nYear > actuvePeriod.Y4))
+                    {
+                        return Json(new { msg = $"Година {nYear} е извън обхвата на активния период! Моля проверете!", success = false });
+                    }
+                    //------check locked period------------
+                    var checkLocked = await _sjcService.QueryRaw<KontoPbInstitutionTypeLockedVm>($@"SELECT TOP 1 a.Id,a.InstitutionTypeId,a.Nyear,a.LockedBy,a.LockedOn FROM KontoPbInstitutionTypeLocked a where a.InstitutionTypeId={inst?.Id ?? 0} and a.Nyear={nYear}");
+
+                    if (checkLocked != null)
+                    {
+                        return Json(new { msg = $"Този период е заключен! Моля проверете!", success = false });
+                    }
+                    //-------end check locked period------------------------
+                    List<DraftBudgetRow> dic = new();
+                    using (var excelWorkbook = new XLWorkbook(file))
+                    {
+                        var nonEmptyDataRows = excelWorkbook.Worksheet(1).RowsUsed();
+                        var rowCount = excelWorkbook.Worksheet(1).LastRowUsed().RowNumber();
+                        var columnCount = excelWorkbook.Worksheet(1).LastColumnUsed().ColumnNumber();
+                        int row = 9;
+                        string code = string.Empty;
+                        string value1 = string.Empty;
+                        string value2 = string.Empty;
+                        string value3 = string.Empty;
+                        string value4 = string.Empty;
+                        decimal nv1 = 0;
+                        decimal nv2 = 0;
+                        decimal nv3 = 0;
+                        decimal nv4 = 0;
+                        while (row <= rowCount)
+                        {
+
+                            value1 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 4).GetString();
+                            value2 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 5).GetString();
+                            value3 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 6).GetString();
+                            value4 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 7).GetString();
+                            code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 8).GetString();
+                            decimal.TryParse(value1, out nv1);
+                            decimal.TryParse(value2, out nv2);
+                            decimal.TryParse(value3, out nv3);
+                            decimal.TryParse(value4, out nv4);
+                            if (!string.IsNullOrEmpty(code))
+                            {
+                                dic.Add(new DraftBudgetRow { Id = row, Code = Regex.Replace(code, @"\s+", ""), Value1 = nv1, Value2 = nv2, Value3 = nv3, Value4 = nv4 });
+                            }
+                            row++;
+
+                        }
+                    }
+
+                    //list of programs by court
+                    var instInPrograms = await _sjcRepo.GetInstitutionInProgramByInstitutionTypeIdAsync(inst?.Id);
+                    nCnt = 0;
+                    if (instInPrograms.Any())
+                    {
+                        foreach (var item in instInPrograms)
+                        {
+                            //-------------
+                            int nYIndex = 0;
+
+                            foreach (var yearItem in yearsLst)
+                            {
+
+                                //always do this nullify values
+                                _ = await _sjcRepo.FirstInitProgramDataDraftBudgetInstitutionAsync(item?.InstitutionTypeId, item?.FunctionalSubAreaId ?? 0, yearItem);
+
+                                nYIndex++;
+
+                                var programDefCodes = await _sjcRepo.GetProgramDefProgCodesByProgramIdAsync(item?.FunctionalSubAreaId ?? 0);
+
+                                if (programDefCodes.Any())
+                                {
+
+                                    foreach (var prowDef in programDefCodes)
+                                    {
+                                        if (prowDef?.ProgCode is null) continue;
+                                        var progCode = Regex.Replace(prowDef.ProgCode, @"\s+", "");
+                                        if (string.IsNullOrWhiteSpace(progCode)) continue;
+                                        decimal? nval = 0;
+                                        var dicFiltered = dic.Where(x => x.Code.ContainsWord(progCode)).ToList();
+                                        //if (progCode == "03.01.04.K") {
+                                        //    var dg= dic.Select(x => x.Code).ToList();
+                                        //}
+                                        switch (nYIndex)
+                                        {
+                                            case 1:
+                                                { nval += dicFiltered.Sum(x => x.Value1); }
+                                                break;
+                                            case 2:
+                                                { nval += dicFiltered.Sum(x => x.Value2); }
+                                                break;
+                                            case 3:
+                                                { nval += dicFiltered.Sum(x => x.Value3); }
+                                                break;
+                                            case 4:
+                                                { nval += dicFiltered.Sum(x => x.Value4); }
+                                                break;
+
+                                        }
+                                        sb.AppendLine($"ItemTypeId:{item?.InstitutionTypeId}, FunctionalSubAreaId:{prowDef?.FunctionalSubAreaId ?? 0} rowNum={prowDef?.RowNum} year={yearItem} val={nval}, progCode='{progCode}'");
+                                        _ = await _sjcRepo.ProgramDataDraftBudgetInstitutionAsync(item?.InstitutionTypeId, prowDef?.FunctionalSubAreaId ?? 0, prowDef?.RowNum, yearItem, nval);
+                                        nCnt++;
+                                    }
+                                }
+                                _ = await _sjcRepo.sp_RecalculateProgramDataInstitutionAsync(item?.FunctionalSubAreaId, yearItem, item?.InstitutionTypeId);
+                            }
+                            //-------------
+                        }
+                    }
+
+                    // var z = s;
+                    //------------------------------------------------------------------------------
+                    var resultfile = $"import_{Guid.NewGuid().ToString("N")}.txt";
+                    string resultfilepath = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", resultfile);
+                    using (StreamWriter writer = new StreamWriter(resultfilepath, false, Encoding.UTF8))
+                    {
+                        writer.Write(sb.ToString());
+                    }
+                    //-------------------------------------------------------------------------------
+                    return Json(new { msg = $"Бяха заредени данни за {nCnt} записа", success = true, resultfile = resultfile });
+
+
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { msg = "Грешка при четене на файл: " + ex?.Message, success = false });
+                }
+            }
+
+            return Json(new { msg = "", success = false });
         }
     }
 }

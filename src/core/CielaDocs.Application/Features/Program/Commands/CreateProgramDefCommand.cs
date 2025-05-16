@@ -40,6 +40,7 @@ namespace CielaDocs.Application
         public bool? IsCalculated { get; set; }
         public string? ProgCode { get; set; }
         public string? Formula { get; set; }
+        public string? ActivityCode { get; set; }
 
     }
 
@@ -81,6 +82,7 @@ namespace CielaDocs.Application
                         IsCalculated=request?.IsCalculated ?? false,
                         ProgCode=request?.ProgCode??string.Empty,
                         Formula=request?.Formula ?? string.Empty,
+                        ActivityCode=request?.ActivityCode??string.Empty,
                 };
                 _context.ProgramDef.Add(entry);
                 await _context.SaveChangesAsync(cancellationToken);

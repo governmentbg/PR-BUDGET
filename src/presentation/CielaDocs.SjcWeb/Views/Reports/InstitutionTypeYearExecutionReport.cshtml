@@ -101,7 +101,7 @@
                 pager: {
                     visible: true,
                     showNavigationButtons: true,
-                    allowedPageSizes: [10, 25, 50, 100],
+                    allowedPageSizes: [10, 25, 50, 100,0],
                     showPageSizeSelector: true,
                     showInfo: true,
                     showNavigationButtons: true,
@@ -139,7 +139,7 @@
                         width: "10%",
                         caption: selectedYear,
                         alllowEditing: true,
-                         valueFormat: '0.00',
+                         valueFormat: '#0.00',
                         dataType: 'number',
                         format: function (value) { return value.toFixed(2); },
                             setCellValue: function (rowData, value) {
@@ -152,7 +152,7 @@
                         width: "10%",
                         caption: selectedYear + 1,
                         alllowEditing: true,
-                         valueFormat: '0.00',
+                         valueFormat: '#0.00',
                         dataType: 'number',
                         format: function (value) { return value.toFixed(2); },
                             setCellValue: function (rowData, value) {
@@ -164,7 +164,7 @@
                         width: "10%",
                         caption: selectedYear + 2,
                         alllowEditing: true,
-                        valueFormat: '0.00',
+                        valueFormat: '#0.00',
                         dataType: 'number',
                         format: function (value) { return value.toFixed(2); },
                             setCellValue: function (rowData, value) {

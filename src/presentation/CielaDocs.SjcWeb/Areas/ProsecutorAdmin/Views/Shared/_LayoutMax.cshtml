@@ -61,7 +61,46 @@
             &copy; @DateTime.Now.Year - ВСС Програмно бюджетиране
         </div>
     </footer>
+    <script>
+        const mainPopup = $("#mainpopup").dxPopup({
+               visible: false,
+               width: 600,
+               height: "auto",
+               showTitle: true,
+               showCloseButton: true,
+               dragEnabled: true,
+               hideOnOutsideClick: true,
+               position: {
+                   at: 'center',
+                   my: 'center',
+                   of: window,
 
+                   collision: {
+                       x: 'none',
+                       y: 'flip'
+                   },
+                   offset: '0 0'
+               },
+
+           }).dxPopup('instance');
+             const layoutPopupContentTemplateByName = function (url, arg) {
+              const scrollView = $('<div />');
+
+              $.ajax({ url: url, data: arg, method: 'Get', async: true, dataType: "html" })
+                  .done(function (result) {
+
+                      scrollView.append($('<div id="emplr" />').html(result));
+                      scrollView.dxScrollView({
+                          width: '100%',
+                          height: '100%',
+                      });
+                  })
+                  .fail(function (xhr) {
+                      alert('Грешка при зареждане на данни.' + xhr.status + ' -' + xhr.statusText + ' -' + xhr.responseText);
+                  });
+              return scrollView;
+          };
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

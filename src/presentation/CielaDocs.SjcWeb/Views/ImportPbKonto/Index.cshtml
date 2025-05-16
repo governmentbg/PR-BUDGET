@@ -69,12 +69,16 @@
                             <p>Моля изчакайте . . . <img src="@Url.Content("~/images/ajax_loader.gif")"></p>
                         </div>
                  <div class="header-container">
+                     <div id="btnDraftDownload"></div>
+                     <div id="btnDraftUpload"></div>
                         <div id="buttonExcelViewer"></div>
                         <div id="buttonGridCourtViewer"></div>
                         <div id="dxContextMenu"></div>
                         <div id="btnLock"></div>
                         <div id="btnLockedView"></div>
                         <div id="btnEnteredData"></div>
+                        <!-- Hidden file input -->
+                        <input type="file" id="fileInput" style="display: none;" />
                 </div>
            
                     
@@ -121,7 +125,7 @@
         }
         }).dxButton("instance");
 
-            const buttonCourts = $("#btnEnteredData").dxButton({
+        const buttonCourts = $("#btnEnteredData").dxButton({
         visible: true,
         icon:Ciela.baseUrl+'images/input-data.svg',
         hint:'Въведени данни',
@@ -135,6 +139,54 @@
             mainRightReadOnlyPopup.show();
         }
         }).dxButton("instance");
+
+
+        const buttonDownload = $("#btnDraftDownload").dxButton({
+        visible: true,
+        icon:Ciela.baseUrl+'images/download.svg',
+        hint:'Изтегли образец',
+        onClick: function () {
+             window.location = "@Url.Action("DownloadDraftBudgetFile", "ImportPbKonto")" + '?importType=' + importType;
+         }
+        }).dxButton("instance");
+
+         const buttonUpload = $("#btnDraftUpload").dxButton({
+        visible: true,
+        icon:Ciela.baseUrl+'images/upload.svg',
+        hint:'Прикачи образец с данни',
+        onClick: function () {
+             $("#fileInput").click();
+         }
+        }).dxButton("instance");
+
+       $("#fileInput").on("change", function (event) {
+                let file = event.target.files[0];
+                if (file) {
+                     var data = new FormData();
+                      data.append("file", file);
+                    $.ajax({
+                        type: "POST",
+                        url: "@Url.Action("UploadFile", "BufferedFileUpload", new { area = "" })",
+                        contentType: false,
+                        processData: false,
+                        data: data,
+                        success: function (result) {
+                            $('#divUploading').hide();
+                            if (result.success != true) {
+                                DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                            }
+                            else {
+                                loadCustomDraftBudgetExcelFile(result.filename);
+                            }
+                        },
+                        error: function (xhr, status, p3, p4) {
+                            $('#divUploading').hide();
+                            DevExpress.ui.dialog.alert('Something is going to wrong please try agan!', 'Грешка');
+                        }
+                    });
+                }
+        });
+
 
 
        let isLocked=false;
@@ -402,4 +454,46 @@
             name: 'onClick',
             delay: { show: 0, hide: 300 },
         }];
+       function loadCustomDraftBudgetExcelFile(id) {
+           console.log('id='+id);
+            console.log('courtId='+courtId);
+             console.log('ny='+ny);
+              console.log('importType='+importType);
+                console.log('institutionTypeId='+institutionTypeId);
+
+        $('#divUploading').show();
+        var inputData={id: id,
+            courtId:courtId, 
+            ny:ny,
+            importType:importType,
+            institutionTypeId:institutionTypeId};
+         $.ajax(
+             {
+             beforeSend: function (request) {
+                 request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+             },
+            url: "@Url.Action("LoadCustomDraftBudgetExcelFile", "ImportPbKonto", new { area = "" })", method: 'POST', data: inputData
+
+        })
+            .done(function (result) {
+                if (result.success === true) {
+
+                    $('#divUploading').hide();
+                    window.location = "@Url.Action("DownloadFile", "ExcelViewer")" + '?id=' + result.resultfile;
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+                else {
+                    $('#divUploading').hide();
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+
+            })
+            .fail(function (e) {
+
+                $('#divUploading').hide();
+                DevExpress.ui.dialog.alert('Failed to load! ' + e);
+            });
+       
+
+    };
 </script>

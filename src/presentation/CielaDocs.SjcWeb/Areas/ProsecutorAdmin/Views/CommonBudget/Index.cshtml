@@ -1,0 +1,45 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<div class="spacer_5"></div>
+<div style="display:inline-block;" id="menu"></div>
+<div class="spacer_5"></div>
+<script>
+    $(()=>{
+         redirectme2New("@Url.Action("Index", "ExcelReport",new{area=""})", "id", "0","filePath",'@ViewBag.ResultFile');
+          const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: Ciela.rootUrl+'images/back.png',
+
+
+        }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+                          case '1':
+                            window.location.href = Ciela.baseUrl+"Reports/Index";
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+    });
+</script>

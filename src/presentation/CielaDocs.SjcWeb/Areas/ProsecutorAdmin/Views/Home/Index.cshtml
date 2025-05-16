@@ -24,13 +24,13 @@
         <h3 style="color:red;">@ViewBag.AppMode</h3>
         <div class="container-flex">
             <div class="activeperiod-right">
-                <label for="currency" style="color:darkred;font-size:medium;">Активен период:@activePeriod?.Y1 г.(@cfg.OfficialCurrencyCode)</label>
+                <label for="currency" style="color:darkred;font-size:medium;">Текуща година:@cfg?.CurrentYear, Активен период:@activePeriod?.Y1 г.(@cfg.OfficialCurrencyCode)</label>
             </div>
         </div>
         <div class="spacer_10"></div>
         <div class="row">
             <div class="col-md-12">
-                <h4 class="section-titlepara">Въвеждане на данни</h4>
+                <h4 class="section-titlepara">Планиране по програми</h4>
             </div>
             <div class="border"></div>
         </div>
@@ -48,12 +48,22 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-3" id="importPbKonto">
+                <div class="capsule-at">
+
+                    <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/ExcelOnline.png")" alt="." />
+                    <p class="button_text-at">Планиране на проекто бюджет</p>
+                    <p>Импорт на данни за проекто бюджет за избран период...</p>
+
+                </div>
+
+            </div>
             <div class="col-md-3">
                 <div class="capsule-at">
                     <div id="mainDataItemCtrl" style="margin-top:10px;">
                         <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Data-add-WF.png")" alt="." />
-                        <p class="button_text-at">Входни данни</p>
-                        <p>Входни данни за изчисляване на показатели...</p>
+                        <p class="button_text-at">Планиране на входни данни</p>
+                        <p>Планиране на входни данни за изчисляване на показатели...</p>
                     </div>
                 </div>
             </div>
@@ -61,20 +71,18 @@
                 <div class="capsule-at">
                     <div id="mainDataCtrl" style="margin-top:10px;">
                         <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/calendar.png")" alt="." />
-                        <p class="button_text-at">Данни за показатели-месечни</p>
-                        <p>Данни за показатели и входни данни за отчетна единица...</p>
+                        <p class="button_text-at">Планиране на показатели-месечни</p>
+                        <p>Планиране на показатели и входни данни за отчетна единица...</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="capsule-at">
-                    <div id="mainPeriodDataCtrl" style="margin-top:10px;">
-                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/DateTime_01.png")" alt="." />
-                        <p class="button_text-at">Данни за показатели за период</p>
-                        <p>Данни за показатели за период...</p>
-                    </div>
-                </div>
+
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <h4 class="section-titlepara">Въвеждане на данни за @cfg?.CurrentYear г.</h4>
             </div>
+            <div class="border"></div>
         </div>
         <div class="row">
 
@@ -99,24 +107,22 @@
                 </div>
 
             </div>
-            <div class="col-md-3" id="importPbKonto">
-                <div class="capsule-at">
-
-                    <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/ExcelOnline.png")" alt="." />
-                    <p class="button_text-at">Импорт на данни проекто бюджет</p>
-                    <p>Импорт на данни проекто бюджет за избран период...</p>
-
-                </div>
-
-            </div>
-            <div class="col-md-3" id="importVss">
+           <div class="col-md-3" id="importVss">
                 <div class="capsule-at">
                     <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Data-Import.png")" alt="." />
                     <p class="button_text-at">Импорт на входни данни</p>
                     <p>Импорт на входни данни за период...</p>
                 </div>
             </div>
-
+            <div class="col-md-3">
+                <div class="capsule-at">
+                    <div id="mainDataCtrl" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/calendar.png")" alt="." />
+                        <p class="button_text-at">Месечни данни за показатели</p>
+                        <p>Данни за показатели и входни данни за отчетна единица...</p>
+                    </div>
+                </div>
+            </div>
 
         </div>
         <div class="row">
@@ -233,19 +239,22 @@ else
                     anyModal.modal('show');
                 }
             $(function() {
-                    window.localStorage.setItem('CourtId', $('#CourtId').val());
-                    window.localStorage.setItem('UserId', $('#UserId').val());
-                    window.localStorage.setItem('CourtName', $('#CourtName').val());
-                    window.localStorage.removeItem('cardfilter');
+                window.localStorage.setItem('CourtId', $('#CourtId').val());
+                window.localStorage.setItem('UserId', $('#UserId').val());
+                window.localStorage.setItem('CourtName', $('#CourtName').val());
+                window.localStorage.removeItem('cardfilter');
 
-                    window.localStorage.setItem('OfficialCurrencyId', @cfg.OfficialCurrencyId);
-                    window.localStorage.setItem('ActiveYear', @activePeriod?.Y1);
-                    //global vars
-                    officialCurrencyId = window.localStorage.getItem('OfficialCurrencyId') ? Number(window.localStorage.getItem('OfficialCurrencyId')) : 0;
-                    activeYear = window.localStorage.getItem('ActiveYear') ? Number(window.localStorage.getItem('ActiveYear')) : 0;
+                window.localStorage.setItem('OfficialCurrencyId', @cfg.OfficialCurrencyId);
+                window.localStorage.setItem('ActiveYear', @activePeriod?.Y1);
+                window.localStorage.setItem('CurrentYear', @cfg?.CurrentYear);
+                //global vars
+                officialCurrencyId = window.localStorage.getItem('OfficialCurrencyId') ? Number(window.localStorage.getItem('OfficialCurrencyId')) : 0;
+                activeYear = window.localStorage.getItem('ActiveYear') ? Number(window.localStorage.getItem('ActiveYear')) : 0;
+                currentYear = window.localStorage.getItem('CurrentYear') ? Number(window.localStorage.getItem('CurrentYear')) : 0;
 
 
-                $("#admin").on("click", function () {
+
+            $("#admin").on("click", function () {
                 redirectme("@Url.Action("Index", "Home", new { area = "ProsecutorAdmin" })");
                 });
                     $("#reports").on("click", function () {

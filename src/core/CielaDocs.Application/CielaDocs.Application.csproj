@@ -31,7 +31,6 @@
     <Folder Include="Features\Feedback\Queries\" />
     <Folder Include="Features\FunctionalArea\Commands\" />
     <Folder Include="Features\Metrics\Commands\" />
-    <Folder Include="Helpers\" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -54,5 +54,6 @@ namespace CielaDocs.Shared.Repository
         Task<int> UpdateIndicatorDataCourt1YValueByIdAsync(int? id, string fieldName, decimal? val);
         Task<IEnumerable<IndicatorDataCourt1Y>> GetIndicatorDataCourt1YByCourtIdAsync(int? functionalSubAreaId, int? ny, int? courtId);
         Task<decimal?> SumMetricsFieldInProgramItemByMainIndicatorsId(int id, int? nm1, int? nm2, int? ny);
+        Task<int?> SpEndCurrentAppMonthDataAsync();
     }
 }

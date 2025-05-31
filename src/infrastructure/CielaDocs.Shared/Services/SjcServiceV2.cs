@@ -63,6 +63,6 @@ namespace CielaDocs.Shared.Services
         public async Task<IEnumerable<IndicatorDataCourt1Y>> GetIndicatorDataCourt1YByCourtIdAsync(int? functionalSubAreaId, int? ny, int? courtId) { return await _repo.GetIndicatorDataCourt1YByCourtIdAsync(functionalSubAreaId, ny, courtId); }
         public async Task<int?> SpEndCurrentYearDataAsync() { return await _repo.SpEndCurrentYearDataAsync(); }
 
-
+        public async Task<int?> SpEndCurrentAppMonthDataAsync() { return await _repo.SpEndCurrentAppMonthDataAsync(); }
     }
 }

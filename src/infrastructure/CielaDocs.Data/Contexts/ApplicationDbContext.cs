@@ -1,6 +1,6 @@
 ﻿using CielaDocs.Application.Common.Interfaces;
 using CielaDocs.Domain.Entities;
-
+using CielaDocs.Domain.Entities.v2;
 
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -67,6 +67,10 @@ namespace CielaDocs.Data.Contexts
         public virtual DbSet<MainPeriodItem> MainPeriodItem { get; set; }
         public virtual DbSet<MainPeriod> MainPeriod { get; set; }
         public virtual DbSet<ProgramDef> ProgramDef { get; set; }
+        public virtual DbSet<App> App { get; set; }
+        public virtual DbSet<AppDef> AppDef { get; set; }
+        public virtual DbSet<AppDefMetricsField> AppDefMetricsField { get; set; }
+        public virtual DbSet<CourtInKontoCode> CourtInKontoCode { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IDateTime dateTime) : base(options)
         {
             _dateTime = dateTime;
@@ -162,6 +166,10 @@ namespace CielaDocs.Data.Contexts
             modelBuilder.Entity<ProgramDef>().ToTable("ProgramDef");
             modelBuilder.Entity<Test>().ToTable("Test");
             modelBuilder.Entity<Test2>().ToTable("Test2");
+            modelBuilder.Entity<App>().ToTable("App");
+            modelBuilder.Entity<AppDef>().ToTable("AppDef");
+            modelBuilder.Entity<AppDefMetricsField>().ToTable("AppDefMetricsField");
+            modelBuilder.Entity<CourtInKontoCode>().ToTable("CourtInKontoCode");
             base.OnModelCreating(modelBuilder);
         }
 

@@ -1,0 +1,113 @@
+﻿@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet2 = antiforgery.GetAndStoreTokens(Context);
+
+}
+<style>
+    .select2-container--open {
+        z-index: 9999999
+    }
+</style>
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+        <script>
+            var defaultValue = @Html.Raw(ViewBag.CurrentAppMonth ?? "null");
+        </script>
+        <div class="container-fluid">
+            <p style="color:red;">Текуща бюджетна година:@ViewBag.CurrentYear, Месец, към който се подават входни данни:@ViewBag.CurrentAppMonth</p>
+            <div class="row">
+                <div class="col-6">
+                    <div class="form-group">
+                        <label for="selectBoxAppMonth">Нов краен месец за подаване на входни данни</label>
+                        <div id="selectBoxAppMonth"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="spacer_10"></div>
+        <div id="loading-indicator"></div>
+        <div style="float:right;margin-right:10px;margin-bottom:10px;">
+            <div id="okBtn"></div>
+            <div id="closeBtn"></div>
+        </div>
+    </div>
+</form>
+<script>
+      $('#loading-indicator').dxLoadIndicator({
+        indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
+    });
+    $(() => {
+        let nm = 0;
+         loadIndicator = $('#loading-indicator').dxLoadIndicator({
+            visible: false,
+        }).dxLoadIndicator('instance');
+        loadIndicator.option('visible', false);
+
+        $("#selectBoxAppMonth").dxSelectBox({
+           dataSource: selectBoxAppMonthData,
+            valueExpr: 'id',
+            displayExpr: 'name',
+            value:defaultValue,
+            onValueChanged: function (e) {
+               nm=e.value;
+            }
+
+        });
+
+
+
+        //-------------buttons--------------
+        $('#okBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                if (nm==0) {
+                    DevExpress.ui.dialog.alert('Изберете задължително месец ','Внимание');
+                    return;
+                }
+                addNewCurrentAppMonth(nm)
+            },
+        });
+        $('#closeBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                mainPopup.hide();
+            },
+        });
+
+         function addNewCurrentAppMonth(id){
+
+              var result = DevExpress.ui.dialog.confirm(`Потвърдете избора на новия месец за въвеждане на входни данни ${id} . Всички въведени до момента входни данни ще бъдат изтрити`, "Потвърждение");
+                             result.done(function (dialogResult) {
+                                 if (dialogResult === true) {
+                                       loadIndicator.option('visible', true);
+                                       $("#okBtn").dxButton("option", "disabled", true);
+                                     $.ajax({
+                                         beforeSend: function (request) {
+                                         request.setRequestHeader('@tokenSet2.HeaderName', '@tokenSet2.RequestToken')
+                                         },
+                                         url: EduDl.baseUrl + "Home/AddNewCurrentAppMonth", data: {nm:id }, method: 'POST'
+                                     })
+                                         .done(function (result) {
+                                              loadIndicator.option('visible', false);
+                                              $("#okBtn").dxButton("option", "disabled", false);
+                                              DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                              loadIndicator.option('visible', false);
+                                              $("#okBtn").dxButton("option", "disabled", false);
+                                             DevExpress.ui.notify('Грешка при създаване на нов текущ месец за входни данни.');
+                                         });
+                                 }
+                             });
+        }
+    });
+
+</script>

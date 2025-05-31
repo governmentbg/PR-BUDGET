@@ -12,8 +12,9 @@ namespace CielaDocs.Shared.Services
     {
         Task<CfgVm> GetCfg();
         Task<IEnumerable<UserLockedItemVm>> GetAllUserLockedItems();
-        Task<int> ExecuteRawSql(string sql);
-        Task<IEnumerable<T>> QueryRawList<T>(string sql);
-        Task<T> QueryRaw<T>(string sql);
+        Task<int> ExecuteRawSql(string sql, object parameters = null);
+        Task<int> ExecuteRawScalarSql(string sql, object parameters = null);
+        Task<IEnumerable<T>> QueryRawList<T>(string sql, object parameters = null);
+        Task<T> QueryRaw<T>(string sql, object parameters = null);
     }
 }

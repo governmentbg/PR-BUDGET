@@ -157,9 +157,10 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<IdNames>> GetCourtInProgramData(int? programNum, int? courtId);
         Task<CfgVm> GetCfgAsync();
         Task<IEnumerable<UserLockedItemVm>> GetAllUserLockedItemsAsync();
-        Task<int> ExecuteRawSqlAsync(string sql);
-        Task<IEnumerable<T>> QueryRawListAsync<T>(string sql);
-        Task<T> QueryRawAsync<T>(string sql);
+        Task<int> ExecuteRawSqlAsync(string sql,object parameters=null);
+        Task<int> ExecuteRawScalarSqlAsync(string sql, object parameters = null);
+        Task<IEnumerable<T>> QueryRawListAsync<T>(string sql, object parameters = null);
+        Task<T> QueryRawAsync<T>(string sql, object parameters = null);
 
         Task<IEnumerable<ProgramDataGridVm>> GetProgramDataGridByFilterCurrencyAsync(int functionalSubAreaId, int ny, int displayCurrencyId);
         Task<IEnumerable<ProgramDataCourtGridVm>> GetProgramDataCourtGridByFilterCurrencyAsync(int? programDefNum, int? ny, int? rowNum, int displayCurrencyId);

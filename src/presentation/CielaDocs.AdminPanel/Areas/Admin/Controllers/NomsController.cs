@@ -341,6 +341,49 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             }
         }
         [HttpGet]
+        public async Task<JsonResult> GetAppById(int? id)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRaw<IdNames>($"Select Id,Name from App where ID={id ?? 0}");
+                return Json(data);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetApps()
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<IdNames>($"Select Id,Name from App ");
+                return Json(data);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetAppDefByProgramId(int? id)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<AppDefVm>($@"SELECT a.Id ,a.FunctionalSubAreaId ,a.AppId ,a.RowNum ,a.RowCode,a.Name,a.ParentRowNum,a.IsActive ,a.MeasureId,a.Formula,b.Name as AppName,c.Name as MeasureName
+                     FROM  dbo.AppDef a
+                    left join App b on a.appId=b.id
+                    left join Measure c on a.MeasureID=c.id
+                    where a.FunctionalSubAreaId={id ?? 0}");
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<CourtsVm>());
+            }
+        }
+        [HttpGet]
         public async Task<JsonResult> GetProgramDefItemsByProgramId(int? id)
         {
             try
@@ -400,6 +443,22 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             }
         }
         [HttpGet]
+        public async Task<JsonResult> GetAppDefMetricsFieldByAppDefId(int? id)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<AppDefMetricsFieldVm>($@"select a.Id,a.AppDefId,a.MetricsFieldId,m.Name as MetricsFieldName,m.Code as MetricsFieldCode,m.IsActive
+                 from AppDefMetricsField a
+                Left join MetricsField m on a.MetricsFieldId=m.id
+                where a.AppDefId={id??0}");
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MetricsField>());
+            }
+        }
+        [HttpGet]
         public async Task<JsonResult> GetMetricsFieldInProgramByMainIndicatorId(int id) {
             var data = await _sjcServiceV2.GetMetricsFieldInProgramByMainIndicatorIdAsync(id);
             return Json(data.ToList());
@@ -407,6 +466,12 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         [HttpPost]
         public async Task<JsonResult> DeleteMetricsFieldInProgramById(int id) {
             _ = await _sjcService.ExecuteRawSql($"Delete from MetricsFieldInProgram where id={id}");
+            return Json(new { success = true });
+        }
+        [HttpPost]
+        public async Task<JsonResult> DeleteAppDefMetricsFieldById(int id)
+        {
+            _ = await _sjcService.ExecuteRawSql($"Delete from AppDefMetricsField where id={id}");
             return Json(new { success = true });
         }
         [HttpGet]
@@ -434,6 +499,15 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                 ,'{mf?.NeededFor}'
                 ,{1}
                 ,{mf?.TypeOfIndicatorId??0})");
+            return Json(new { success = true });
+        }
+        [HttpPost]
+        public async Task<JsonResult> AppDefMetricsField(int? appDefId,  int? metricsFieldId)
+        {
+           
+            _ = await _sjcService.ExecuteRawSql($@"INSERT INTO AppDefMetricsField([AppDefId],[MetricsFieldId])
+                VALUES({appDefId ?? 0}
+                ,{metricsFieldId ?? 0} )");
             return Json(new { success = true });
         }
         [HttpGet]

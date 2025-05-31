@@ -151,8 +151,8 @@
                     .Id("programs")
                     .Text("Бюджетни програми")
                     .Icon("rowproperties");
-                    items.Add()
-                    .Id("indicators")
+                     items.Add()
+                    .Id("indicatorsnew")
                     .Text("Показатели")
                     .Icon("columnfield");
                     items.Add()
@@ -264,7 +264,7 @@
                 const courtsUrl = "@Url.Action("Index","Courts", new {area="Admin"})";
                 const programUrl = "@Url.Action("Index","Program", new {area="Admin"})";
                 const fnareaUrl = "@Url.Action("Index","FnArea", new {area="Admin"})";
-                const indicatorsUrl = "@Url.Action("Index","MainIndicators", new {area="Admin"})";
+                 const indicatorsnewUrl = "@Url.Action("Index", "AppDef", new { area = "Admin" })";
                 const metricsUrl = "@Url.Action("Index","Metrics", new {area="Admin"})";
                 const metricsFieldUrl = "@Url.Action("Index","MetricsField", new {area="Admin"})";
                 const institutionsUrl = "@Url.Action("Index", "Institution", new { area = "Admin" })";
@@ -300,6 +300,8 @@
                         case 'programs': navigate(programUrl, willHide ? 400 : 0);
                             break;
                         case 'indicators': navigate(indicatorsUrl, willHide ? 400 : 0);
+                            break;
+                        case 'indicatorsnew': navigate(indicatorsnewUrl, willHide ? 400 : 0);
                             break;
                         case 'metrics': navigate(metricsUrl, willHide ? 400 : 0);
                             break;

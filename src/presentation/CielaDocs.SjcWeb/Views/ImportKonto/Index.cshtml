@@ -43,8 +43,11 @@
 
         <div class="container-fluid">
             <div class="row">
-                <div class="col-12">
+                <div class="col-6">
                     <div style="margin-bottom:20px;" id="cbOverwrite"></div>
+                </div>
+                <div class="col-6">
+                    <div style="margin-bottom:20px;" id="cbWriteLog"></div>
                 </div>
             </div>
             <div class="row">
@@ -117,6 +120,11 @@
             text: 'Припокрий стойностите с тези от файла',
         }).dxCheckBox('instance');
 
+        const isWriteLog = $('#cbWriteLog').dxCheckBox({
+            value: false,
+            text: 'Запис на логове в базата данни при зареждане от папка',
+        }).dxCheckBox('instance');
+
         $('#button').dxButton({
             text: 'Зареди данните',
             type: 'success',
@@ -172,7 +180,7 @@
                                 DevExpress.ui.dialog.alert(result.msg, 'Внимание');
                             }
                             else {
-                                loadCustomExcelFile(result.filename, isOverwrite.option('value'));
+                                loadCustomExcelFile(result.filename, isOverwrite.option('value'), isWriteLog.option('value'));
                             }
                         },
                         error: function (xhr, status, p3, p4) {
@@ -336,7 +344,7 @@
             rootFolderName: 'uploads'
         })
     });
-    function loadCustomExcelFile(id, isOverwrite) {
+    function loadCustomExcelFile(id, isOverwrite,isWriteLog) {
 
         $('#divUploading').show();
 
@@ -344,7 +352,7 @@
             beforeSend: function (request) {
                 request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
             },
-            url: "@Url.Action("LoadCustomExcelFile", "ImportKonto")", method: 'POST', data: { id: id, isOverwrite: isOverwrite }
+            url: "@Url.Action("LoadCustomExcelFile", "ImportKonto")", method: 'POST', data: { id: id, isOverwrite: isOverwrite,isWriteLog: isWriteLog }
 
         })
             .done(function (result) {
@@ -378,7 +386,7 @@
             beforeSend: function (request) {
                 request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
             },
-            url: "@Url.Action("LoadFromFolderKontoFile", "ImportKonto")", method: 'POST'
+            url: "@Url.Action("LoadFromFolderKontoFile", "ImportKonto")", method: 'POST',data: {isWriteLog: $('#cbWriteLog').dxCheckBox('instance').option('value') }
 
         })
             .done(function (result) {

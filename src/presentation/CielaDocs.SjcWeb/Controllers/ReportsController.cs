@@ -58,11 +58,12 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly ILogRepository _logRepo;
         private readonly ISjcBudgetRepository _sjcRepo;
         private readonly IWebHostEnvironment _env;
+        private readonly ISjcService _sjcService;
         private readonly ISjcServiceV2 _sjcServiceV2;
 
         public ReportsController(ILogger<HomeController> logger, IConfiguration configuration, ISendGridMailer emailSender,
                         IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo, 
-                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env, ISjcServiceV2 sjcServiceV2)
+                        ISjcBudgetRepository sjcRepo, IWebHostEnvironment env,ISjcService sjcService, ISjcServiceV2 sjcServiceV2)
         {
             _logger = logger;
             _mediator = mediator;
@@ -71,6 +72,7 @@ namespace CielaDocs.SjcWeb.Controllers
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _env = env;
+            _sjcService = sjcService;
             _sjcServiceV2 = sjcServiceV2;
 
         }
@@ -170,6 +172,7 @@ namespace CielaDocs.SjcWeb.Controllers
         public IActionResult AddCommonBudgetFilterPartial() => PartialView(nameof(AddCommonBudgetFilterPartial));
         public IActionResult EndedBudgetPeriodFilterPartial()=> PartialView(nameof(EndedBudgetPeriodFilterPartial));
         public IActionResult AddMainDataFilterPartial() => PartialView(nameof(AddMainDataFilterPartial));
+        public IActionResult AddImportKontoFilterPartial() => PartialView(nameof(AddImportKontoFilterPartial));
 
         [HttpGet]
 
@@ -292,8 +295,79 @@ namespace CielaDocs.SjcWeb.Controllers
             ViewBag.Month2 = nMonth2;
             ViewBag.Year = nYear;
             ViewBag.FunctionalSubAreaName = fsub?.Name;
-            @ViewBag.Currency = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
+            ViewBag.Currency = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
             return View();
+        }
+
+        public async Task<IActionResult> AnalizeImportKonto(string par, int? currencyId)
+        {
+            string[] args = par.Split('|');
+            int.TryParse(args[0], out int functionalSubAreaId);
+            int.TryParse(args[1], out int institutionTypeId);
+            int.TryParse(args[2], out int courtTypeId);
+            int.TryParse(args[3], out int courtId);
+            int.TryParse(args[4], out int nMonth);
+            int.TryParse(args[5], out int nYear);
+            string kontoCode = args[6]??string.Empty;
+            string filterTitle=string.Empty;
+            if (functionalSubAreaId > 0) {
+                var fsub = await _mediator.Send(new GetFunctionalSubAreaByIdQuery { Id = functionalSubAreaId });
+                filterTitle+= $"Програма: {fsub?.Name}";
+            }
+            if (courtId > 0) { 
+                filterTitle += $" , Съд: {await _sjcRepo.GetNameByIdFromTable("Court", courtId)}";
+            }
+            if (nMonth > 0) { 
+                filterTitle += $" , Месец: {nMonth}";
+            }
+            if (nYear > 0) { 
+                filterTitle += $" , Година: {nYear}";
+            }
+            if (!string.IsNullOrWhiteSpace(kontoCode)) { 
+                filterTitle += $" , Код: {kontoCode}";
+            }
+            ViewBag.FunctionalSubAreaId = functionalSubAreaId;
+            ViewBag.Month = nMonth;
+            ViewBag.Year = nYear;
+            ViewBag.CourtId=courtId;
+            ViewBag.KontoCode = kontoCode;
+            ViewBag.FilterTitle = filterTitle;
+            ViewBag.Currency = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
+            return View();
+        }
+        [HttpGet]
+
+        public async Task<JsonResult> GetImportedKontoData(int? functionalSubAreaId,  int? courtId, int? nyear, int? nmonth, string? kontoCode, int? displayCurrencyId)
+        {
+            try
+            {
+                string sql = $@"Select a.Id,a.CourtId,a.FunctionalSubAreaId,a.Nmonth,a.Nyear,a.Nvalue,a.KontoCode,c.KontoCode as CourtKontoCode, c.Name as CourtName,f.NAme as FunctionalSubAreaName
+                          from CourtInKontoCode a
+                          left join Court c on a.courtId=c.id
+                         left join FunctionalSubArea f on a.FunctionalSubAreaId=f.id 
+                         where a.Id>0 ";
+                if (functionalSubAreaId > 0) { 
+                    sql += $" and a.FunctionalSubAreaId={functionalSubAreaId} ";
+                }
+                if (courtId > 0) { 
+                    sql += $" and a.CourtId={courtId} ";
+                }
+                if (nyear > 0) { 
+                    sql += $" and a.Nyear={nyear} ";
+                }
+                if (nmonth > 0) { 
+                    sql += $" and a.Nmonth={nmonth} ";
+                }
+                if (!string.IsNullOrWhiteSpace(kontoCode)) { 
+                    sql += $" and a.KontoCode = '{kontoCode}' ";
+                }
+                var data = await _sjcService.QueryRawList<CourtInKontoCodeVm>(sql);
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<CourtInKontoCodeVm>());
+            }
         }
     }
 }

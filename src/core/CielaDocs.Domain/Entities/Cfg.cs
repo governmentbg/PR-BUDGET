@@ -14,5 +14,6 @@ namespace CielaDocs.Domain.Entities
         public decimal OfficialEuroRate { get; set; }
         public int DefaultCurrencyMeasureId { get; set; }
         public int CurrentYear { get; set; }
+        public int? CurrentAppMonth { get; set; }
     }
 }

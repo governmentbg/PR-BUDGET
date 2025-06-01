@@ -598,6 +598,7 @@ namespace CielaDocs.Shared.Repository
             var ret =await connection.ExecuteAsync("sp_LoadMainPeriodItems", parameters, commandType: CommandType.StoredProcedure);
             return ret;
         }
+      
         public async Task<IEnumerable<MainDataGrid>> GetMainDataGridByFilterAsync(int functionalSubAreaId, int courtId, int nm, int ny) {
             string sql = $@"select m.Id,m.FunctionalSubAreaId,m.CourtId,m.NMonth,m.NYear,m.MainIndicatorsId,m.Nvalue,m.EnteredValue,m.Datum,m.EnteredOn,i.Name as MainIndicatorName,i.Code,i.MeasureId,i.TypeOfIndicatorId,i.Calculation,c.Name as MeasureName,t.Name as TypeOfIndicatorName
                         from MainData m

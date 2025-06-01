@@ -4,12 +4,12 @@
 }
 <style>
     .select2-container--open {
-        z-index: 9999999
+        z-index: 99999999
     }
 </style>
+
 <form id="anyForm">
     <div class="modal-body form-horizontal">
-
         <div class="container-fluid">
 
             <div class="row">
@@ -55,23 +55,23 @@
         </div>
         <div class="spacer_10"></div>
         <div style="float:right;margin-right:10px;margin-bottom:10px;">
-            <div id="okFilterBtn"></div>
-            <div id="closeFilterBtn"></div>
+            <div id="okInputBtn"></div>
+            <div id="closeInputBtn"></div>
         </div>
     </div>
 </form>
 <script>
+   
     $(() => {
-       
-        let institutionTypeId = 0;
+         let institutionTypeId = 0;
         let courtTypeId = 0;
         let courtId = 0;
         let ny =Number('@ViewBag.Year')||0;
         let nm = Number('@ViewBag.Month')||0;
 
-         $('#selectYear').text(ny);
+        $('#selectYear').text(ny);
          $('#selectMonth').text(nm);
-       
+
          $("#cbInstitutionType").select2({
             placeholder: "Избери...",
             allowClear: true,
@@ -167,21 +167,21 @@
         }).on('change', function (e) {
             courtId=$(e.currentTarget).val();
         });
-        //-------------buttons--------------
-        $('#okFilterBtn').dxButton({
+         //-------------buttons--------------
+        $('#okInputBtn').dxButton({
             stylingMode: 'contained',
             text: 'Добре',
             type: 'normal',
             width: 120,
             onClick() {
-                if ((institutionTypeId == 0)||(nm==0)||(ny==0)) {
-                    DevExpress.ui.dialog.alert('Изберете задължително орган на съдебна власт','Внимание');
+                if (courtId == 0)  {
+                    DevExpress.ui.dialog.alert('Изберете задължително отчетна единица', 'Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('mainDataFilterOk', ''.concat(institutionTypeId,"|",courtTypeId,"|",courtId, "|",nm, "|", ny));
+                window.parent.OnClosePopupEventHandlerEx('appInputFilterOk', ''.concat(courtId, "|",nm, "|", ny));
             },
         });
-        $('#closeFilterBtn').dxButton({
+        $('#closeInputBtn').dxButton({
             stylingMode: 'contained',
             text: 'Затвори',
             type: 'normal',
@@ -190,6 +190,7 @@
                 popup.hide();
             },
         });
+      
     });
-
+     
 </script>

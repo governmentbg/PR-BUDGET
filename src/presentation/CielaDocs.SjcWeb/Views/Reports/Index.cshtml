@@ -62,8 +62,8 @@
                 <div class="capsule-at">
                     <div id="mainDataCtrl" style="margin-top:10px;">
                         <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/calendar.png")" alt="." />
-                        <p class="button_text-at">Данни за показатели</p>
-                        <p>Данни за показатели и входни данни за отчетна единица...</p>
+                        <p class="button_text-at">Входни данни за показатели</p>
+                        <p>Входни данни за изчисляване на показатели...</p>
                     </div>
                 </div>
             </div>
@@ -422,7 +422,7 @@ else
               redirectme2("@Url.Action("Index", "EndedBudget")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
          }
           function  applyMainDataFilter(e){
-                redirectme2("@Url.Action("Indicators", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
+                redirectme2("@Url.Action("SummarizedAppInput", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
           }
           function  applyImportKontoFilter(e){
                     redirectme2("@Url.Action("AnalizeImportKonto", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);

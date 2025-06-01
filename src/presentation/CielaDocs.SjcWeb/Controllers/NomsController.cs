@@ -1478,6 +1478,102 @@ namespace CielaDocs.SjcWeb.Controllers
             return Json(new { success = true, msg = "Периодът бе отключен" });
         }
 
-
+        [HttpGet]
+        public async Task<JsonResult> GetMetricsInputByInstitutionTypeId(int? institutionTypeId)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<MetricsInputCodeName>($@"select i.Id,m.Code,m.Name from MetricsInput i
+                  left join MetricsField m on i.MetricsFieldId=m.id
+                  left join InstitutionType t on i.InstitutionTypeId=t.id
+                  where t.id={institutionTypeId}");
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MetricsInputCodeName>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetMetricsInputByCourtId(int? courtId)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<MetricsInputCodeName>($@"select i.Id,m.Code,m.Name from MetricsInput i
+                  left join MetricsField m on i.MetricsFieldId=m.id
+                  left join InstitutionType t on i.InstitutionTypeId=t.id
+                  left join CourtType ct on t.id=ct.InstitutionTypeId
+                  left join Court c on ct.id=c.CourtTypeId
+                  where c.id={courtId}");
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MetricsInputCodeName>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetAppRequiredByAppId(int? appId)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<AppRequiredVm>($@"SELECT a.Id
+                                  ,a.AppId
+                                  ,a.InstitutionTypeId
+                                  ,a.IsActive
+	                            ,i.Name as InstitutionTypeName
+                              FROM AppRequired a
+                            left join InstitutionType i on a.InstitutionTypeId=i.id
+                                                            where a.AppId={appId ?? 0}");
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetAppById(int? id)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRaw<IdNames>($"Select Id,Name from App where ID={id ?? 0}");
+                return Json(data);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetApps()
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<IdNames>($"Select Id,Name from App ");
+                return Json(data);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetAppDefByProgramId(int? id)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<AppDefVm>($@"SELECT a.Id ,a.FunctionalSubAreaId ,a.AppId ,a.RowNum ,a.RowCode,a.Name,a.ParentRowNum,a.IsActive ,a.MeasureId,a.Formula,b.Name as AppName,c.Name as MeasureName
+                     FROM  dbo.AppDef a
+                    left join App b on a.appId=b.id
+                    left join Measure c on a.MeasureID=c.id
+                    where a.FunctionalSubAreaId={id ?? 0}");
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<CourtsVm>());
+            }
+        }
     }
 }

@@ -164,7 +164,20 @@ namespace CielaDocs.SjcWeb.Controllers
         public IActionResult AddCurrentIndicatorFilterPartial() => PartialView(nameof(AddCurrentIndicatorFilterPartial));
        
         public IActionResult NotSupportedFile()=>View(nameof(NotSupportedFile));
-
+        public async Task<IActionResult> AddAppInputFilterPartial()
+        {
+            var cfg=await _sjcRepo.GetCfgAsync();
+            ViewBag.Month = cfg?.CurrentAppMonth ?? 0;
+            ViewBag.Year = cfg?.CurrentYear ?? 0;
+            return  PartialView(nameof(AddAppInputFilterPartial));
+        }
+        public async Task<IActionResult> AddAppResultFilterPartial()
+        {
+            var cfg = await _sjcRepo.GetCfgAsync();
+            ViewBag.Month = cfg?.CurrentAppMonth ?? 0;
+            ViewBag.Year = cfg?.CurrentYear ?? 0;
+            return PartialView(nameof(AddAppResultFilterPartial));
+        }
         [Authorize]
         public async Task<IActionResult> Profile()
         {
@@ -249,6 +262,30 @@ namespace CielaDocs.SjcWeb.Controllers
             catch (Exception ex)
             {
                 return Json(new { success = false, msg="Грешка: "+ex?.Message });
+            }
+        }
+        [HttpPost]
+        public async Task<JsonResult> SetAddInputFilter(string? id)
+        {
+            try
+            {
+               var par = id?.Split('|');
+                int.TryParse(par?[0], out int courtId);
+                int.TryParse(par?[1], out int nmonth);
+                int.TryParse(par?[2], out int nyear);
+
+                HttpContext.Session.Remove("FilterAppInputSess");
+                HttpContext.Session.Set<AppInputFilter>("FilterAppInputSess", new AppInputFilter {CourtId= courtId,Nmonth=nmonth,PlannedYear=nyear});
+
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                string logmsg = $"Филтър с условие {User?.Identity?.Name}";
+                await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
+                return Json(new { success = true, msg = "Ok" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, msg = "Грешка: " + ex?.Message });
             }
         }
         [HttpPost]

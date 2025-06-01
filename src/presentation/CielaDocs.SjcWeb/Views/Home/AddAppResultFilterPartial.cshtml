@@ -1,0 +1,116 @@
+﻿@{
+    ViewData["Title"] = "Index";
+
+}
+<style>
+    .select2-container--open {
+        z-index: 99999999
+    }
+</style>
+
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+        <div class="container-fluid">
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="cbApps">Приложение</label>
+                        <select class="form-control" style="width:100%" id="cbApps">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="selectMonth">Към месец</label>
+                        <div id="selectMonth" style="color:red;font-size:medium;"></div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="form-group">
+                        <label for="selectYear">За година</label>
+                        <div id="selectYear" style="color:red;font-size:medium;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="spacer_10"></div>
+        <div style="float:right;margin-right:10px;margin-bottom:10px;">
+            <div id="okAppInputBtn"></div>
+            <div id="closeAppInputBtn"></div>
+        </div>
+    </div>
+</form>
+<script>
+
+    $(() => {
+
+        let appId = 0;
+        let ny =Number('@ViewBag.Year')||0;
+        let nm = Number('@ViewBag.Month')||0;
+
+        $('#selectYear').text(ny);
+         $('#selectMonth').text(nm);
+
+         $("#cbApps").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetApps", "Noms")",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            appId = $(e.currentTarget).val();
+        });
+      
+         //-------------buttons--------------
+        $('#okAppInputBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                if (appId == 0)  {
+                    DevExpress.ui.dialog.alert('Изберете задължително Приложение ', 'Внимание');
+                    return;
+                }
+                window.parent.OnClosePopupEventHandlerEx('appResultInputFilterOk', ''.concat(appId, "|",nm, "|", ny));
+            },
+        });
+        $('#closeAppInputBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                popup.hide();
+            },
+        });
+
+    });
+
+</script>

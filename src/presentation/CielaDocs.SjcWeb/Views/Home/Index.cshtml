@@ -99,10 +99,10 @@
             </div>
             <div class="col-md-3">
                 <div class="capsule-at">
-                    <div id="currentIndicatorFilter" style="margin-top:10px;">
+                    <div id="currentAppResultFilter" style="margin-top:10px;">
                         <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Bar.png")" alt="." />
                         <p class="button_text-at">Отчитане на показатели по програми</p>
-                        <p>Данни за показатели по програми...</p>
+                        <p>Резултати за показатели по програми...</p>
                     </div>
                 </div>
             </div>
@@ -110,8 +110,8 @@
                 <div class="capsule-at">
                     <div id="mainDataCtrl" style="margin-top:10px;">
                         <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/calendar.png")" alt="." />
-                        <p class="button_text-at">Отчетни данни за показатели</p>
-                        <p>Данни за показатели и входни данни за отчетна единица...</p>
+                        <p class="button_text-at">Входни данни за показатели</p>
+                        <p>Входни данни за показатели за отчетна единица...</p>
                     </div>
                 </div>
             </div>
@@ -302,7 +302,7 @@ else{
             $("#docarchive").on("click", function () {
             redirectme("@Url.Action("Index", "DocumentUploader")");
         });
-                 $("#currentIndicatorFilter").on("click", function () {
+            $("#currentAppResultFilter").on("click", function () {
                         popup.option({
                             contentTemplate: () => popupContentTemplate(8)
                         });
@@ -461,10 +461,15 @@ $('#btnAnySave').on('click', function() {
                     popup.hide();
                     applyIndicatorDataFilter(e);
                     break;
-               case 'currentIndicatorFilterOk': 
+               case 'appResultInputFilterOk':
                     popup.hide();
-                    applyCurrentIndicatorFilter(e);
+                    applyAppResultInputFilter(e);
                     break;
+              case 'appInputFilterOk':
+                    popup.hide();
+                    applyAppInputFilter(e);
+                   break;
+
             }
         }
         const popupContentTemplate = function (id) {
@@ -472,7 +477,7 @@ $('#btnAnySave').on('click', function() {
             switch (id) {
                 case 0: cnturl = "@Url.Action("AuthorshipPartial", "Home")";
                     break;
-                case 1: cnturl = "@Url.Action("AddMainDataFilterPartial", "Home")";
+                case 1: cnturl = "@Url.Action("AddAppInputFilterPartial", "Home")";
                     break;
                 case 2: cnturl = "@Url.Action("AddMainDataItemFilterPartial", "Home")";
                     break;
@@ -486,7 +491,7 @@ $('#btnAnySave').on('click', function() {
                     break;
                 case 7: cnturl = "@Url.Action("AddIndicatorDataFilterPartial", "Home")";
                         break;
-                case 8: cnturl = "@Url.Action("AddCurrentIndicatorFilterPartial", "Home")";
+                case 8: cnturl = "@Url.Action("AddAppResultFilterPartial", "Home")";
                                 break;
                 default: cnturl = "@Url.Action("AuthorshipPartial", "Home")";
                     break;
@@ -640,26 +645,10 @@ $('#btnAnySave').on('click', function() {
                         DevExpress.ui.notify('Failed to set filter! ' + e);
                     });
             }
-            function applyCurrentIndicatorFilter(e) {
-                        var itm = e.split('|');
-                        $.ajax({
-                            beforeSend: function (request) {
-                                request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
-                            },
+             function applyAppResultInputFilter(e) {
 
-                            url: "@Url.Action("SetCurrentIndicatorFilter", "Home")", method: 'POST', data: { functionalSubAreaId: itm[0], ny: itm[1],currencyId:itm[2],currencyMeasureId:itm[3],isLocked:itm[4] }
-
-                        }).done(function (result) {
-                            if (result.success === true) {
-                                redirectme("@Url.Action("Index", "CurrentIndicatorData")");
-                            }
-                            else {
-                                DevExpress.ui.dialog.alert(result.msg, 'Внимание');
-                            }
-                        })
-                            .fail(function (e) {
-                                DevExpress.ui.notify('Failed to set filter! ' + e);
-                            });
+              redirectme1("@Url.Action("Index", "AppResult")","par",e);
+                           
              }
                     
         function applyPeriodDataItemFilter(e) {
@@ -704,5 +693,27 @@ $('#btnAnySave').on('click', function() {
                     DevExpress.ui.notify('Failed to set filter! ' + e);
                 });
         }
+                function applyAppInputFilter(e)
+                {
+                            
+                    $.ajax({
+                        beforeSend: function (request) {
+                            request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                        },
+
+                                url: "@Url.Action("SetAddInputFilter", "Home")", method: 'POST', data: { id:e }
+
+                    }).done(function (result) {
+                        if (result.success === true) {
+                            redirectme("@Url.Action("Index", "AppInput")");
+                        }
+                        else {
+                            DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                        }
+                    })
+                        .fail(function (e) {
+                            DevExpress.ui.notify('Failed to set filter! ' + e);
+                        });
+                }
 </script>
 }

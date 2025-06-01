@@ -177,7 +177,13 @@ namespace CielaDocs.SjcWeb.Controllers
         public IActionResult AddProgramYearFilterPartial() => PartialView(nameof(AddProgramYearFilterPartial));
         public IActionResult AddCommonBudgetFilterPartial() => PartialView(nameof(AddCommonBudgetFilterPartial));
         public IActionResult EndedBudgetPeriodFilterPartial() => PartialView(nameof(EndedBudgetPeriodFilterPartial));
-        public IActionResult AddMainDataFilterPartial() => PartialView(nameof(AddMainDataFilterPartial));
+        public async Task<IActionResult> AddMainDataFilterPartial()
+        {
+            var cfg = await _sjcRepo.GetCfgAsync();
+            ViewBag.Month = cfg?.CurrentAppMonth ?? 0;
+            ViewBag.Year = cfg?.CurrentYear ?? 0;
+            return  PartialView(nameof(AddMainDataFilterPartial));
+        }
         public IActionResult AddImportKontoFilterPartial() => PartialView(nameof(AddImportKontoFilterPartial));
         public IActionResult SummarizeKontoCodesPartialView() => PartialView(nameof(SummarizeKontoCodesPartialView));
 
@@ -429,6 +435,49 @@ namespace CielaDocs.SjcWeb.Controllers
             {
                 return Json(new { success = false, summary =  0,msg=ex?.Message });
             }
+        }
+        public async Task<IActionResult> SummarizedAppInput(string par, int? currencyId)
+        {
+            string[] args = par.Split('|');
+
+            int.TryParse(args[0], out int institutionTypeId);
+            int.TryParse(args[1], out int courtTypeId);
+            int.TryParse(args[2], out int courtId);
+            int.TryParse(args[3], out int nMonth);
+            int.TryParse(args[4], out int nYear);
+          
+            string filterTitle = "Входни данни за показатели";
+            if (institutionTypeId > 0)
+            {
+               
+                filterTitle += $", Орган на съдебна власт: {await _sjcRepo.GetNameByIdFromTable("InstitutionType", institutionTypeId)}";
+            }
+            if (courtTypeId > 0)
+            {
+
+                filterTitle += $", Вид орган: {await _sjcRepo.GetNameByIdFromTable("CourtType", courtTypeId)}";
+            }
+            if (courtId > 0)
+            {
+                filterTitle += $" , Отчетна единица: {await _sjcRepo.GetNameByIdFromTable("Court", courtId)}";
+            }
+            if (nMonth > 0)
+            {
+                filterTitle += $" , Месец: {nMonth}";
+            }
+            if (nYear > 0)
+            {
+                filterTitle += $" , Година: {nYear}";
+            }
+           
+            ViewBag.InstitutionTypeId = institutionTypeId;
+            ViewBag.CourtTypeId = courtTypeId;
+            ViewBag.CourtId = courtId;
+            ViewBag.Month = nMonth;
+            ViewBag.Year = nYear;
+            ViewBag.FilterTitle = filterTitle;
+            ViewBag.Currency = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
+            return View();
         }
     }
 }

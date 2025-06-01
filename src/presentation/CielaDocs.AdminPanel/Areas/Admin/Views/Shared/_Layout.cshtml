@@ -151,6 +151,10 @@
                     .Id("programs")
                     .Text("Бюджетни програми")
                     .Icon("rowproperties");
+                    items.Add()
+                    .Id("apps")
+                    .Text("Приложения за показатели")
+                    .Icon("datafield");
                      items.Add()
                     .Id("indicatorsnew")
                     .Text("Показатели")
@@ -158,6 +162,10 @@
                     items.Add()
                     .Id("metricsfield")
                     .Text("Входни данни")
+                    .Icon("fieldchooser");
+                    items.Add()
+                    .Id("metricsfieldinput")
+                    .Text("Входни данни по органи")
                     .Icon("fieldchooser");
                     items.Add()
                     .Id("applog")
@@ -269,8 +277,9 @@
                 const metricsFieldUrl = "@Url.Action("Index","MetricsField", new {area="Admin"})";
                 const institutionsUrl = "@Url.Action("Index", "Institution", new { area = "Admin" })";
                 const appLogUrl = "@Url.Action("Index", "ApplicationLog", new { area = "Admin" })";
-                 const utilsUrl = "@Url.Action("Index", "Utils", new { area = "Admin" })";
-             
+                const utilsUrl = "@Url.Action("Index", "Utils", new { area = "Admin" })";
+                const metricsfieldinputUrl = "@Url.Action("Index", "MetricsFieldInput", new { area = "Admin" })";
+                const appsUrl = "@Url.Action("Index", "Apps", new { area = "Admin" })";
                 var drawer = getDrawer();
                 var savedOpened = restoreDrawerOpened();
                 var actualOpened = drawer.option("opened");
@@ -297,6 +306,8 @@
                             break;
                         case 'fnarea': navigate(fnareaUrl, willHide ? 400 : 0);
                             break;
+                        case 'apps': navigate(appsUrl, willHide ? 400 : 0);
+                            break;
                         case 'programs': navigate(programUrl, willHide ? 400 : 0);
                             break;
                         case 'indicators': navigate(indicatorsUrl, willHide ? 400 : 0);
@@ -306,6 +317,8 @@
                         case 'metrics': navigate(metricsUrl, willHide ? 400 : 0);
                             break;
                         case 'metricsfield': navigate(metricsFieldUrl, willHide ? 400 : 0);
+                            break;
+                             case 'metricsfieldinput': navigate(metricsfieldinputUrl, willHide ? 400 : 0);
                             break;
                         case 'institutions': navigate(institutionsUrl, willHide ? 400 : 0);
                             break;

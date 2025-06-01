@@ -48,6 +48,7 @@ namespace CielaDocs.Shared.Services
         Task<IEnumerable<IndicatorDataCourt1Y>> GetIndicatorDataCourt1YByCourtIdAsync(int? functionalSubAreaId, int? ny, int? courtId);
         Task<int?> SpEndCurrentYearDataAsync();
         Task<int?> SpEndCurrentAppMonthDataAsync();
+        Task<int?> SpInitAppInputAsync(int? courtId, int? nm, int? ny);
 
 
     }

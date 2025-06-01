@@ -1093,5 +1093,16 @@ t1.PlannedYear as PlannedYear1,t2.PlannedYear as PlannedYear2,t3.PlannedYear as 
             var result = await connection.QuerySingleOrDefaultAsync<IndicatorDataCourtVm>(sql);
             return result;
         }
+        public async Task<int?> SpInitAppInputAsync(int? courtId, int? nm, int? ny)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("CourtId", courtId);
+            parameters.Add("nMonth", nm);
+            parameters.Add("nYear", ny);
+            var ret = await connection.ExecuteAsync("sp_InitAppInput", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
+        }
     }
 }

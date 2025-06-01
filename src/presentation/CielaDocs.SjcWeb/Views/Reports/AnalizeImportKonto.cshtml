@@ -44,12 +44,12 @@
                     autoExpandAll: true,
                 },
                 paging: {
-                    pageSize: 100,
+                    pageSize: 25,
                 },
                 pager: {
                     visible: true,
                     showNavigationButtons: true,
-                    allowedPageSizes: [10, 25, 50, 100,0],
+                    allowedPageSizes: [10, 25, 50, 100],
                     showPageSizeSelector: true,
                     showInfo: true,
                     showNavigationButtons: true,
@@ -109,7 +109,7 @@
                         dataField: "Nvalue",
                         width: "10%",
                         caption: "Стойност",
-                         valueFormat: '0.00',
+                        valueFormat: '#0.00',
                         dataType: 'number',
                         format: function (value) { return value.toFixed(2); },
                             setCellValue: function (rowData, value) {
@@ -153,6 +153,16 @@
                         column: 'Month',
                         summaryType: 'count',
                         displayFormat: '{0} записи',
+                    }, {
+                        column: 'Nvalue',
+                        summaryType: 'sum',
+                        dataType: 'number',
+                        displayFormat: 'Общо: {0}',
+                        showInGroupFooter: true,
+                        customizeText: function(data) {
+                           let formatted = data.value.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            return `Общо: ${formatted}`;
+                        },
                     }],
                      totalItems: [{
                                     column: 'Id',
@@ -162,10 +172,10 @@
                                     summaryType: 'sum',
                                      valueFormat: '#0.00',
                                     dataType: 'number',
-                                    format: function (value) { return value.toFixed(2); },
-                                        setCellValue: function (rowData, value) {
-                                            rowData.Nvalue = value.toFixed(2);
-                                        },
+                                    customizeText: function(data) {
+                                       let formatted = data.value.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                        return `Общо: ${formatted}`;
+                                    },
                                 }],
                 },
                 onRowRemoved: function (e) {
@@ -210,6 +220,11 @@
             name: 'Обнови',
             icon: Ciela.baseUrl+'images/refresh.png',
 
+        }, {
+            id: '5',
+            name: 'Сумирай',
+            icon: Ciela.baseUrl+'images/abacus.png',
+
         }];
         const dxMenu = $('#menu').dxMenu({
             dataSource: menuData,
@@ -227,7 +242,9 @@
                         case '4':
                             $("#grid").dxDataGrid("instance").refresh();
                             break;
-
+                        case '5':
+                            summarizeKontoCodes();
+                            break;
                         case '6_1':
                             var workbook = new ExcelJS.Workbook();
                             var worksheet = workbook.addWorksheet("AnalizeImportKonto");
@@ -254,6 +271,47 @@
             delay: { show: 0, hide: 300 },
         }];
 
+        function summarizeKontoCodes() {
+            mainPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Reports/SummarizeKontoCodesPartialView"),
+                height: $(window).height() - 250,
+                width: $(window).width() - 890,
+                title: 'Конто кодове за сумиране',
+            });
+            mainPopup.show();
+        }
+         function OnClosePopupEventHandlerSummarizeEx(arg, e) {
+            switch (arg) {
 
+               case 'summarizeKontoFilterOk':
+                    mainPopup.hide();
+                    showSummarizedData(e);
+                    break;
+            }
+        }
+                let formatter = new Intl.NumberFormat('bg-BG', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        function showSummarizedData(e){
+
+            $.ajax({
+                   url: "@Url.Action("GetSummarizedKontoCodes", "Reports")", method: 'Get', data: {functionalSubAreaId: $("#FunctionalSubAreaId").val(),
+                             courtId: $("#CourtId").val(), nyear: $("#Nyear").val(), nmonth: $("#Nmonth").val(),
+                            kontoCodes: e,displayCurrencyId:window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId  }
+
+            }).done(function (result) {
+                if (result.success === true) {
+                      DevExpress.ui.dialog.alert(`Сума=${formatter.format(result.summary)}`, 'Сумирана стойност');
+                    return;
+                }
+                else {
+                    DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                }
+            })
+                .fail(function (e) {
+                    DevExpress.ui.notify('Failed to set filter! ' + e);
+                });
+        }
     </script>
 }

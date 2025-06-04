@@ -49,7 +49,7 @@ namespace CielaDocs.Shared.Services
         Task<int?> SpEndCurrentYearDataAsync();
         Task<int?> SpEndCurrentAppMonthDataAsync();
         Task<int?> SpInitAppInputAsync(int? courtId, int? nm, int? ny);
-
+        Task<int?> Sp_InitAppInputCommonAsync(int? createdByInstTypeId, int? ny);
 
     }
 }

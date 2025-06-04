@@ -1,0 +1,123 @@
+﻿@{
+    ViewData["Title"] = "Index";
+
+}
+<style>
+    .select2-container--open {
+        z-index: 99999999
+    }
+
+</style>
+<form id="anyForm">
+    <div class="modal-body form-horizontal">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <div class="lock-container">
+                            <input type="text" readonly id="aciveperiodparams" class="lock-result">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label for="cbApps">Приложение</label>
+                        <select class="form-control" style="width:100%" id="cbApps">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="lock-container">
+                        <input type="text" readonly id="lock-result">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="spacer_10"></div>
+        <div style="float:right;margin-right:10px;margin-bottom:10px;">
+            <div id="okCommonFilterBtn"></div>
+            <div id="closeCommonFilterBtn"></div>
+        </div>
+    </div>
+</form>
+<script>
+
+    $(() => {
+        let appId = 0;
+
+
+     let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
+             .then(data =>{
+                if(!isEmpty(data)){
+                    $('#aciveperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
+                }
+                else {
+                      $('#aciveperiodparams').val('');
+                }
+             });
+
+        $("#cbApps").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetApps", "Noms")",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            appId = $(e.currentTarget).val();
+        });
+        //-------------buttons--------------
+         let isLocked=false;
+        $('#okCommonFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                if (appId == 0) {
+                    DevExpress.ui.dialog.alert('Изберете задължително приложение', 'Внимание');
+                    return;
+                }
+                window.parent.OnClosePopupEventHandlerEx('appInputCommonFilterOk', ''.concat(appId, "|",activeYear,"|",officialCurrencyId,"|",0,"|",isLocked));
+            },
+        });
+        $('#closeCommonFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                popup.hide();
+            },
+        });
+    });
+
+</script>

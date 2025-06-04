@@ -1104,5 +1104,25 @@ t1.PlannedYear as PlannedYear1,t2.PlannedYear as PlannedYear2,t3.PlannedYear as 
             var ret = await connection.ExecuteAsync("sp_InitAppInput", parameters, commandType: CommandType.StoredProcedure);
             return ret;
         }
+        public async Task<int?> Sp_InitAppInputCommonAsync(int? createdByInstTypeId, int? ny)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                DynamicParameters parameters = new DynamicParameters();
+                parameters.Add("CreatedByInstTypeId", createdByInstTypeId ?? 0);
+                parameters.Add("nYear", ny);
+                var ret = await connection.ExecuteAsync("sp_InitAppInputCommon", parameters, transaction, commandType: CommandType.StoredProcedure);
+                await transaction.CommitAsync();
+                return ret;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 }

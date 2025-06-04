@@ -1,0 +1,261 @@
+﻿@using CielaDocs.Application.Dtos
+@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    Layout = "~/Views/Shared/_LayoutMax.cshtml";
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    var title = $" година: {ViewBag.Year}";
+
+}
+<div class="spacer_5"></div>
+<h4>Прогнозни стойности за входни данни за приложение:@ViewBag.AppName</h4>
+
+<div class="row">
+    <div class="col-3">
+        <div class="lock-container">
+            <input type="text" readonly id="lock-result">
+        </div>
+    </div>
+</div>
+
+<div class="spacer_5"></div>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="image-indicator"></div>
+<div id="grid"></div>
+@Html.Hidden("AppId", (int)ViewBag.AppId)
+@Html.Hidden("nYear", (int)ViewBag.Year)
+@section scripts {
+    <script>
+       
+        var selectedId = 0;
+        let selectedYear = parseInt($('#nYear').val(),10);
+
+
+        let loadIndicator;
+        $('#image-indicator').dxLoadIndicator({
+            indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
+        });
+
+
+        $(() => {
+            let bIsLocked=false;
+              loadIndicator = $('#image-indicator').dxLoadIndicator({
+                visible: false,
+            }).dxLoadIndicator('instance');
+            loadIndicator.option('visible', false);
+
+        $('#grid').dxDataGrid({
+                       dataSource: new DevExpress.data.DataSource({
+                           store: new DevExpress.data.CustomStore({
+                               key: 'Id',
+                               load() {
+                                   return sendRequest(Ciela.baseUrl + "AppInputCommon/GetAppInputDataGrid", 'Get');
+                               },
+                               update(key, values) {
+                                   return sendRequest(Ciela.baseUrl + "AppInputCommon/UpdateAppInputDataItem", 'Post', {
+                                       key: key,
+                                       values: JSON.stringify(values),
+                                   });
+                               },
+                           }),
+                       }),
+                       paging: {
+                           pageSize: 25,
+                       },
+                       pager: {
+                           visible: true,
+                           showNavigationButtons: true,
+                           allowedPageSizes: [10, 25, 50, 100,0],
+                           showPageSizeSelector: true,
+                           showInfo: true,
+                           showNavigationButtons: true,
+                       },
+                       searchPanel: {
+                           visible: true,
+                           highlightCaseSensitive: true,
+                       },
+                       selection: {
+                           mode: "single"
+                       },
+                       showBorders: true,
+                       showRowLines: true,
+                       decimalSeparator: '.',
+                       columns: [
+                           {
+                               dataField: "MetricsFieldCode",
+                               width: "10%",
+                               caption: "Код"
+                           },
+
+                           {
+                               dataField: "MetricsFieldName",
+                               width: "45%",
+                               caption: "Наименование"
+                           },
+                           {
+                               dataField: "Nval1",
+                               width: "10%",
+                               caption: selectedYear,
+                               alllowEditing: true,
+                               valueFormat: '0.00',
+                               dataType: 'number',
+                               format: function (value) { return value.toFixed(2); },
+                                   setCellValue: function (rowData, value) {
+                                       rowData.Nval1 = value.toFixed(2);
+                                   },
+
+                           },
+                           {
+                               dataField: "Nval2",
+                               width: "10%",
+                               caption: selectedYear+1,
+                               alllowEditing: true,
+                               valueFormat: '0.00',
+                               dataType: 'number',
+                               format: function (value) { return value.toFixed(2); },
+                                   setCellValue: function (rowData, value) {
+                                       rowData.Nval2 = value.toFixed(2);
+                                   },
+
+                           },{
+                               dataField: "Nval3",
+                               width: "10%",
+                               caption: selectedYear+2,
+                               alllowEditing: true,
+                               valueFormat: '0.00',
+                               dataType: 'number',
+                               format: function (value) { return value.toFixed(2); },
+                                   setCellValue: function (rowData, value) {
+                                       rowData.Nval3 = value.toFixed(2);
+                                   },
+
+                           },{
+                               dataField: "Nval4",
+                               width: "10%",
+                               caption: selectedYear+3,
+                               alllowEditing: true,
+                               valueFormat: '0.00',
+                               dataType: 'number',
+                               format: function (value) { return value.toFixed(2); },
+                                   setCellValue: function (rowData, value) {
+                                       rowData.Nval4 = value.toFixed(2);
+                                   },
+
+                           },
+
+
+                       ],
+                       editing: {
+                           mode: 'cell',
+                           allowUpdating: !bIsLocked,
+                           allowDeleting: false,
+                           allowAdding: false,
+                       },
+                       onEditorPreparing: function (e) {
+                           if (e.dataField === "MetricsFieldCode"  || e.dataField === "MetricsFieldName" || e.dataField==="EnteredDate" ) e.editorOptions.disabled = true;
+                                 if ((e.dataField === "Nval1" || e.dataField === "Nval2" || e.dataField === "Nval3" || e.dataField === "Nval4") && e.parentType === "dataRow") {
+                                        const defaultValueChangeHandler = e.editorOptions.onValueChanged;
+                                        e.editorOptions.onValueChanged = function (args) {
+                                            defaultValueChangeHandler(args);
+                                        }
+                                    }
+                       },
+                       onRowRemoved: function (e) {
+                           e.component.selectRowsByIndexes(0);
+                       },
+                       onSelectionChanged: function (items) {
+                           if (items.selectedRowsData[0]) {
+                               selectedId = items.selectedRowsData[0].Id;
+                           }
+                       },
+                       focusedRowEnabled: true,
+                       onFocusedRowChanged(e) {
+                           if (e) {
+                               getExtraDataItem(e.row);
+                           }
+                       },
+                       hoverStateEnabled: true,
+                       onRowPrepared: function (info) {
+                           if (info.rowType != 'header' && info.data.Disabled == true) {
+                               info.rowElement.addClass('disabledRow');
+                               info.rowElement.css('background', 'yellow');
+                           }
+
+                       }
+
+                   });
+
+
+               });
+               async function getExtraDataItem(row) {
+
+
+                   return false;
+               }
+
+               const menuData = [{
+                   id: '1',
+                   name: 'Начало',
+                   icon: Ciela.baseUrl+'images/back.png',
+                   },
+                   {
+                       id: '6_1',
+                       name: 'Експорт',
+                       icon: Ciela.baseUrl+'images/exporter.svg',
+
+
+                   }, {
+                       id: '4',
+                       name: 'Обнови',
+                       icon: Ciela.baseUrl+'images/refresh.png',
+
+                   }];
+               const dxMenu = $('#menu').dxMenu({
+                   dataSource: menuData,
+                   hideSubmenuOnMouseLeave: false,
+                   displayExpr: 'name',
+                   onItemClick(data) {
+                       const item = data.itemData;
+                       if (item.id) {
+
+                           switch (item.id) {
+                                 case '1':
+                                   window.location.href = Ciela.baseUrl;
+                                   break;
+
+                               case '4':
+                                   $("#grid").dxDataGrid("instance").refresh();
+                                   break;
+
+
+                               case '6_1':
+                                   var workbook = new ExcelJS.Workbook();
+                                   var worksheet = workbook.addWorksheet("AppInput");
+
+                                   DevExpress.excelExporter.exportDataGrid({
+                                       component: $("#grid").dxDataGrid("instance"),
+                                       worksheet: worksheet
+                                   }).then(function () {
+                                       workbook.xlsx.writeBuffer().then(function (buffer) {
+                                           saveAs(new Blob([buffer], { type: "application/octet-stream" }), "AppInputData.xlsx");
+                                       });
+                                   });
+                                   break;
+                           }
+                       }
+                   },
+               }).dxMenu('instance');
+
+               const showSubmenuModes = [{
+                   name: 'onHover',
+                   delay: { show: 0, hide: 500 },
+               }, {
+                   name: 'onClick',
+                   delay: { show: 0, hide: 300 },
+               }];
+
+    </script>
+}
+

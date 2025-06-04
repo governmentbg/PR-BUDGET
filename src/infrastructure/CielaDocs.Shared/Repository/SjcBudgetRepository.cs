@@ -1,5 +1,6 @@
 ﻿using CielaDocs.Application.Models;
 using CielaDocs.Domain.Entities;
+using CielaDocs.Domain.Entities.v2;
 using CielaDocs.Shared.DataAccess;
 
 using Dapper;
@@ -984,18 +985,22 @@ namespace CielaDocs.Shared.Repository
         public async Task<int?> Sp_InitFinYearStage1Async(int ny) {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("nYear", ny);
-            var ret = await connection.ExecuteAsync("sp_InitFinYear1", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_InitFinYear1", parameters, transaction, commandType: CommandType.StoredProcedure);
+            await transaction.CommitAsync();
             return ret;
         }
         public async Task<int?> Sp_InitFinYearStage2Async(int ny)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("nYear", ny);
-            var ret = await connection.ExecuteAsync("sp_InitFinYear2", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_InitFinYear2", parameters, transaction, commandType: CommandType.StoredProcedure);
+            await transaction.CommitAsync();
             return ret;
         }
 
@@ -1003,10 +1008,12 @@ namespace CielaDocs.Shared.Repository
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum??0);
             parameters.Add("nYear", ny);
-            var ret = await connection.ExecuteAsync("sp_InitProgramData", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_InitProgramData", parameters, transaction, commandType: CommandType.StoredProcedure);
+            await transaction.CommitAsync();
             return ret;
         }
         public async Task<int?> Sp_InitProgramDataCourtAsync(int? programNum, int? ny)
@@ -1019,7 +1026,7 @@ namespace CielaDocs.Shared.Repository
                 DynamicParameters parameters = new DynamicParameters();
                 parameters.Add("ProgramDefNum", programNum ?? 0);
                 parameters.Add("nYear", ny);
-                var ret = await connection.ExecuteAsync("sp_InitProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
+                var ret = await connection.ExecuteAsync("sp_InitProgramDataCourt", parameters,transaction, commandType: CommandType.StoredProcedure);
                 await transaction.CommitAsync();
                 return ret;
             }
@@ -1040,7 +1047,7 @@ namespace CielaDocs.Shared.Repository
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
             parameters.Add("nBudgetPeriodId", budgetPeriodId??0);
-            var ret = await connection.ExecuteAsync("sp_InitIndicatorData", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_InitIndicatorData", parameters,transaction, commandType: CommandType.StoredProcedure);
                 await transaction.CommitAsync();
                 return ret;
             }
@@ -1061,7 +1068,7 @@ namespace CielaDocs.Shared.Repository
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
             parameters.Add("nBudgetPeriodId", budgetPeriodId ?? 0);
-            var ret = await connection.ExecuteAsync("sp_InitIndicatorDataCourt", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_InitIndicatorDataCourt", parameters,transaction, commandType: CommandType.StoredProcedure);
                 await transaction.CommitAsync();
                 return ret;
             }
@@ -1071,6 +1078,9 @@ namespace CielaDocs.Shared.Repository
                 throw;
             }
         }
+
+
+      
         public async Task<int?> Sp_InitProgramDataCourtByIdAsync(int? programNum,int? courtId, int? ny)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();

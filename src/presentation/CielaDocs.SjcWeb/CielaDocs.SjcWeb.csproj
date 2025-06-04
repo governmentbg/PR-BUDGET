@@ -89,6 +89,7 @@
     <Folder Include="SamlUtils\" />
     <Folder Include="temp-keys\" />
     <Folder Include="ViewComponents\" />
+    <Folder Include="Views\AppResult\" />
     <Folder Include="wwwroot\localdocarchive\Docs\" />
     <Folder Include="wwwroot\localdocarchive\Отчети\2024\" />
     <Folder Include="wwwroot\localdocarchive\Справки\" />

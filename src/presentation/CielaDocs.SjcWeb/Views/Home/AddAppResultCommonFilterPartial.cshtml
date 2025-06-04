@@ -11,7 +11,15 @@
 <form id="anyForm">
     <div class="modal-body form-horizontal">
         <div class="container-fluid">
-
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <div class="lock-container">
+                            <input type="text" readonly id="aciveperiodparams" class="lock-result">
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
@@ -19,20 +27,6 @@
                         <select class="form-control" style="width:100%" id="cbApps">
                             <option>Избери... </option>
                         </select>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-4">
-                    <div class="form-group">
-                        <label for="selectMonth">Към месец</label>
-                        <div id="selectMonth" style="color:red;font-size:medium;"></div>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="form-group">
-                        <label for="selectYear">За година</label>
-                        <div id="selectYear" style="color:red;font-size:medium;"></div>
                     </div>
                 </div>
             </div>
@@ -50,8 +44,7 @@
     $(() => {
 
         let appId = 0;
-        let ny =Number('@ViewBag.Year')||0;
-        let nm = Number('@ViewBag.Month')||0;
+
          let loadIndicator;
         $('#image-indicator').dxLoadIndicator({
             indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
@@ -60,8 +53,15 @@
                 visible: false,
             }).dxLoadIndicator('instance');
             loadIndicator.option('visible', false);
-        $('#selectYear').text(ny);
-         $('#selectMonth').text(nm);
+        let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
+             .then(data =>{
+                if(!isEmpty(data)){
+                    $('#aciveperiodparams').val('Активен период: '+`${data?.Y1},${data?.Y2},${data?.Y3} и ${data?.Y4}`);
+                }
+                else {
+                      $('#aciveperiodparams').val('');
+                }
+             });
 
          $("#cbApps").select2({
             placeholder: "Избери...",
@@ -94,7 +94,7 @@
         }).on('change', function (e) {
             appId = $(e.currentTarget).val();
         });
-      
+
          //-------------buttons--------------
         $('#okAppInputBtn').dxButton({
             stylingMode: 'contained',
@@ -108,9 +108,9 @@
                 }
                  loadIndicator.option('visible', true);
                   $.ajax({
-               
 
-                url: "@Url.Action("Index", "AppResult")", method: 'POST', data: { par: ''.concat(appId, "|",nm, "|", ny)}
+
+                url: "@Url.Action("PlannedResult", "AppResult")", method: 'POST', data: { par: ''.concat(appId, "|",activeYear)}
 
             }).done(function (result) {
                  loadIndicator.option('visible', false);
@@ -126,7 +126,7 @@
                      loadIndicator.option('visible', false);
                     DevExpress.ui.notify('Failed to generate report! ' + e);
                 });
-                
+
             },
         });
         $('#closeAppInputBtn').dxButton({

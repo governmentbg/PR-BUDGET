@@ -65,5 +65,6 @@ namespace CielaDocs.Shared.Services
 
         public async Task<int?> SpEndCurrentAppMonthDataAsync() { return await _repo.SpEndCurrentAppMonthDataAsync(); }
         public async Task<int?> SpInitAppInputAsync(int? courtId, int? nm, int? ny) { return await _repo.SpInitAppInputAsync(courtId,nm,ny); }
+        public async Task<int?> Sp_InitAppInputCommonAsync(int? createdByInstTypeId, int? ny) { return await _repo.Sp_InitAppInputCommonAsync(createdByInstTypeId, ny); }
     }
 }

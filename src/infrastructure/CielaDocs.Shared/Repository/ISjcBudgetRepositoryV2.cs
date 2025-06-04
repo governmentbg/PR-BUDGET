@@ -56,5 +56,6 @@ namespace CielaDocs.Shared.Repository
         Task<decimal?> SumMetricsFieldInProgramItemByMainIndicatorsId(int id, int? nm1, int? nm2, int? ny);
         Task<int?> SpEndCurrentAppMonthDataAsync();
         Task<int?> SpInitAppInputAsync(int? courtId, int? nm, int? ny);
+        Task<int?> Sp_InitAppInputCommonAsync(int? createdByInstTypeId, int? ny);
     }
 }

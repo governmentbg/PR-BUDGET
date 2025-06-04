@@ -105,6 +105,7 @@ namespace CielaDocs.Shared.Repository
         Task<int?> Sp_InitProgramDataCourtAsync(int? programNum, int? ny);
         Task<int?> Sp_InitIndicatorDataAsync(int? programNum, int? ny,int? budgetPeriodId);
         Task<int?> Sp_InitIndicatorDataCourtAsync(int? programNum, int? ny, int? budgetPeriodId);
+       
         Task<int?> Sp_UpdateProgramDataAsync(int? programNum, int? ny);
         Task<int?> Sp_UpdateProgramDataCourtAsync(int? programNum, int? ny);
      

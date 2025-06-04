@@ -58,6 +58,7 @@ namespace CielaDocs.Application.Common.Interfaces
         DbSet<CourtInKontoCode> CourtInKontoCode { get; set; }
         DbSet<AppInput> AppInput { get; set; }
         DbSet<AppRequired> AppRequired { get; set; }
+        DbSet<AppInputCommon> AppInputCommon { get; set; }
         Task BeginTransactionAsync();
         Task CommitTransactionAsync();
         void RollbackTransaction();

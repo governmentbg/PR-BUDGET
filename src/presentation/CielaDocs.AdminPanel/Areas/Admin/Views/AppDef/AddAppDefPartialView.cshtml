@@ -1,0 +1,367 @@
+﻿@model CielaDocs.Application.Models.AppDefVm
+
+@{
+    ViewData["Title"] = "Index";
+
+}
+
+<form id="anyForm">
+
+    @Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.FunctionalSubAreaId)
+    @Html.HiddenFor(x => x.MeasureId)
+    @Html.HiddenFor(x => x.IsActive)
+    @Html.HiddenFor(x => x.AppId)
+
+    <div class="modal-body form-horizontal">
+
+        <div class="container-fluid">
+
+            <div class="row">
+                <span style="color:red;">@ViewBag.FnSubName</span>
+                <div class="col-12">
+                    <div class="form-group">
+                        <label asp-for="Name" class="required">Показател</label>
+                        <textarea asp-for="Name" class="form-control"></textarea>
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+
+            </div>
+            <div class="row">
+                    <div class="col-4">
+                        <div class="form-group">
+                            <label asp-for="RowNum" class="required">Ред</label>
+                            <input asp-for="RowNum" class="form-control" type="number" style="width:120px;" />
+                            <span asp-validation-for="RowNum" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-group">
+                            <label asp-for="RowCode" class="required">Етикет на ред</label>
+                            <input asp-for="RowCode" class="form-control" type="number" style="width:120px;" />
+                            <span asp-validation-for="RowCode" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-group">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="cbIsActive">
+                                <label class="custom-control-label" for="cbIsActive">Активна</label>
+                            </div>
+                        </div>
+                    </div>
+             </div>
+             <div class="row">
+                   <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="ddlApp">Приложение</label>
+                        <select class="form-control" style="width:100%" id="ddlApp">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="ddlMeasure">Мярка</label>
+                        <select class="form-control" style="width:100%" id="ddlMeasure">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-6">
+                    <div class="form-group">
+                        <label for="Calculation">Изчисление</label>
+                        <textarea asp-for="Formula" class="form-control"></textarea>
+                        <span asp-validation-for="Formula" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                        <label for="MetricsFileds">Входни данни</label>
+
+                        <label for="ddlMetricsCode">Код</label>
+                        <select class="form-control" id="ddlMetricsCode">
+                            <option>Избери... </option>
+                        </select>
+                        <div id="addMetricsBtn" style="margin-top:5px;"></div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12"><div id="gridresult"></div></div>
+            </div>
+            <div class="spacer_10"></div>
+            <div style="float:right;margin-right:10px;margin-bottom:10px;">
+                <div id="okBtn"></div>
+                <div id="closeBtn"></div>
+            </div>
+        </div>
+    </div>
+
+</form>
+<script>
+
+
+    $(() => {
+        let metricsFieldId=0;
+
+
+        $('#cbIsActive').prop('checked', ($('#IsActive').val().toLowerCase() == 'true') ? true : false);
+
+        $("#cbIsActive").change(function () {
+            $('#IsActive').val($(this).prop("checked"));
+            if ($(this).prop("checked") == true) {
+                $('#txtInactiveSince').val('');
+                $('#InactiveSince').val('');
+                $('#InactiveDescription').val('');
+            }
+        });
+
+
+        let appId = $('#AppId').val();
+        let measureId = $('#MeasureId').val();
+
+        $.ajax({
+            url: "@Url.Action("GetAppById", "Noms", new { area = "Admin" })",
+            dataType: 'json',
+            type: "Get",
+            data: { id: appId },
+            success: function (data) {
+                $("#ddlApp").empty();
+                 $("#ddlApp").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
+                $('#ddlApp').val(appId);
+            }
+        });
+        $.ajax({
+            url: "@Url.Action("GetMeasureById", "Noms", new { area = "Admin" })",
+            dataType: 'json',
+            type: "Get",
+            data: { id: measureId },
+            success: function (data) {
+                $("#ddlMeasure").empty();
+                $("#ddlMeasure").append("<option value='" + data.Id + "'>" + data.Name + "</option>");
+                $('#ddlMeasure').val(measureId);
+            }
+        });
+
+    $("#ddlApp").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetApps", "Noms", new { area = "Admin" })",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+         $('#AppId').val($(e.currentTarget).val());
+        });
+
+
+
+    $("#ddlMeasure").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetMeasure", "Noms", new { area = "Admin" })",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+         $('#MeasureId').val($(e.currentTarget).val());
+        });
+
+          $("#ddlMetricsCode").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetMetricsFieldByCode", "Noms", new { area = "Admin" })",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+                            };
+                        }),
+                    };
+                }
+            }
+        }).on('change', function (e) {
+         metricsFieldId=$(e.currentTarget).val();
+        });
+
+
+                $('#gridresult').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(EduDl.baseUrl + "Noms/GetAppDefMetricsFieldByAppDefId", 'Get', { id: $('#Id').val() });
+                        },
+                    }),
+                }),
+                paging: {
+                    pageSize: 100,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                decimalSeparator: '.',
+                columns: [
+                    {
+                        dataField: "MetricsFieldCode",
+                        width: "20%",
+                        caption: "Код"
+                    },
+
+                    {
+                        dataField: "MetricsFieldName",
+                        width: "50%",
+                        caption: "Наименование на входни данни"
+                    },
+
+                    {
+                        type: 'buttons',
+                    width: 124,
+                    buttons: [
+                    {
+                        hint: 'Изтриване',
+                        icon: 'trash',
+
+                        onClick(e) {
+                            removeRow(e.row.data.Id);
+                            e.component.refresh(true);
+                            e.event.preventDefault();
+                        },
+                    }
+                    ],
+                    }
+
+                ],
+
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                focusedRowEnabled: true,
+
+            });
+             function removeRow(id){
+              var result = DevExpress.ui.dialog.confirm("Потвърдете изтриването на записа?", "Потвърждение");
+                             result.done(function (dialogResult) {
+                                 if (dialogResult === true) {
+                                     $.ajax({
+                                         url: EduDl.baseUrl + "Noms/DeleteAppDefMetricsFieldById", data: {id:id }, method: 'POST'
+                                     })
+                                         .done(function (result) {
+                                              $("#gridresult").dxDataGrid("instance").refresh();
+                                             DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                             DevExpress.ui.notify('Грешка при изтриване на входни данни за показател.');
+                                         });
+                                 }
+                             });
+        }
+          //-------------buttons--------------
+           $('#addMetricsBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добави',
+            type: 'success',
+            width: 120,
+            onClick() {
+                addMetricsFieldInProgram($('#Id').val(),metricsFieldId);
+            },
+        });
+        $('#okBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+
+                window.parent.OnClosePopupEventHandlerEx('dataOk', '');
+            },
+        });
+        $('#closeBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+               mainPopup.hide();
+            },
+        });
+        function addMetricsFieldInProgram(appDefId,metricsFieldId){
+             $.ajax({
+                                         url: EduDl.baseUrl + "Noms/AppDefMetricsField", data: {appDefId:appDefId,metricsFieldId:metricsFieldId }, method: 'POST'
+                                     })
+                                         .done(function (result) {
+                                              $("#gridresult").dxDataGrid("instance").refresh();
+                                             DevExpress.ui.notify(result.msg);
+                                         })
+                                         .fail(function () {
+                                             DevExpress.ui.notify('Грешка при добавяне на показател.');
+                                         });
+        }
+    });
+
+</script>

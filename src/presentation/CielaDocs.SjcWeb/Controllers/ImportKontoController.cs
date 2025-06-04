@@ -76,12 +76,15 @@ namespace CielaDocs.SjcWeb.Controllers
       
         // [HttpPost]
         //[ValidateAntiForgeryToken]
-        public async Task<JsonResult> LoadCustomExcelFile(string id, bool? isOverwrite)
+        public async Task<JsonResult> LoadCustomExcelFile(string id, bool? isOverwrite, bool? isWriteLog)
         {
             StringBuilder sb = new StringBuilder();
             try
             {
-          
+                if (isWriteLog == true)
+                {
+                    _ = await _sjcService.ExecuteRawSql($"TRUNCATE TABLE CourtInKontoCode;");
+                }
                 // Check the File is received
 
                 if (string.IsNullOrWhiteSpace(id))
@@ -177,7 +180,13 @@ namespace CielaDocs.SjcWeb.Controllers
                         else
                         {
                             sb.AppendLine($"Found code='{code}', sum value={foundItem.Sum(x => x.Value)}");
+                         
                             nval += foundItem.Sum(x => x.Value);
+                            if (isWriteLog == true)
+                            {
+                                _ = await _sjcService.ExecuteRawSql($@"INSERT INTO CourtInKontoCode(CourtId,FunctionalSubAreaId,NMonth,NYear,NValue,KontoCode) 
+                                VALUES ({court?.Id},{row?.FunctionalSubAreaId ?? 0},{nMonth},{nYear},{foundItem.Sum(x => x.Value)},'{code}')");
+                            }
                         }
                     }
                     KontoMonthDataVm dataVm = new KontoMonthDataVm()
@@ -217,15 +226,18 @@ namespace CielaDocs.SjcWeb.Controllers
                 return Json(new { msg = "Грешка при четене на файл: " + ex?.Message, success = false });
             }
         }
-        public async Task<JsonResult> LoadFromFolderKontoFile() {
+        public async Task<JsonResult> LoadFromFolderKontoFile(bool? isWriteLog) {
             try
             {
+                if (isWriteLog == true) { 
+                    _=await _sjcService.ExecuteRawSql($"TRUNCATE TABLE CourtInKontoCode;");
+                }
                 int nCnt=0;int fileCnt = 0;StringBuilder sb = new StringBuilder();
                 string[] filePaths = System.IO.Directory.GetFiles(System.IO.Path.Combine(_env.WebRootPath + "/uploads/"));
                 foreach (string filePath in filePaths)
                 {
 
-                   var res = await LoadKontoFile(System.IO.Path.GetFileName(filePath));
+                   var res = await LoadKontoFile(System.IO.Path.GetFileName(filePath),isWriteLog);
                     fileCnt += res.Item1;
                     nCnt += res.Item2;
                     sb.AppendLine(res.Item3);
@@ -244,7 +256,7 @@ namespace CielaDocs.SjcWeb.Controllers
                 return Json(new { msg = "Грешка при импорт на файлове: " + ex?.Message, success = false });
             }
         }
-        private async Task<(int,int,string)> LoadKontoFile(string fileName)
+        private async Task<(int,int,string)> LoadKontoFile(string fileName, bool? isWriteLog)
         {
             try
             {
@@ -331,7 +343,7 @@ namespace CielaDocs.SjcWeb.Controllers
                     var kCodes = await _sjcRepo.GetKontoCodesFromProgramDef(row?.FunctionalSubAreaId, row?.RowNum);
                     if (string.IsNullOrWhiteSpace(kCodes)) continue;
                     decimal? nval = 0;
-                    var KontoCodesList = kCodes.Split(',');
+                    var KontoCodesList = kCodes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                     foreach (var kCode in KontoCodesList)
                     {
                         var code = Regex.Replace(kCode, @"\s+", "");
@@ -339,6 +351,12 @@ namespace CielaDocs.SjcWeb.Controllers
                         var foundItem = dic.Where(x => x.Code.ContainsWord(code)).ToList();
                         if (!foundItem.Any()) continue;
                         nval += foundItem.Sum(x => x.Value);
+                        if (isWriteLog == true) {
+                            _ = await _sjcService.ExecuteRawSql($@"INSERT INTO CourtInKontoCode (CourtId,FunctionalSubAreaId,NMonth,NYear,NValue,KontoCode) 
+                                VALUES ({court?.Id},{row?.FunctionalSubAreaId ?? 0},{nMonth},{nYear},{foundItem.Sum(x => x.Value)},'{code}')");
+                        }
+                        
+                                               
                     }
                     KontoMonthDataVm dataVm = new KontoMonthDataVm()
                     {

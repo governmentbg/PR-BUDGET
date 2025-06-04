@@ -171,6 +171,10 @@
                         dataType: 'number',
                         displayFormat: 'Общо: {0}',
                         showInGroupFooter: true,
+                        customizeText: function(data) {
+                           let formatted = data.value.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            return `Общо: ${formatted}`;
+                        },
                     }],
                 },
                 onRowRemoved: function (e) {

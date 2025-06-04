@@ -1,4 +1,5 @@
 ﻿using CielaDocs.Domain.Entities;
+using CielaDocs.Domain.Entities.v2;
 
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,6 @@ namespace CielaDocs.Application.Common.Interfaces
     {
         DatabaseFacade Database { get; }
      
-       
       
          DbSet<Country> Countries { get; set; }
          DbSet<User> Users { get; set; }
@@ -52,6 +52,13 @@ namespace CielaDocs.Application.Common.Interfaces
         DbSet<ProgramDef> ProgramDef { get; set; }
         DbSet<Test> Test { get; set; }
         DbSet<Test2> Test2 { get; set; }
+        DbSet<App> App { get; set; }
+        DbSet<AppDef> AppDef { get; set; }
+        DbSet<AppDefMetricsField> AppDefMetricsField { get; set; }
+        DbSet<CourtInKontoCode> CourtInKontoCode { get; set; }
+        DbSet<AppInput> AppInput { get; set; }
+        DbSet<AppRequired> AppRequired { get; set; }
+        DbSet<AppInputCommon> AppInputCommon { get; set; }
         Task BeginTransactionAsync();
         Task CommitTransactionAsync();
         void RollbackTransaction();

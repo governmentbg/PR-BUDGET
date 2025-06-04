@@ -162,9 +162,23 @@ namespace CielaDocs.SjcWeb.Controllers
         public IActionResult AddMainDataPeriodFilterPartial() => PartialView(nameof(AddMainDataPeriodFilterPartial));
         public IActionResult AddApprovedDataItemFilterPartial() => PartialView(nameof(AddApprovedDataItemFilterPartial));
         public IActionResult AddCurrentIndicatorFilterPartial() => PartialView(nameof(AddCurrentIndicatorFilterPartial));
-       
+        public IActionResult AddAppInputCommonFilterPartial() => PartialView(nameof(AddAppInputCommonFilterPartial));
+        public IActionResult AddAppResultCommonFilterPartial() => PartialView(nameof(AddAppResultCommonFilterPartial));
         public IActionResult NotSupportedFile()=>View(nameof(NotSupportedFile));
-
+        public async Task<IActionResult> AddAppInputFilterPartial()
+        {
+            var cfg=await _sjcRepo.GetCfgAsync();
+            ViewBag.Month = cfg?.CurrentAppMonth ?? 0;
+            ViewBag.Year = cfg?.CurrentYear ?? 0;
+            return  PartialView(nameof(AddAppInputFilterPartial));
+        }
+        public async Task<IActionResult> AddAppResultFilterPartial()
+        {
+            var cfg = await _sjcRepo.GetCfgAsync();
+            ViewBag.Month = cfg?.CurrentAppMonth ?? 0;
+            ViewBag.Year = cfg?.CurrentYear ?? 0;
+            return PartialView(nameof(AddAppResultFilterPartial));
+        }
         [Authorize]
         public async Task<IActionResult> Profile()
         {
@@ -252,6 +266,30 @@ namespace CielaDocs.SjcWeb.Controllers
             }
         }
         [HttpPost]
+        public async Task<JsonResult> SetAddInputFilter(string? id)
+        {
+            try
+            {
+               var par = id?.Split('|');
+                int.TryParse(par?[0], out int courtId);
+                int.TryParse(par?[1], out int nmonth);
+                int.TryParse(par?[2], out int nyear);
+
+                HttpContext.Session.Remove("FilterAppInputSess");
+                HttpContext.Session.Set<AppInputFilter>("FilterAppInputSess", new AppInputFilter {CourtId= courtId,Nmonth=nmonth,PlannedYear=nyear});
+
+                var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+                var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+                string logmsg = $"Филтър с условие {User?.Identity?.Name}";
+                await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
+                return Json(new { success = true, msg = "Ok" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, msg = "Грешка: " + ex?.Message });
+            }
+        }
+        [HttpPost]
         public async Task<JsonResult> SetMainDataItemFilter(int? functionalSubAreaId, int? courtId, int? nm, int? ny, bool? isLocked)
         {
             try
@@ -326,22 +364,23 @@ namespace CielaDocs.SjcWeb.Controllers
             }
         }
         [HttpPost]
-        public async Task<JsonResult> SetIndicatorDataFilter(int? functionalSubAreaId, int? ny, int? currencyId, int? currencyMeasureId, bool? isLocked)
+        public async Task<JsonResult> SetAppInputCommonFilter(int? appId, int? ny, int? currencyId, int? currencyMeasureId, bool? isLocked)
         {
             try
             {
-                if ((functionalSubAreaId == null) || (functionalSubAreaId < 1) || (ny == null) || (ny < 2022))
+                if ((appId == null) || (appId < 1) || (ny == null) || (ny < 2022))
                 {
                     return Json(new { success = false, msg = "Не сте избрали коректни условия! " });
                 }
 
-                HttpContext.Session.Remove("FilterMainDataSess");
-                HttpContext.Session.Set<FilterMainDataVm>("FilterMainDataSess", new FilterMainDataVm { FunctionalSubAreaId = functionalSubAreaId ?? 0, Nyear = ny ?? 0, CurrencyId = currencyId ?? 0, CurrencyMeasureId = currencyMeasureId ?? 0, IsLocked = isLocked ?? false });
-                _ = await _sjcRepo.Sp_InitIndicatorDataAsync(functionalSubAreaId ?? 0, ny ?? 0,0);
-                _ = await _sjcRepo.Sp_InitIndicatorDataCourtAsync(functionalSubAreaId ?? 0, ny ?? 0, 0);
+                HttpContext.Session.Remove("FilterAppInputCommonSess");
+                //CreatedByInstTypeId=4 means VSS user creator
+                HttpContext.Session.Set<FilterAppInputCommonVm>("FilterAppInputCommonSess", new FilterAppInputCommonVm { CreatedByInstTypeId=4, AppId = appId ?? 0, Nyear = ny ?? 0, CurrencyId = currencyId ?? 0, CurrencyMeasureId = currencyMeasureId ?? 0, IsLocked = isLocked ?? false });
                 var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+
+               
                 var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
-                string logmsg = $"Филтър по програми {User?.Identity?.Name}";
+                string logmsg = $"Филтър по приложения {User?.Identity?.Name}";
                 await _logRepo.AddToAppUserLogAsync(new CielaDocs.Domain.Entities.AppUserLog { AppUserId = empl?.Id ?? 0, MsgId = 0, Msg = logmsg, IP = ip });
                 return Json(new { success = true, msg = "Ok" });
             }

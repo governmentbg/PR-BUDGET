@@ -1,0 +1,239 @@
+﻿@using CielaDocs.Application.Dtos
+@model CourtDto
+@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .select2-dropdown {
+        z-index: 10001;
+    }
+</style>
+<div class="spacer_20"></div>
+<h3>Органи на съдебната власт към приложения</h3>
+<div style="display:inline-block">Избор</div>
+<select class="form-control" id="selectApp" style="width:280px;display:inline-block;padding-left:5px;">
+    <option> </option>
+</select>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="programTitle" style="color:red;"></div>
+<div id="grid"></div>
+@section scripts {
+    <script>
+         let selectedAppId;
+         function addInstitutionTypes() {
+              mainPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(EduDl.baseUrl + "Apps/AddInstitutionTypePartial", { appId: selectedAppId||0 }),
+                height: $(window).height() - 450,
+                width: $(window).width() - 990,
+                title: 'Орган на съдебна власт',
+            });
+            mainPopup.show();
+        }
+
+         function OnClosePopupEventHandlerEx(arg, e) {
+             switch (arg) {
+                 case 'dataOk':
+                       mainPopup.hide();
+                       Save();
+                       $("#grid").dxDataGrid("instance").refresh();
+                     break;
+
+             }
+         }
+       
+        $(() => {
+
+             
+            $("#selectApp").select2({
+                placeholder: "",
+                allowClear: true,
+                ajax: {
+                    url: "@Url.Action("GetApps", "Noms", new { area = "Admin" })",
+                    contentType: "application/json; charset=utf-8",
+                    data: function (params) {
+                        var query =
+                        {
+                            term: params.term,
+                        };
+                        return query;
+                    },
+                    processResults: function (result) {
+                        return {
+                            results: $.map(result, function (item) {
+                                return {
+                                    id: item.Id,
+                                    text: item.Name
+                                };
+                            }),
+                        };
+                    }
+                }
+            }).on('change', function (e) {
+                selectedAppId = $(e.currentTarget).val();
+                $("#grid").dxDataGrid("instance").refresh();
+            });
+            //end of ------
+
+            $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(EduDl.baseUrl + "Noms/GetAppRequiredByAppId", 'Get', { appId: selectedAppId });
+                        }
+                    }),
+                }),
+                paging: {
+                    pageSize: 10,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                columns: [
+
+                {
+                    dataField: "InstitutionTypeName",
+                    width: "95%",
+                    caption: "Наименование"
+                }
+                ,
+                     {
+                                type: 'buttons',
+                                width: 114,
+                                buttons: [          
+                                    {
+                                hint: 'Изтриване',
+                                icon: 'trash',
+
+                                onClick(e) {
+                                    deleteItem(e.row.data.Id)
+                                    e.component.refresh(true);
+                                    e.event.preventDefault();
+                                },
+                             },
+                            
+                            ],
+                     },
+                ],
+
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                onSelectionChanged: function (items) {
+                    if (items.selectedRowsData[0]) {
+                        selectedId = items.selectedRowsData[0].Id;
+                    }
+                },
+                focusedRowEnabled: true,
+                onFocusedRowChanged(e) {
+                    if (e) {
+                        getExtraDataItem(e.row);
+                    }
+                },
+            });
+
+
+        });
+        async function getExtraDataItem(row) {
+
+
+            $('#elem-info').empty();
+            return false;
+        }
+
+        const menuData = [
+             {
+                id: '1',
+                name: 'Нов',
+                icon: '../images/add.png',
+
+            },
+            {
+                id: '6_1',
+                name: 'Експорт',
+                icon: '../images/exporter.svg',
+
+
+            }, {
+                id: '4',
+                name: 'Обнови',
+                icon: '../images/refresh.png',
+
+            }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+                         case '1': addInstitutionTypes();
+                            break;
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("Owners");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "CourtTypes.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+
+         function deleteItem(id) {
+            if (confirmDlg('Потвърдете изтриването на записа', function (ret) {
+                if (ret) {
+                    $.ajax({
+                        url: "@Url.Action("DeleteAppRequired", "Apps", new { area = "Admin" })", data: { id: id }, method: 'POST'
+                    })
+                        .done(function (result) {
+                            $("#grid").dxDataGrid("instance").refresh();
+                            DevExpress.ui.notify(result.msg);
+                        })
+                        .fail(function () {
+                            DevExpress.ui.notify('Грешка при изтриване на записа.');
+                        });
+                }
+            }));
+        }
+    </script>
+}

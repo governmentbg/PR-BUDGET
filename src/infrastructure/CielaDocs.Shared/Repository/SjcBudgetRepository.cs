@@ -1,5 +1,6 @@
 ﻿using CielaDocs.Application.Models;
 using CielaDocs.Domain.Entities;
+using CielaDocs.Domain.Entities.v2;
 using CielaDocs.Shared.DataAccess;
 
 using Dapper;
@@ -598,6 +599,7 @@ namespace CielaDocs.Shared.Repository
             var ret =await connection.ExecuteAsync("sp_LoadMainPeriodItems", parameters, commandType: CommandType.StoredProcedure);
             return ret;
         }
+      
         public async Task<IEnumerable<MainDataGrid>> GetMainDataGridByFilterAsync(int functionalSubAreaId, int courtId, int nm, int ny) {
             string sql = $@"select m.Id,m.FunctionalSubAreaId,m.CourtId,m.NMonth,m.NYear,m.MainIndicatorsId,m.Nvalue,m.EnteredValue,m.Datum,m.EnteredOn,i.Name as MainIndicatorName,i.Code,i.MeasureId,i.TypeOfIndicatorId,i.Calculation,c.Name as MeasureName,t.Name as TypeOfIndicatorName
                         from MainData m
@@ -983,18 +985,22 @@ namespace CielaDocs.Shared.Repository
         public async Task<int?> Sp_InitFinYearStage1Async(int ny) {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("nYear", ny);
-            var ret = await connection.ExecuteAsync("sp_InitFinYear1", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_InitFinYear1", parameters, transaction, commandType: CommandType.StoredProcedure);
+            await transaction.CommitAsync();
             return ret;
         }
         public async Task<int?> Sp_InitFinYearStage2Async(int ny)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("nYear", ny);
-            var ret = await connection.ExecuteAsync("sp_InitFinYear2", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_InitFinYear2", parameters, transaction, commandType: CommandType.StoredProcedure);
+            await transaction.CommitAsync();
             return ret;
         }
 
@@ -1002,10 +1008,12 @@ namespace CielaDocs.Shared.Repository
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
             DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum??0);
             parameters.Add("nYear", ny);
-            var ret = await connection.ExecuteAsync("sp_InitProgramData", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_InitProgramData", parameters, transaction, commandType: CommandType.StoredProcedure);
+            await transaction.CommitAsync();
             return ret;
         }
         public async Task<int?> Sp_InitProgramDataCourtAsync(int? programNum, int? ny)
@@ -1018,7 +1026,7 @@ namespace CielaDocs.Shared.Repository
                 DynamicParameters parameters = new DynamicParameters();
                 parameters.Add("ProgramDefNum", programNum ?? 0);
                 parameters.Add("nYear", ny);
-                var ret = await connection.ExecuteAsync("sp_InitProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
+                var ret = await connection.ExecuteAsync("sp_InitProgramDataCourt", parameters,transaction, commandType: CommandType.StoredProcedure);
                 await transaction.CommitAsync();
                 return ret;
             }
@@ -1039,7 +1047,7 @@ namespace CielaDocs.Shared.Repository
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
             parameters.Add("nBudgetPeriodId", budgetPeriodId??0);
-            var ret = await connection.ExecuteAsync("sp_InitIndicatorData", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_InitIndicatorData", parameters,transaction, commandType: CommandType.StoredProcedure);
                 await transaction.CommitAsync();
                 return ret;
             }
@@ -1060,7 +1068,7 @@ namespace CielaDocs.Shared.Repository
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
             parameters.Add("nBudgetPeriodId", budgetPeriodId ?? 0);
-            var ret = await connection.ExecuteAsync("sp_InitIndicatorDataCourt", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_InitIndicatorDataCourt", parameters,transaction, commandType: CommandType.StoredProcedure);
                 await transaction.CommitAsync();
                 return ret;
             }
@@ -1070,6 +1078,9 @@ namespace CielaDocs.Shared.Repository
                 throw;
             }
         }
+
+
+      
         public async Task<int?> Sp_InitProgramDataCourtByIdAsync(int? programNum,int? courtId, int? ny)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -1121,7 +1132,7 @@ namespace CielaDocs.Shared.Repository
                 DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
-            var ret = await connection.ExecuteAsync("sp_InitProgramDataProsecutor", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_InitProgramDataProsecutor", parameters,transaction: transaction, commandType: CommandType.StoredProcedure);
                  await transaction.CommitAsync();
                 return ret;
             }
@@ -1141,7 +1152,7 @@ namespace CielaDocs.Shared.Repository
                 DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
-            var ret = await connection.ExecuteAsync("sp_UpdateProgramData", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_UpdateProgramData", parameters, transaction: transaction, commandType: CommandType.StoredProcedure);
                 await transaction.CommitAsync();
                 return ret;
             }
@@ -1161,7 +1172,7 @@ namespace CielaDocs.Shared.Repository
                 DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
-            var ret = await connection.ExecuteAsync("sp_UpdateProgramDataCourt", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_UpdateProgramDataCourt", parameters, transaction: transaction, commandType: CommandType.StoredProcedure);
                 await transaction.CommitAsync();
                 return ret;
             }
@@ -1182,7 +1193,7 @@ namespace CielaDocs.Shared.Repository
                 DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
-            var ret = await connection.ExecuteAsync("sp_UpdateProgramDataInstitution", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_UpdateProgramDataInstitution", parameters, transaction: transaction, commandType: CommandType.StoredProcedure);
                 await transaction.CommitAsync();
                 return ret;
             }
@@ -1202,7 +1213,7 @@ namespace CielaDocs.Shared.Repository
                 DynamicParameters parameters = new DynamicParameters();
             parameters.Add("ProgramDefNum", programNum ?? 0);
             parameters.Add("nYear", ny);
-            var ret = await connection.ExecuteAsync("sp_UpdateProgramDataProsecutor", parameters, commandType: CommandType.StoredProcedure);
+            var ret = await connection.ExecuteAsync("sp_UpdateProgramDataProsecutor", parameters, transaction: transaction, commandType: CommandType.StoredProcedure);
                 await transaction.CommitAsync();
                 return ret;
             }
@@ -4959,6 +4970,7 @@ namespace CielaDocs.Shared.Repository
                   ,[OfficialEuroRate]
                   ,DefaultCurrencyMeasureId
                   ,CurrentYear
+                  ,CurrentAppMonth
               FROM [dbo].[Cfg] where id=0";
 
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
@@ -4974,25 +4986,36 @@ namespace CielaDocs.Shared.Repository
             var result = await connection.QueryAsync<UserLockedItemVm>(sql);
             return result;
         }
-        public async Task<int> ExecuteRawSqlAsync(string sql)
+        public async Task<int> ExecuteRawSqlAsync(string sql, object parameters = null)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var result = await connection.ExecuteAsync(sql);
+            var result = await connection.ExecuteAsync(sql, parameters);
             return result;
         }
-        public async Task<IEnumerable<T>> QueryRawListAsync<T>(string sql) {
+        public async Task<int> ExecuteRawScalarSqlAsync(string sql, object parameters = null)
+        {
+            await using SqlConnection connection = (SqlConnection) this._context.CreateConnection();
+            await connection.OpenAsync();
+            var result = await connection.ExecuteAsync(sql, parameters);
+            return result;
+    }
+    public async Task<IEnumerable<T>> QueryRawListAsync<T>(string sql, object parameters = null) {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var result = await connection.QueryAsync<T>(sql);
-            return result;
+            
+                var result = await connection.QueryAsync<T>(sql, parameters);
+                return result;
+           
+            
         }
-        public async Task<T> QueryRawAsync<T>(string sql)
+        public async Task<T> QueryRawAsync<T>(string sql, object parameters = null)
         {
             await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
             await connection.OpenAsync();
-            var result = await connection.QuerySingleOrDefaultAsync<T>(sql);
-            return result;
+          
+                return  await connection.QuerySingleOrDefaultAsync<T>(sql, parameters);
+         
         }
 
         public Task GetProgramDataCourt3YAsync(int v, int ny)

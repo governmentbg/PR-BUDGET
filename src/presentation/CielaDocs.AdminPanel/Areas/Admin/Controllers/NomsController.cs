@@ -39,14 +39,14 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         private readonly ISjcService _sjcService;
         private readonly ISjcServiceV2 _sjcServiceV2;
 
-        public NomsController(IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor,ISjcService sjcService, ISjcServiceV2 sjcServiceV2)
+        public NomsController(IMediator mediator, IMapper mapper, ILogRepository logRepo, ISjcBudgetRepository sjcRepo, IHttpContextAccessor httpContextAccessor, ISjcService sjcService, ISjcServiceV2 sjcServiceV2)
         {
             _mediator = mediator;
             _mapper = mapper;
             _logRepo = logRepo;
             _sjcRepo = sjcRepo;
             _httpContextAccessor = httpContextAccessor;
-            _sjcService= sjcService;
+            _sjcService = sjcService;
             _sjcServiceV2 = sjcServiceV2;
         }
         [HttpGet]
@@ -101,7 +101,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             try
             {
                 var data = await _sjcRepo.GetInstitutionsAsync();
-                return Json(data.Where(x=>x.Id>0).ToList());
+                return Json(data.Where(x => x.Id > 0).ToList());
             }
             catch (Exception ex)
             {
@@ -153,7 +153,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         {
             try
             {
-                var data = await _sjcRepo.GetCourtsByCourtTypeIdAsync(courtTypeId??0);
+                var data = await _sjcRepo.GetCourtsByCourtTypeIdAsync(courtTypeId ?? 0);
                 return Json(data.ToList());
             }
             catch (Exception ex)
@@ -177,9 +177,9 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         }
         [HttpGet]
 
-        public async Task<JsonResult> GetCourtsByCourtTypeIdSelect2( int? courtTypeId, string term = "")
+        public async Task<JsonResult> GetCourtsByCourtTypeIdSelect2(int? courtTypeId, string term = "")
         {
-            var data = await _mediator.Send(new GetCourtByCourtTypeIdComboQuery { CourtTypeId=courtTypeId??0, Name = term });
+            var data = await _mediator.Send(new GetCourtByCourtTypeIdComboQuery { CourtTypeId = courtTypeId ?? 0, Name = term });
             return Json(data.ToList());
         }
         [HttpGet]
@@ -207,7 +207,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             var court = await _mediator.Send(new GetCourtByIdQuery { Id = courtId ?? 0 });
             _ = int.TryParse(User?.Claims?.FirstOrDefault(c => c.Type == "UserId")?.Value?.ToString(), out int UserId);
             var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
-            string logmsg = $"Преглед на {court?.Name} от {User?.Identity?.Name??string.Empty}";
+            string logmsg = $"Преглед на {court?.Name} от {User?.Identity?.Name ?? string.Empty}";
             await _logRepo.AddToAppUserLogAsync(new Domain.Entities.AppUserLog { AppUserId = UserId, MsgId = 0, Msg = logmsg, IP = ip });
             return View(court);
         }
@@ -306,7 +306,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         public async Task<JsonResult> GetFunctionalSubAreaByCourtId(int? courtId)
         {
 
-            var returner = await _sjcRepo.GetProgramByCourtIdAsync(courtId??0);
+            var returner = await _sjcRepo.GetProgramByCourtIdAsync(courtId ?? 0);
             return Json(returner.ToArray());
 
         }
@@ -320,7 +320,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<JsonResult> GetFunctionalSubAreaByAreaId(int? id,string term = "")
+        public async Task<JsonResult> GetFunctionalSubAreaByAreaId(int? id, string term = "")
         {
 
             var returner = await _mediator.Send(new GetFnSubAreaQuery { Name = term });
@@ -333,6 +333,49 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             try
             {
                 var data = await _sjcRepo.GetMainIndicatorsByProgramId(id ?? 0);
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<CourtsVm>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetAppById(int? id)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRaw<IdNames>($"Select Id,Name from App where ID={id ?? 0}");
+                return Json(data);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetApps()
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<IdNames>($"Select Id,Name from App ");
+                return Json(data);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetAppDefByProgramId(int? id)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<AppDefVm>($@"SELECT a.Id ,a.FunctionalSubAreaId ,a.AppId ,a.RowNum ,a.RowCode,a.Name,a.ParentRowNum,a.IsActive ,a.MeasureId,a.Formula,b.Name as AppName,c.Name as MeasureName
+                     FROM  dbo.AppDef a
+                    left join App b on a.appId=b.id
+                    left join Measure c on a.MeasureID=c.id
+                    where a.FunctionalSubAreaId={id ?? 0}");
                 return Json(data.ToList());
             }
             catch (Exception ex)
@@ -387,8 +430,10 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                 var data = await _sjcRepo.GetMetricsFields();
                 data = data.Where(x => x.Code.Contains(term.ToUpper()));
                 List<IdNames> ret = new List<IdNames>();
-                if (data.Any()) {
-                    foreach (var item in data) {
+                if (data.Any())
+                {
+                    foreach (var item in data)
+                    {
                         ret.Add(new IdNames() { Id = item?.Id ?? 0, Name = item?.Code + "-" + item?.Name });
                     }
                 }
@@ -400,13 +445,37 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             }
         }
         [HttpGet]
-        public async Task<JsonResult> GetMetricsFieldInProgramByMainIndicatorId(int id) {
+        public async Task<JsonResult> GetAppDefMetricsFieldByAppDefId(int? id)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<AppDefMetricsFieldVm>($@"select a.Id,a.AppDefId,a.MetricsFieldId,m.Name as MetricsFieldName,m.Code as MetricsFieldCode,m.IsActive
+                 from AppDefMetricsField a
+                Left join MetricsField m on a.MetricsFieldId=m.id
+                where a.AppDefId={id ?? 0}");
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MetricsField>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetMetricsFieldInProgramByMainIndicatorId(int id)
+        {
             var data = await _sjcServiceV2.GetMetricsFieldInProgramByMainIndicatorIdAsync(id);
             return Json(data.ToList());
         }
         [HttpPost]
-        public async Task<JsonResult> DeleteMetricsFieldInProgramById(int id) {
+        public async Task<JsonResult> DeleteMetricsFieldInProgramById(int id)
+        {
             _ = await _sjcService.ExecuteRawSql($"Delete from MetricsFieldInProgram where id={id}");
+            return Json(new { success = true });
+        }
+        [HttpPost]
+        public async Task<JsonResult> DeleteAppDefMetricsFieldById(int id)
+        {
+            _ = await _sjcService.ExecuteRawSql($"Delete from AppDefMetricsField where id={id}");
             return Json(new { success = true });
         }
         [HttpGet]
@@ -427,13 +496,22 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         {
             var mf = await GetMetricsFieldById(metricsFieldId ?? 0);
             _ = await _sjcService.ExecuteRawSql($@"INSERT INTO [MetricsFieldInProgram]([MainIndicatorsId],[FunctionalSubAreaId],[Code],[Name],[NeededFor],[IsActive],[TypeOfIndicatorId])
-                VALUES({mainIndicatorsId??0}
-                ,{functionalSubAreaId??0}
+                VALUES({mainIndicatorsId ?? 0}
+                ,{functionalSubAreaId ?? 0}
                 ,'{mf?.Code}'
                 ,'{mf?.Name}'
                 ,'{mf?.NeededFor}'
                 ,{1}
-                ,{mf?.TypeOfIndicatorId??0})");
+                ,{mf?.TypeOfIndicatorId ?? 0})");
+            return Json(new { success = true });
+        }
+        [HttpPost]
+        public async Task<JsonResult> AppDefMetricsField(int? appDefId, int? metricsFieldId)
+        {
+
+            _ = await _sjcService.ExecuteRawSql($@"INSERT INTO AppDefMetricsField([AppDefId],[MetricsFieldId])
+                VALUES({appDefId ?? 0}
+                ,{metricsFieldId ?? 0} )");
             return Json(new { success = true });
         }
         [HttpGet]
@@ -480,7 +558,7 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
         {
             try
             {
-                var data = await _sjcRepo.GetTypeOfIndicatorByIdAsync(id??0);
+                var data = await _sjcRepo.GetTypeOfIndicatorByIdAsync(id ?? 0);
                 return Json(data);
             }
             catch (Exception ex)
@@ -521,14 +599,15 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             try
             {
                 var cfg = await _sjcService.QueryRaw<Cfg>($"Select * from cfg");
-                if (cfg?.CurrentYear > 0) { 
-                    _=await _sjcRepo.Sp_UpdateProgramDataAsync(id, cfg?.CurrentYear??0);
+                if (cfg?.CurrentYear > 0)
+                {
+                    _ = await _sjcRepo.Sp_UpdateProgramDataAsync(id, cfg?.CurrentYear ?? 0);
                     _ = await _sjcRepo.Sp_UpdateProgramDataCourtAsync(id, cfg?.CurrentYear ?? 0);
                     _ = await _sjcRepo.Sp_UpdateProgramDataInstitutionAsync(id, cfg?.CurrentYear ?? 0);
                     _ = await _sjcRepo.Sp_UpdateProgramDataProsecutorAsync(id, cfg?.CurrentYear ?? 0);
                 }
-                var abp =await  _sjcServiceV2.GetActiveBudgetPeriodAsync();
-                List<int?> years= new List<int?> { abp.Y1, abp.Y2, abp.Y3, abp.Y4 };
+                var abp = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                List<int?> years = new List<int?> { abp.Y1, abp.Y2, abp.Y3, abp.Y4 };
                 for (int i = 0; i < years.Count; i++)
                 {
                     _ = await _sjcRepo.Sp_UpdateProgramDataAsync(id, years[i]);
@@ -537,14 +616,17 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
                     _ = await _sjcRepo.Sp_UpdateProgramDataProsecutorAsync(id, years[i]);
                 }
                 var data = await _sjcRepo.GetProgramDefByProgramIdAsync(id ?? 0);
-                if (data.Any()) {
+                if (data.Any())
+                {
                     _ = await _sjcService.ExecuteRawSql($"Update ProgramData set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
                     _ = await _sjcService.ExecuteRawSql($"Update ProgramDataCourt set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
                     _ = await _sjcService.ExecuteRawSql($"Update ProgramDataInstitution set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
                     _ = await _sjcService.ExecuteRawSql($"Update ProgramDataProsecutor set ValueAllowed=0 where functionalSubAreaId={id ?? 0}");
-                    foreach (var itemVm in data) {
-                        if (itemVm.ValueAllowed == true) {
-                            _ = await _sjcService.ExecuteRawSql($"Update ProgramData set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum??0}");
+                    foreach (var itemVm in data)
+                    {
+                        if (itemVm.ValueAllowed == true)
+                        {
+                            _ = await _sjcService.ExecuteRawSql($"Update ProgramData set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum ?? 0}");
                             _ = await _sjcService.ExecuteRawSql($"Update ProgramDataCourt set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum ?? 0}");
                             _ = await _sjcService.ExecuteRawSql($"Update ProgramDataInstitution set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum ?? 0}");
                             _ = await _sjcService.ExecuteRawSql($"Update ProgramDataProsecutor set ValueAllowed=1 where functionalSubAreaId={id ?? 0} and RowNum={itemVm?.RowNum ?? 0}");
@@ -557,6 +639,60 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             catch (Exception ex)
             {
                 return Json(new { msg = ex?.Message, success = false });
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetMetricsInputByInstitutionTypeId(int? institutionTypeId)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<MetricsInputCodeName>($@"select i.Id,m.Code,m.Name from MetricsInput i
+                  left join MetricsField m on i.MetricsFieldId=m.id
+                  left join InstitutionType t on i.InstitutionTypeId=t.id
+                  where t.id={institutionTypeId}");
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MetricsInputCodeName>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetMetricsInputByCourtId(int? courtId)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<MetricsInputCodeName>($@"select i.Id,m.Code,m.Name from MetricsInput i
+                  left join MetricsField m on i.MetricsFieldId=m.id
+                  left join InstitutionType t on i.InstitutionTypeId=t.id
+                  left join CourtType ct on t.id=ct.InstitutionTypeId
+                  left join Court c on ct.id=c.CourtTypeId
+                  where c.id={courtId}");
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<MetricsInputCodeName>());
+            }
+        }
+        [HttpGet]
+        public async Task<JsonResult> GetAppRequiredByAppId(int? appId)
+        {
+            try
+            {
+                var data = await _sjcService.QueryRawList<AppRequiredVm>($@"SELECT a.Id
+                                  ,a.AppId
+                                  ,a.InstitutionTypeId
+                                  ,a.IsActive
+	                            ,i.Name as InstitutionTypeName
+                              FROM AppRequired a
+                            left join InstitutionType i on a.InstitutionTypeId=i.id
+                                                            where a.AppId={appId ?? 0}");
+                return Json(data.ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<IdNames>());
             }
         }
     }

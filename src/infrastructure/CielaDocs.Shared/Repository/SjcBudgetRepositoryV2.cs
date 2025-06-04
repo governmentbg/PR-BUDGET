@@ -524,6 +524,15 @@ t1.PlannedYear as PlannedYear1,t2.PlannedYear as PlannedYear2,t3.PlannedYear as 
             var ret = await connection.ExecuteAsync("sp_EndCurrentYear", parameters, commandType: CommandType.StoredProcedure);
             return ret;
         }
+        public async Task<int?> SpEndCurrentAppMonthDataAsync()
+        {
+
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            DynamicParameters parameters = new DynamicParameters();
+            var ret = await connection.ExecuteAsync("sp_EndCurrentAppMonth", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
+        }
         public async Task<IEnumerable<MetricsFieldInProgramVm>> GetMetricsFieldInProgramByMainIndicatorIdAsync(int? id)
         {
             string sql = $@"SELECT [Id]
@@ -1083,6 +1092,37 @@ t1.PlannedYear as PlannedYear1,t2.PlannedYear as PlannedYear2,t3.PlannedYear as 
             await connection.OpenAsync();
             var result = await connection.QuerySingleOrDefaultAsync<IndicatorDataCourtVm>(sql);
             return result;
+        }
+        public async Task<int?> SpInitAppInputAsync(int? courtId, int? nm, int? ny)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("CourtId", courtId);
+            parameters.Add("nMonth", nm);
+            parameters.Add("nYear", ny);
+            var ret = await connection.ExecuteAsync("sp_InitAppInput", parameters, commandType: CommandType.StoredProcedure);
+            return ret;
+        }
+        public async Task<int?> Sp_InitAppInputCommonAsync(int? createdByInstTypeId, int? ny)
+        {
+            await using SqlConnection connection = (SqlConnection)this._context.CreateConnection();
+            await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                DynamicParameters parameters = new DynamicParameters();
+                parameters.Add("CreatedByInstTypeId", createdByInstTypeId ?? 0);
+                parameters.Add("nYear", ny);
+                var ret = await connection.ExecuteAsync("sp_InitAppInputCommon", parameters, transaction, commandType: CommandType.StoredProcedure);
+                await transaction.CommitAsync();
+                return ret;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
     }
 }

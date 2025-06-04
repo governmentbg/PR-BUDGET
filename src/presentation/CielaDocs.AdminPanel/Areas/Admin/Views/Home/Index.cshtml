@@ -180,6 +180,12 @@
             icon: EduDl.rootUrl+'images/add.png',
 
 
+        },{
+            id: '3',
+            name: 'Текущ месец за входни данни',
+            icon: EduDl.rootUrl+'images/add.png',
+
+
         }
            ];
         const dxMenu = $('#menu').dxMenu({
@@ -197,6 +203,9 @@
                             break;
                           case '2':
                            addNewCurrentYear();
+                            break;
+                         case '3':
+                           addNewCurrentAppMonth();
                             break;
                        
                     }
@@ -267,13 +276,25 @@
                              });
         }
         function  addNewCurrentYear()
-        { mainPopup.option({
+        {
+            mainPopup.option({
                 contentTemplate: () => layoutPopupContentTemplateByName(EduDl.baseUrl + "Home/AddCurrentYear", { }),
                 height: 400,
                 width: 600,
                 title: 'Нова текуща бюджетна година',
             });
-            mainPopup.show();}
+            mainPopup.show();
+        }
+         function addNewCurrentAppMonth()
+        {
+            mainPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(EduDl.baseUrl + "Home/AddCurrentAppMonth", { }),
+                height: 400,
+                width: 600,
+                title: 'Нова текущ месец за входни данни',
+            });
+            mainPopup.show();
+        }
     });
 
        

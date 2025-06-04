@@ -1,0 +1,317 @@
+﻿@using CielaDocs.Application.Dtos
+@using System.Linq
+@{
+    Layout = "~/Views/Shared/_LayoutMax.cshtml";
+}
+<div class="spacer_5"></div>
+<h4>Импортирани данни от Конто:@ViewBag.FilterTitle</h4>
+<div class="container-flex">
+    <div class="right-currency">
+        <label for="currency" style="color:darkred;font-size:medium;">Валута:@ViewBag.Currency</label>
+    </div>
+</div>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="grid"></div>
+
+
+@Html.Hidden("CourtId", (int)ViewBag.CourtId)
+@Html.Hidden("Nyear", (int)ViewBag.Year)
+@Html.Hidden("Nmonth", (int)ViewBag.Month)
+@Html.Hidden("FunctionalSubAreaId", (int)ViewBag.FunctionalSubAreaId)
+@Html.Hidden("KontoCode", (string)ViewBag.KontoCode)
+
+@section scripts {
+    <script>
+       
+        var selectedId = 0;
+
+        $(() => {
+
+            $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(Ciela.baseUrl + "Reports/GetImportedKontoData", 'Get', { functionalSubAreaId: $("#FunctionalSubAreaId").val(),
+                             courtId: $("#CourtId").val(), nyear: $("#Nyear").val(), nmonth: $("#Nmonth").val(),
+                            kontoCode: $("#KontoCode").val(),displayCurrencyId:window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId  });
+                        },
+                    }),
+                }),
+                allowColumnReordering: true,
+                grouping: {
+                    autoExpandAll: true,
+                },
+                paging: {
+                    pageSize: 25,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                filterRow: {
+                    visible: true,
+                    applyFilter: 'auto',
+                },
+                headerFilter: {
+                    visible: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                decimalSeparator: '.',
+                groupPanel: {
+                  visible: true,
+                },
+                columnChooser: {
+                    enabled: true,
+                },
+                columnFixing: {
+                    enabled: true,
+                },
+                allowColumnReordering: true,
+                allowColumnResizing: true,
+                columnAutoWidth: true,
+                columns: [
+                    {
+                        dataField: "CourtName",
+                        width: "25%",
+                        caption: "Отчетна единица"
+                    },
+                    {
+                        dataField: "CourtKontoCode",
+                        width: "5%",
+                        caption: "Код"
+                    },
+                    {
+                        dataField: "FunctionalSubAreaName",
+                        width: "25%",
+                        caption: "Програма"
+                    },
+
+                    {
+                        dataField: "KontoCode",
+                        width: "10%",
+                        caption: "Код по Конто"
+                    },
+                    {
+                        dataField: "Nvalue",
+                        width: "10%",
+                        caption: "Стойност",
+                        valueFormat: '#0.00',
+                        dataType: 'number',
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.Nvalue = value.toFixed(2);
+                            },
+
+
+                    },
+                    {
+                        dataField: "Nmonth",
+                        width: "5%",
+                        caption: "Месец",
+                        valueFormat: '#0',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                    {
+                        dataField: "Nyear",
+                        width: "5%",
+                        caption: "Год.",
+                        valueFormat: '#0',
+                        dataType: 'number',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+
+                    },
+                ],
+                sortByGroupSummaryInfo: [{
+                    summaryItem: 'count',
+                }],
+                summary: {
+                    groupItems: [{
+                        column: 'Month',
+                        summaryType: 'count',
+                        displayFormat: '{0} записи',
+                    }, {
+                        column: 'Nvalue',
+                        summaryType: 'sum',
+                        dataType: 'number',
+                        displayFormat: 'Общо: {0}',
+                        showInGroupFooter: true,
+                        customizeText: function(data) {
+                           let formatted = data.value.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            return `Общо: ${formatted}`;
+                        },
+                    }],
+                     totalItems: [{
+                                    column: 'Id',
+                                    summaryType: 'count',
+                                }, {
+                                    column: 'Nvalue',
+                                    summaryType: 'sum',
+                                     valueFormat: '#0.00',
+                                    dataType: 'number',
+                                    customizeText: function(data) {
+                                       let formatted = data.value.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                        return `Общо: ${formatted}`;
+                                    },
+                                }],
+                },
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                onSelectionChanged: function (items) {
+                    if (items.selectedRowsData[0]) {
+                        selectedId = items.selectedRowsData[0].Id;
+                    }
+                },
+                focusedRowEnabled: true,
+                onFocusedRowChanged(e) {
+                    if (e) {
+                        getExtraDataItem(e.row);
+                    }
+                },
+            });
+
+
+        });
+        async function getExtraDataItem(row) {
+
+
+            return false;
+        }
+
+        const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: Ciela.baseUrl+'images/back.png',
+
+
+        },
+        {
+            id: '6_1',
+            name: 'Експорт',
+            icon:Ciela.baseUrl+'images/exporter.svg',
+
+
+        }, {
+            id: '4',
+            name: 'Обнови',
+            icon: Ciela.baseUrl+'images/refresh.png',
+
+        }, {
+            id: '5',
+            name: 'Сумирай',
+            icon: Ciela.baseUrl+'images/abacus.png',
+
+        }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+
+                        case '1':
+                            redirectme("@Url.Action("Index", "Reports")");
+                            break;
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+                        case '5':
+                            summarizeKontoCodes();
+                            break;
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("AnalizeImportKonto");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "AnalizeImportKonto.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+
+        function summarizeKontoCodes() {
+            mainPopup.option({
+                contentTemplate: () => layoutPopupContentTemplateByName(Ciela.baseUrl + "Reports/SummarizeKontoCodesPartialView"),
+                height: $(window).height() - 250,
+                width: $(window).width() - 890,
+                title: 'Конто кодове за сумиране',
+            });
+            mainPopup.show();
+        }
+         function OnClosePopupEventHandlerSummarizeEx(arg, e) {
+            switch (arg) {
+
+               case 'summarizeKontoFilterOk':
+                    mainPopup.hide();
+                    showSummarizedData(e);
+                    break;
+            }
+        }
+                let formatter = new Intl.NumberFormat('bg-BG', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        function showSummarizedData(e){
+
+            $.ajax({
+                   url: "@Url.Action("GetSummarizedKontoCodes", "Reports")", method: 'Get', data: {functionalSubAreaId: $("#FunctionalSubAreaId").val(),
+                             courtId: $("#CourtId").val(), nyear: $("#Nyear").val(), nmonth: $("#Nmonth").val(),
+                            kontoCodes: e,displayCurrencyId:window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId  }
+
+            }).done(function (result) {
+                if (result.success === true) {
+                      DevExpress.ui.dialog.alert(`Сума=${formatter.format(result.summary)}`, 'Сумирана стойност');
+                    return;
+                }
+                else {
+                    DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                }
+            })
+                .fail(function (e) {
+                    DevExpress.ui.notify('Failed to set filter! ' + e);
+                });
+        }
+    </script>
+}

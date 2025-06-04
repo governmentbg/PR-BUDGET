@@ -247,6 +247,13 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             ViewBag.CurrentYear = await _sjcService.QueryRaw<int>($"Select CurrentYear from Cfg");
            return PartialView("AddCurrentYear"); 
         }
+        public async Task<PartialViewResult> AddCurrentAppMonth()
+        {
+            var cfg= await _sjcService.GetCfg();
+            ViewBag.CurrentAppMonth = cfg?.CurrentAppMonth ?? 0;
+            ViewBag.CurrentYear = cfg?.CurrentYear ?? 0;
+            return PartialView("AddCurrentAppMonth");
+        }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<JsonResult> AddNewActivePeriod(int ny)
@@ -350,6 +357,48 @@ namespace CielaDocs.AdminPanel.Areas.Admin.Controllers
             catch (Exception ex)
             {
                 return Json(new { msg = $"Създаването на новата текуща бюджетна година завърши с грешка {ex?.Message} ", success = false });
+            }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<JsonResult> AddNewCurrentAppMonth(int nm)
+        {
+            var empl = await Mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
+            if ((!empl.CanAdd) && (!empl.CanUpdate))
+            {
+                return Json(new { msg = "Нямате предоставени права да добавяте/редактирате данни ", success = false, id = 0 });
+            }
+
+            try
+            {
+                _ = await _sjcServiceV2.SpEndCurrentAppMonthDataAsync();
+
+                int? newId = await _sjcService.ExecuteRawSql($@"Update Cfg set CurrentAppMonth={nm}");
+
+
+                //for (int i = 1; i <= 9; i++)
+                //{
+
+                //    _ = await _sjcRepo.Sp_InitProgramDataAsync(i, ny);
+                //    _ = await _sjcRepo.Sp_InitProgramDataInstitutionAsync(i, ny);
+
+                //}
+                //for (int i = 1; i <= 9; i++)
+                //{
+
+                //    _ = await _sjcRepo.Sp_UpdateProgramDataAsync(i, ny);
+                //    _ = await _sjcRepo.Sp_UpdateProgramDataInstitutionAsync(i, ny);
+
+                //}
+
+
+
+                return Json(new { msg = $"Новият месец {nm}, към който се подават входни данни бе записан", success = true });
+
+            }
+            catch (Exception ex)
+            {
+                return Json(new { msg = $"Създаването на нов месец завърши с грешка {ex?.Message} ", success = false });
             }
         }
     }

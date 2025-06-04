@@ -1,0 +1,46 @@
+﻿<form id="anyForm">
+    <div class="modal-body form-horizontal">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="form-group">
+                        <label for="kontoCodes">Кодове от Конто(отчет) разделени със запетая</label>
+                        <input type="text" class="form-control" id="kontoCodes" maxlength="1024">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="spacer_10"></div>
+        <div style="float:right;margin-right:10px;margin-bottom:10px;">
+            <div id="okSummarizeFilterBtn"></div>
+            <div id="closeSummarizeFilterBtn"></div>
+        </div>
+    </div>
+</form>
+<script>
+    $(() => {  //-------------buttons--------------
+        $('#okSummarizeFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Добре',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                let kontoCodes= $('#kontoCodes').val();
+                if (kontoCodes.lenght === 0)  {
+                    DevExpress.ui.dialog.alert('Въведете поне един код за сумиране', 'Внимание');
+                    return;
+                }
+                window.parent.OnClosePopupEventHandlerSummarizeEx('summarizeKontoFilterOk', kontoCodes);
+            },
+        });
+        $('#closeSummarizeFilterBtn').dxButton({
+            stylingMode: 'contained',
+            text: 'Затвори',
+            type: 'normal',
+            width: 120,
+            onClick() {
+                mainPopup.hide();
+            },
+        });
+    });
+</script>

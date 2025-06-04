@@ -183,12 +183,12 @@
                                 }, {
                                     column: 'Nvalue',
                                     summaryType: 'sum',
-                                     valueFormat: '#0.00',
+                                   //  valueFormat: '#0.00',
                                     dataType: 'number',
-                                    format: function (value) { return value.toFixed(2); },
-                                        setCellValue: function (rowData, value) {
-                                            rowData.Nvalue = value.toFixed(2);
-                                        },
+                                    customizeText: function(data) {
+                               let formatted = data.value.toLocaleString('bg-BG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                return `Общо: ${formatted}`;
+                            },
                                 }],
                             },
                             toolbar: {

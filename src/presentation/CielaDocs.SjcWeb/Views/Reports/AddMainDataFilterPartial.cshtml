@@ -13,43 +13,42 @@
         <div class="container-fluid">
 
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-6">
                     <div class="form-group">
-                        <label for="cbFunctionalArea">Функционална област</label>
-                        <select class="form-control" style="width:100%" id="cbFunctionalArea">
+                        <label for="cbInstitutionType">Орган на съдебна власт</label>
+                        <select class="form-control" style="width:100%" id="cbInstitutionType">
+                            <option>Избери... </option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="cbCourtType">Вид</label>
+                        <select class="form-control" style="width:100%" id="cbCourtType">
                             <option>Избери... </option>
                         </select>
                     </div>
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-6">
                     <div class="form-group">
-                        <label for="cbFunctionalSubArea">Бюджетна програма</label>
-                        <select class="form-control" style="width:100%" id="cbFunctionalSubArea">
+                        <label for="cbCourt">Отчетна единица</label>
+                        <select class="form-control" style="width:100%" id="cbCourt">
                             <option>Избери... </option>
                         </select>
                     </div>
                 </div>
-            </div>
-         
-            <div class="row">
                 <div class="col-3">
                     <div class="form-group">
-                        <label for="nmonth">От месец</label>
-                        <div id="selectBoxMonth1"></div>
+                        <label for="selectMonth">Към месец</label>
+                        <div id="selectMonth" style="color:red;font-size:medium;"></div>
                     </div>
                 </div>
                 <div class="col-3">
                     <div class="form-group">
-                        <label for="nmonth">До месец</label>
-                        <div id="selectBoxMonth2"></div>
-                    </div>
-                </div>
-                <div class="col-3">
-                    <div class="form-group">
-                        <label for="nyear">За година</label>
-                        <div id="selectBoxYear"></div>
+                        <label for="selectYear">За година</label>
+                        <div id="selectYear" style="color:red;font-size:medium;"></div>
                     </div>
                 </div>
             </div>
@@ -63,56 +62,21 @@
 </form>
 <script>
     $(() => {
-        let functionalAreaId = 0;
-        let functionalSubAreaId = 0;
+       
+        let institutionTypeId = 0;
         let courtTypeId = 0;
         let courtId = 0;
-        let nm1 = 0;
-        let nm2 = 0;
-        let ny = 0;
+        let ny =Number('@ViewBag.Year')||0;
+        let nm = Number('@ViewBag.Month')||0;
+
+         $('#selectYear').text(ny);
+         $('#selectMonth').text(nm);
        
-        $("#selectBoxMonth1").dxSelectBox({
-            dataSource: selectBoxMonthData,
-            valueExpr: 'id',
-            displayExpr: 'name',
-            onValueChanged: function (e) {
-                nm1=e.value;
-            }
-
-        });
-          $("#selectBoxMonth2").dxSelectBox({
-            dataSource: selectBoxMonthData,
-            valueExpr: 'id',
-            displayExpr: 'name',
-            onValueChanged: function (e) {
-                nm2=e.value;
-            }
-
-        });
-        $("#selectBoxYear").dxSelectBox({
-           dataSource: new DevExpress.data.DataSource({
-                store: new DevExpress.data.CustomStore({
-                    key: 'Id',
-                    load() {
-                        return sendRequest(Ciela.baseUrl + "Noms/GetCurrentYear", 'Get', { });
-                    }
-                }),
-            }),
-            valueExpr: 'Id',
-            displayExpr: 'Name',
-            onValueChanged: function (e) {
-               ny=e.value;
-               nSelectedYear=ny;
-            }
-
-        });
-
-      
-        $("#cbFunctionalArea").select2({
+         $("#cbInstitutionType").select2({
             placeholder: "Избери...",
             allowClear: true,
             ajax: {
-                url: "@Url.Action("GetFunctionalAreas", "Noms")",
+                url: "@Url.Action("GetInstitutionTypes", "Noms")",
                 contentType: "application/json; charset=utf-8",
                 data: function (params) {
                     var query =
@@ -137,18 +101,18 @@
                 }
             }
         }).on('change', function (e) {
-            functionalAreaId = $(e.currentTarget).val();
+            institutionTypeId = $(e.currentTarget).val();
         });
-        $("#cbFunctionalSubArea").select2({
+        $("#cbCourtType").select2({
             placeholder: "Избери...",
             allowClear: true,
             ajax: {
-                url: "@Url.Action("GetFunctionalSubAreaByAreaId", "Noms")",
+                url: "@Url.Action("GetCourtTypesbyInstitutionTypeId", "Noms")",
                 contentType: "application/json; charset=utf-8",
                 data: function (params) {
                     var query =
                     {
-                        id: functionalAreaId,
+                        institutionTypeId: institutionTypeId,
                         term: params.term,
                     };
                     return query;
@@ -169,9 +133,40 @@
                 }
             }
         }).on('change', function (e) {
-            functionalSubAreaId = $(e.currentTarget).val();
+            courtTypeId=$(e.currentTarget).val();
         });
-        
+        $("#cbCourt").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetCourtsByCourtTypeIdSelect2", "Noms")",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        courtTypeId: courtTypeId,
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            courtId=$(e.currentTarget).val();
+        });
         //-------------buttons--------------
         $('#okFilterBtn').dxButton({
             stylingMode: 'contained',
@@ -179,11 +174,11 @@
             type: 'normal',
             width: 120,
             onClick() {
-                if ((functionalSubAreaId == 0)||(nm1==0)||(nm2==0)||(nSelectedYear==0)) {
-                    DevExpress.ui.dialog.alert('Изберете задължително отчетна единица, месец и година','Внимание');
+                if ((institutionTypeId == 0)||(nm==0)||(ny==0)) {
+                    DevExpress.ui.dialog.alert('Изберете задължително орган на съдебна власт','Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('mainDataFilterOk', ''.concat(functionalAreaId,"|",nm1, "|", nm2, "|", nSelectedYear));
+                window.parent.OnClosePopupEventHandlerEx('mainDataFilterOk', ''.concat(institutionTypeId,"|",courtTypeId,"|",courtId, "|",nm, "|", ny));
             },
         });
         $('#closeFilterBtn').dxButton({

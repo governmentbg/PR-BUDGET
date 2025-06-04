@@ -62,8 +62,8 @@
                 <div class="capsule-at">
                     <div id="mainDataCtrl" style="margin-top:10px;">
                         <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/calendar.png")" alt="." />
-                        <p class="button_text-at">Данни за показатели</p>
-                        <p>Данни за показатели и входни данни за отчетна единица...</p>
+                        <p class="button_text-at">Входни данни за показатели</p>
+                        <p>Входни данни за изчисляване на показатели...</p>
                     </div>
                 </div>
             </div>
@@ -103,6 +103,17 @@
                         <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Auto-Archive-WF.png")" alt="." />
                         <p class="button_text-at">Приключени периоди</p>
                         <p>Справки и отчети за приключени периоди за бюджетни програми</p>
+                    </div>
+                </div>
+            </div>
+      </div>
+      <div class="row">
+            <div class="col-md-3">
+                <div class="capsule-at">
+                    <div id="analizeImportKonto" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Genie-lamp-WF.png")" alt="." />
+                        <p class="button_text-at">Анализ на данни от Конто</p>
+                        <p>Анализ на импортирани месечни данни от Конто</p>
                     </div>
                 </div>
             </div>
@@ -258,7 +269,13 @@ else
                  });
                  popup.show();
              });
-              
+                $("#analizeImportKonto").on("click", function () {
+                  popup.option({
+                      contentTemplate: () => popupContentTemplate(10)
+                  });
+                  popup.show();
+              });
+               
         });
            
         
@@ -309,6 +326,10 @@ else
                     popup.hide();
                            applyMainDataFilter(e);
                   break;
+                  case 'importKontoFilterOk':
+                    popup.hide();
+                            applyImportKontoFilter(e);
+                  break;
             }
         }
         const popupContentTemplate = function (id) {
@@ -332,6 +353,8 @@ else
                            break;
                  case 9: cnturl = "@Url.Action("AddMainDataFilterPartial", "Reports")";
                             break;
+                 case 10: cnturl = "@Url.Action("AddImportKontoFilterPartial", "Reports")";
+                           break;
             }
 
             const scrollView = $('<div />');
@@ -399,8 +422,11 @@ else
               redirectme2("@Url.Action("Index", "EndedBudget")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
          }
           function  applyMainDataFilter(e){
-                redirectme2("@Url.Action("Indicators", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
+                redirectme2("@Url.Action("SummarizedAppInput", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
           }
+          function  applyImportKontoFilter(e){
+                    redirectme2("@Url.Action("AnalizeImportKonto", "Reports")", "par", e,"currencyId",window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId);
+             }
         const reportmenuData = [{
                    id: '1',
                    name: 'Начало',

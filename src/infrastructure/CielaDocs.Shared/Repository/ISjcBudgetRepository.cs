@@ -105,6 +105,7 @@ namespace CielaDocs.Shared.Repository
         Task<int?> Sp_InitProgramDataCourtAsync(int? programNum, int? ny);
         Task<int?> Sp_InitIndicatorDataAsync(int? programNum, int? ny,int? budgetPeriodId);
         Task<int?> Sp_InitIndicatorDataCourtAsync(int? programNum, int? ny, int? budgetPeriodId);
+       
         Task<int?> Sp_UpdateProgramDataAsync(int? programNum, int? ny);
         Task<int?> Sp_UpdateProgramDataCourtAsync(int? programNum, int? ny);
      
@@ -123,6 +124,7 @@ namespace CielaDocs.Shared.Repository
         Task<int?> sp_RecalculateApprovedBudgetCourtAsync(int? functionalSubAreaId, int? ny, int? courtId);
         Task<int?> sp_RecalculateProgramDataCourtAsync(int? functionalSubAreaId, int? ny, int? courtId);
         Task<int?> sp_UpdateProgramsByProgramDefAsync(int? Id);
+      
         Task<IEnumerable<ProgramDataExecutionVm>> GetYearExecutionDataGridAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? currencyId);
         Task<IEnumerable<ProgramDataExecutionVm>> GetProgramDataCourtGridByFilterAsync(int? functionalSubAreaId, int? m1, int? m2, int? nyear, int? rowNum,int? displayCurrencyId);
        
@@ -157,9 +159,10 @@ namespace CielaDocs.Shared.Repository
         Task<IEnumerable<IdNames>> GetCourtInProgramData(int? programNum, int? courtId);
         Task<CfgVm> GetCfgAsync();
         Task<IEnumerable<UserLockedItemVm>> GetAllUserLockedItemsAsync();
-        Task<int> ExecuteRawSqlAsync(string sql);
-        Task<IEnumerable<T>> QueryRawListAsync<T>(string sql);
-        Task<T> QueryRawAsync<T>(string sql);
+        Task<int> ExecuteRawSqlAsync(string sql,object parameters=null);
+        Task<int> ExecuteRawScalarSqlAsync(string sql, object parameters = null);
+        Task<IEnumerable<T>> QueryRawListAsync<T>(string sql, object parameters = null);
+        Task<T> QueryRawAsync<T>(string sql, object parameters = null);
 
         Task<IEnumerable<ProgramDataGridVm>> GetProgramDataGridByFilterCurrencyAsync(int functionalSubAreaId, int ny, int displayCurrencyId);
         Task<IEnumerable<ProgramDataCourtGridVm>> GetProgramDataCourtGridByFilterCurrencyAsync(int? programDefNum, int? ny, int? rowNum, int displayCurrencyId);

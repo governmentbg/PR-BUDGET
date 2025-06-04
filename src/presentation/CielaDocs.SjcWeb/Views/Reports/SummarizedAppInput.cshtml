@@ -1,0 +1,217 @@
+﻿@using CielaDocs.Application.Dtos
+@using System.Linq
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery antiforgery
+@{
+    var tokenSet = antiforgery.GetAndStoreTokens(Context);
+   
+}
+<h3></h3>
+<div class="spacer_20"></div>
+<div class="spacer_5"></div>
+<h4>Обобщени данни:@ViewBag.FilterTitle</h4>
+
+<div class="spacer_5"></div>
+<div style="display:inline-block;padding-left:10px;" id="menu"></div>
+<div class="spacer_5"></div>
+<div id="grid"></div>
+
+@section scripts {
+    <script>
+        var selectedId = 0;
+        let institutionTypeId=Number('@ViewBag.InstitutionTypeId')||0;
+        let courtTypeId=Number('@ViewBag.CourtTypeId')||0;
+        let courtId=Number('@ViewBag.CourtId')||0;
+        let nm=Number('@ViewBag.Month')||0;
+        let ny=Number('@ViewBag.Year')||0;
+        $(() => {
+            let par=''.concat(institutionTypeId,"|",courtTypeId,"|",courtId, "|",nm, "|", ny);
+            $('#grid').dxDataGrid({
+                dataSource: new DevExpress.data.DataSource({
+                    store: new DevExpress.data.CustomStore({
+                        key: 'Id',
+                        load() {
+                            return sendRequest(Ciela.baseUrl + "AppInput/GetSummarizedAppInputDataGrid", 'Get',{id:par});
+                        },
+                       
+                    }),
+                }),
+                paging: {
+                    pageSize: 100,
+                },
+                pager: {
+                    visible: true,
+                    showNavigationButtons: true,
+                    allowedPageSizes: [10, 25, 50, 100],
+                    showPageSizeSelector: true,
+                    showInfo: true,
+                    showNavigationButtons: true,
+                },
+                searchPanel: {
+                    visible: true,
+                    highlightCaseSensitive: true,
+                },
+                selection: {
+                    mode: "single"
+                },
+                showBorders: true,
+                showRowLines: true,
+                decimalSeparator: '.',
+                columns: [
+                    {
+                        dataField: "MetricsFieldCode",
+                        width: "15%",
+                        caption: "Код"
+                    },
+
+                    {
+                        dataField: "MetricsFieldName",
+                        width: "65%",
+                        caption: "Наименование"
+                    },
+                    {
+                        dataField: "CalculatedValue",
+                        width: "10%",
+                        caption: "Стойност",
+                        alllowEditing: true,
+                        valueFormat: '0.00',
+                        dataType: 'number',
+                        format: function (value) { return value.toFixed(2); },
+                            setCellValue: function (rowData, value) {
+                                rowData.CalculatedValue = value.toFixed(2);
+                            },
+
+                    },
+                    {
+                        dataField: "EnteredDate",
+                        width: "10%",
+                        caption: "Въведено на",
+                        alllowEditing: true,
+                        valueFormat: 'dd.MM.yyyy',
+                        dataType: 'date',
+                        format: {
+                            formatter: function (value) {
+                                return value.toLocaleString('bg-BG');
+                            }
+                        }
+                    },
+
+
+                ],
+                editing: {
+                    mode: 'cell',
+                    allowUpdating: false,
+                    allowDeleting: false,
+                    allowAdding: false,
+                },
+                onEditorPreparing: function (e) {
+                    if (e.dataField != "Nvalue" && e.dataField != "EnteredOn") e.editorOptions.disabled = true
+                    if (e.dataField === "Nvalue" && e.parentType === "dataRow") {
+                        const defaultValueChangeHandler = e.editorOptions.onValueChanged;
+                        e.editorOptions.onValueChanged = function (args) { // Override the default handler
+                            defaultValueChangeHandler(args);
+                        }
+                    }
+                    if (e.dataField === "EnteredOn" && e.parentType === "dataRow") {
+                        const defaultValueChangeHandler = e.editorOptions.onValueChanged;
+                        e.editorOptions.onValueChanged = function (args) { // Override the default handler
+                            defaultValueChangeHandler(args);
+                        }
+                    }
+                },
+                onRowRemoved: function (e) {
+                    e.component.selectRowsByIndexes(0);
+                },
+                onSelectionChanged: function (items) {
+                    if (items.selectedRowsData[0]) {
+                        selectedId = items.selectedRowsData[0].Id;
+                    }
+                },
+                focusedRowEnabled: true,
+                onFocusedRowChanged(e) {
+                    if (e) {
+                        getExtraDataItem(e.row);
+                    }
+                },
+                hoverStateEnabled: true,
+                onRowPrepared: function (info) {
+                    if (info.rowType != 'header' && info.data.Disabled == true) {
+                        info.rowElement.addClass('disabledRow');
+                        info.rowElement.css('background', 'yellow');
+                    }
+
+                }
+
+            });
+
+
+        });
+        async function getExtraDataItem(row) {
+
+
+            return false;
+        }
+
+        const menuData = [{
+            id: '1',
+            name: 'Начало',
+            icon: Ciela.baseUrl+'images/back.png',
+            },
+            {
+                id: '6_1',
+                name: 'Експорт',
+                icon: Ciela.baseUrl+'images/exporter.svg',
+
+
+            }, {
+                id: '4',
+                name: 'Обнови',
+                icon: Ciela.baseUrl+'images/refresh.png',
+
+            }];
+        const dxMenu = $('#menu').dxMenu({
+            dataSource: menuData,
+            hideSubmenuOnMouseLeave: false,
+            displayExpr: 'name',
+            onItemClick(data) {
+                const item = data.itemData;
+                if (item.id) {
+
+                    switch (item.id) {
+                          case '1':
+                            window.location.href = Ciela.baseUrl;
+                            break;
+
+                        case '4':
+                            $("#grid").dxDataGrid("instance").refresh();
+                            break;
+
+
+                        case '6_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("AppInput");
+
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "AppInputData.xlsx");
+                                });
+                            });
+                            break;
+                    }
+                }
+            },
+        }).dxMenu('instance');
+
+        const showSubmenuModes = [{
+            name: 'onHover',
+            delay: { show: 0, hide: 500 },
+        }, {
+            name: 'onClick',
+            delay: { show: 0, hide: 300 },
+        }];
+
+    </script>
+}

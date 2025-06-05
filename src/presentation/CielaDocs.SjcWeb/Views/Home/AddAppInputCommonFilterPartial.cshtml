@@ -11,6 +11,7 @@
 <form id="anyForm">
     <div class="modal-body form-horizontal">
         <div class="container-fluid">
+
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
@@ -20,7 +21,17 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
 
+                <label>
+                    &nbsp; <input type="radio" name="option" value="0" checked>
+                    &nbsp;Експертен модел
+                </label>
+                <label>
+                    &nbsp; <input type="radio" name="option" value="1">
+                    &nbsp;Модел за отчетна единица
+                </label>
+            </div>
             <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
@@ -31,7 +42,36 @@
                     </div>
                 </div>
             </div>
-
+            <div id="div2" class="toggle-div" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="cbInstitutionType">Орган на съдебна власт</label>
+                            <select class="form-control" style="width:100%" id="cbInstitutionType">
+                                <option>Избери... </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="cbCourtType">Вид</label>
+                            <select class="form-control" style="width:100%" id="cbCourtType">
+                                <option>Избери... </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label for="cbCourt">Отчетна единица</label>
+                            <select class="form-control" style="width:100%" id="cbCourt">
+                                <option>Избери... </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-12">
                     <div class="lock-container">
@@ -51,7 +91,18 @@
 
     $(() => {
         let appId = 0;
+        let institutionTypeId = 0;
+        let courtTypeId = 0;
+        let courtId = 0;
+         $('input[name="option"]').on('change', function () {
+                var selectedValue = $(this).val();
 
+                if (selectedValue === "1") {
+                    $('#div2').show();
+                } else {
+                    $('#div2').hide();
+                }
+            });
 
      let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
              .then(data =>{
@@ -94,6 +145,102 @@
         }).on('change', function (e) {
             appId = $(e.currentTarget).val();
         });
+          $("#cbInstitutionType").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetInstitutionTypesByAppId", "Noms")",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                         appId: appId,
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            institutionTypeId = $(e.currentTarget).val();
+        });
+        $("#cbCourtType").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetCourtTypesbyInstitutionTypeId", "Noms")",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        institutionTypeId: institutionTypeId,
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            courtTypeId=$(e.currentTarget).val();
+        });
+        $("#cbCourt").select2({
+            placeholder: "Избери...",
+            allowClear: true,
+            ajax: {
+                url: "@Url.Action("GetCourtsByCourtTypeIdSelect2", "Noms")",
+                contentType: "application/json; charset=utf-8",
+                data: function (params) {
+                    var query =
+                    {
+                        courtTypeId: courtTypeId,
+                        term: params.term,
+                    };
+                    return query;
+                },
+                processResults: function (result) {
+                    return {
+                        results: $.map(result, function (item) {
+                            return {
+                                id: item.Id,
+                                text: item.Name
+
+                            };
+
+                        }),
+
+                    };
+
+                }
+            }
+        }).on('change', function (e) {
+            courtId=$(e.currentTarget).val();
+        });
         //-------------buttons--------------
          let isLocked=false;
         $('#okCommonFilterBtn').dxButton({
@@ -106,7 +253,17 @@
                     DevExpress.ui.dialog.alert('Изберете задължително приложение', 'Внимание');
                     return;
                 }
-                window.parent.OnClosePopupEventHandlerEx('appInputCommonFilterOk', ''.concat(appId, "|",activeYear,"|",officialCurrencyId,"|",0,"|",isLocked));
+                let selectedValue = $('input[name="option"]:checked').val();
+                if(selectedValue==0){
+                window.parent.OnClosePopupEventHandlerEx('appInputCommonFilterOk', ''.concat(selectedValue,"|",appId, "|",activeYear,"|",officialCurrencyId,"|",courtId,"|",0,"|",isLocked));
+                }
+                else if(selectedValue==1){
+                    if (courtId == 0) {
+                        DevExpress.ui.dialog.alert('Изберете задължително отчетна единица', 'Внимание');
+                        return;
+                    }
+                    window.parent.OnClosePopupEventHandlerEx('appInputCommonFilterOk', ''.concat(selectedValue,"|",appId, "|",activeYear,"|",officialCurrencyId,"|",courtId,"|",0,"|",isLocked));
+                }
             },
         });
         $('#closeCommonFilterBtn').dxButton({

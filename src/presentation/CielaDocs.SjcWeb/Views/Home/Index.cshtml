@@ -640,11 +640,16 @@ $('#btnAnySave').on('click', function() {
                         request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
                     },
 
-                 url: "@Url.Action("SetAppInputCommonFilter", "Home")", method: 'POST', data: { appId: itm[0], ny: itm[1],currencyId:itm[2],currencyMeasureId:itm[3],isLocked:itm[4] }
+                         url: "@Url.Action("SetAppInputCommonFilter", "Home")", method: 'POST', data: { appId: itm[1], ny: itm[2],currencyId:itm[3],courtId:itm[4],currencyMeasureId:itm[5],isLocked:itm[6] }
 
                 }).done(function (result) {
                     if (result.success === true) {
+                        if(itm[0]==0){
                          redirectme("@Url.Action("Index", "AppInputCommon")");
+                        }
+                        if(itm[0]==1){
+                            redirectme("@Url.Action("Index", "AppInputCourt")");
+                        }
                     }
                     else {
                         DevExpress.ui.dialog.alert(result.msg, 'Внимание');

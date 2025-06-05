@@ -348,7 +348,7 @@ namespace CielaDocs.SjcWeb.Controllers
                     {
                         var code = Regex.Replace(kCode, @"\s+", "");
                         if (string.IsNullOrWhiteSpace(code)) continue;
-                        var foundItem = dic.Where(x => x.Code.ContainsWord(code)).ToList();
+                        var foundItem = dic.Where(x => x.Code.ContainsWord(code));
                         if (!foundItem.Any()) continue;
                         nval += foundItem.Sum(x => x.Value);
                         if (isWriteLog == true) {

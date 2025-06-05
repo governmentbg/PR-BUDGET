@@ -4,16 +4,21 @@
     {
         public static bool ContainsWord(this string s, string word)
         {
-           
-            string[] ar = s.Split(';');
-           
-                foreach (string str in ar)
-                {
-                    if (str.ToLower() == word.ToLower())
-                        return true;
-                }
-            
-            return false;
+
+            //string[] ar = s.Split(';');
+
+            //    foreach (string str in ar)
+            //    {
+            //        if (str.ToLower() == word.ToLower())
+            //            return true;
+            //    }
+
+            //return false;
+            if (string.IsNullOrWhiteSpace(s) || string.IsNullOrWhiteSpace(word))
+                return false;
+
+            return s.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Any(str => string.Equals(str, word, StringComparison.OrdinalIgnoreCase));
         }
         public static int IndexOfWholeWord(this string str, string word)
         {

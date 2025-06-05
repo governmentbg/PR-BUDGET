@@ -12,6 +12,7 @@
 </div>
 <div style="display:inline-block;padding-left:10px;" id="menu"></div>
 <div class="spacer_5"></div>
+<div id="image-indicator"></div>
 <div id="grid"></div>
 
 
@@ -25,9 +26,15 @@
     <script>
        
         var selectedId = 0;
-
+         let loadIndicator;
+        $('#image-indicator').dxLoadIndicator({
+            indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
+        });
         $(() => {
-
+             loadIndicator = $('#image-indicator').dxLoadIndicator({
+                visible: false,
+            }).dxLoadIndicator('instance');
+            loadIndicator.option('visible', false);
             $('#grid').dxDataGrid({
                 dataSource: new DevExpress.data.DataSource({
                     store: new DevExpress.data.CustomStore({
@@ -225,6 +232,11 @@
             name: 'Сумирай',
             icon: Ciela.baseUrl+'images/abacus.png',
 
+        }, {
+            id: '7',
+            name: 'Сумарен отчет',
+            icon: Ciela.baseUrl+'images/calculator.png',
+
         }];
         const dxMenu = $('#menu').dxMenu({
             dataSource: menuData,
@@ -244,6 +256,9 @@
                             break;
                         case '5':
                             summarizeKontoCodes();
+                            break;
+                        case '7':
+                            summarizeExcelKontoCodes();
                             break;
                         case '6_1':
                             var workbook = new ExcelJS.Workbook();
@@ -279,6 +294,32 @@
                 title: 'Конто кодове за сумиране',
             });
             mainPopup.show();
+        }
+        function summarizeExcelKontoCodes() {
+            loadIndicator.option('visible', true);
+               $.ajax({
+           
+            url: "@Url.Action("GenerateResultExcelFile", "Reports")", method: 'POST', data: {functionalSubAreaId: $("#FunctionalSubAreaId").val(),
+                             courtId: $("#CourtId").val(), nyear: $("#Nyear").val(), nmonth: $("#Nmonth").val(),
+                            kontoCode: $("#KontoCode").val(),displayCurrencyId:window.localStorage.getItem('CurrencyId') ? Number(window.localStorage.getItem('CurrencyId')) : officialCurrencyId}
+
+        })
+            .done(function (result) {
+                loadIndicator.option('visible', false);
+                if (result.success === true) {
+                    window.location = "@Url.Action("DownloadFile", "ExcelViewer")" + '?id=' + result.resultfile;
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+                else {
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+
+            })
+            .fail(function (e) {
+
+               loadIndicator.option('visible', false);
+                DevExpress.ui.dialog.alert('Failed to load! ' + e);
+            });
         }
          function OnClosePopupEventHandlerSummarizeEx(arg, e) {
             switch (arg) {

@@ -74,6 +74,7 @@ namespace CielaDocs.Data.Contexts
         public virtual DbSet<AppInput> AppInput { get; set; }
         public virtual DbSet<AppRequired> AppRequired { get; set; }
         public virtual DbSet<AppInputCommon> AppInputCommon { get; set; }
+        public virtual DbSet<AppInputCourt> AppInputCourt { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IDateTime dateTime) : base(options)
         {
             _dateTime = dateTime;
@@ -176,6 +177,7 @@ namespace CielaDocs.Data.Contexts
             modelBuilder.Entity<AppInput>().ToTable("AppInput");
             modelBuilder.Entity<AppRequired>().ToTable("AppRequired");
             modelBuilder.Entity<AppInputCommon>().ToTable("AppInputCommon");
+            modelBuilder.Entity<AppInputCourt>().ToTable("AppInputCourt");
             base.OnModelCreating(modelBuilder);
         }
 

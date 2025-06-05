@@ -5,16 +5,20 @@ using CielaDocs.Shared.Repository;
 using CielaDocs.Shared.Services;
 using CielaDocs.SjcWeb.Extensions;
 
+using ClosedXML.Excel;
+
 using DocumentFormat.OpenXml.Drawing.Charts;
 
 using MediatR;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using Newtonsoft.Json;
 
 using System.Data;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace CielaDocs.SjcWeb.Controllers
@@ -175,6 +179,91 @@ namespace CielaDocs.SjcWeb.Controllers
             {
                 return Json(new List<AppInputVm>());
             }
+        }
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        public async Task<JsonResult> LoadCustomAppInputExcelFile(string id, int? courtId, int? ny, int? nm)
+        {
+            string s = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(id)) return Json(new { msg = "Невалиден файл за зареждане на данни", success = false });
+
+
+            string file = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", id);
+            var supportedTypes = new[] { "xlsm", "xlsx" };
+            var fileExt = System.IO.Path.GetExtension(id).Substring(1);
+            if (!supportedTypes.Contains(fileExt))
+            {
+                return Json(new { msg = "Невалиден файл за зареждане на данни. Задължително изберете файл с разширение .xlsm,.xlsx ", success = false });
+            }
+           
+            string sFileNameOnly = System.IO.Path.GetFileNameWithoutExtension(id);
+            int nCnt = 0;
+            StringBuilder sb = new StringBuilder();
+         
+                try
+                {
+
+                    
+                   var  dic = new Dictionary<string, decimal>();
+                using (var excelWorkbook = new XLWorkbook(file))
+                    {
+                        var nonEmptyDataRows = excelWorkbook.Worksheet(1).RowsUsed();
+                        var rowCount = excelWorkbook.Worksheet(1).LastRowUsed().RowNumber();
+                        var columnCount = excelWorkbook.Worksheet(1).LastColumnUsed().ColumnNumber();
+                        int row = 2;
+                        string code = string.Empty;
+                        string value1 = string.Empty;
+
+                        decimal nv1 = 0;
+
+
+                        while (row <= rowCount)
+                        {
+                        code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 1).GetString();
+                        value1 = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 3).GetString();
+                         
+                            decimal.TryParse(value1, out nv1);
+                           
+                            if (!string.IsNullOrEmpty(code))
+                            {
+                                dic.Add(Regex.Replace(code, @"\s+", ""), nv1);
+                            }
+                            row++;
+                        }
+                    }
+                int nMetricsFieldId = 0;
+                foreach (var item in dic)
+                    {
+                        if (item.Value == 0) continue;
+                    nMetricsFieldId = await _sjcService.QueryRaw<int?>($"SELECT id FROM MetricsField WHERE code='{item.Key}'")??0;
+                    int foundId= await _sjcService.QueryRaw<int?>($"SELECT id FROM AppInput WHERE courtId={courtId??0} and MetricsFieldId={nMetricsFieldId} and Nmonth={nm} and PlannedYear={ny}") ?? 0;
+                    if (foundId == 0) {
+                        _ = await _sjcService.ExecuteRawSql($@"INSERT INTO [dbo].[AppInput]([CourtId],[MetricsFieldId],[Nmonth],[PlannedYear],[Nvalue],[EnteredDate])
+                                VALUES({courtId ?? 0},{nMetricsFieldId},{nm},{ny},{item.Value},getDate())");
+                    }
+                    else
+                    {
+                        _ = await _sjcService.ExecuteRawSql($@"Update [dbo].[AppInput] set Nvalue={item.Value},EnteredDate=getDate() WHERE Id={foundId}");
+                        
+                    }
+                   nCnt++;
+                }
+
+
+                //-------------------------------------------------------------------------------
+                return Json(new { msg = $"Бяха заредени данни за {nCnt} записа", success = true });
+
+
+                }
+                catch (Exception ex)
+                {
+                    return Json(new { msg = "Грешка при четене на файл: " + ex?.Message, success = false });
+                }
+            
+
+
+            return Json(new { msg = "", success = false });
         }
     }
 }

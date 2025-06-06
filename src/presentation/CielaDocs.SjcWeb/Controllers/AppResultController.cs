@@ -94,11 +94,69 @@ namespace CielaDocs.SjcWeb.Controllers
                 };
             return await _sjcService.QueryRawList<AppInputSummarizedVm>(sql, parameters);
         }
-        private async Task<IEnumerable<AppInputSummarizedCommonVm>> GetSummarizedAppInputCommon(int appId, int nYear)
+        private async Task<IEnumerable<AppInputSummarizedCommonVm>> GetSummarizedAppInputCommon(int appId, int nYear, int? modelReport)
         {
-            string sql = $@"SELECT 
+            string sql = string.Empty;
+            if (modelReport == 1)
+            {
+                sql = $@"SELECT 
                         a.Id,
-                        a.CreatedByInstTypeId,
+                        a.CourtId,
+                        a.MetricsFieldId,
+                        m.Code AS MetricsFieldCode,
+                        m.Name AS MetricsFieldName,
+                        a.PlannedYear ,
+                        SUM(a.Nvalue) AS Nval1,              -- Base year
+                        SUM(b.Nvalue) AS Nval2,              -- Base year + 1
+                        SUM(c.Nvalue) AS Nval3,               -- Base year + 2
+	                    SUM(d.Nvalue) AS Nval4               -- Base year + 3
+                    FROM AppInputCourt a
+                    LEFT JOIN AppInputCourt b 
+                        ON a.CourtId = b.CourtId 
+                        AND a.MetricsFieldId = b.MetricsFieldId 
+                        AND b.PlannedYear = a.PlannedYear + 1
+                    LEFT JOIN AppInputCourt c 
+                        ON a.CourtId = c.CourtId 
+                        AND a.MetricsFieldId = c.MetricsFieldId 
+                        AND c.PlannedYear = a.PlannedYear + 2
+                    LEFT JOIN AppInputCourt d 
+                        ON a.CourtId = d.CourtId 
+                        AND a.MetricsFieldId = d.MetricsFieldId 
+                        AND d.PlannedYear = a.PlannedYear + 3
+                    LEFT JOIN MetricsField m 
+                        ON a.MetricsFieldId = m.Id
+                    WHERE 
+                        a.PlannedYear = @nYear
+                        AND m.Id IN (
+                            SELECT DISTINCT admf.MetricsFieldId
+                            FROM AppDefMetricsField admf
+                            WHERE admf.AppDefId IN (
+                                SELECT ad.Id FROM AppDef ad WHERE ad.AppId = @appId
+                            )
+                        )
+                    GROUP BY 
+                        a.Id,
+                        a.CourtId,
+                        a.MetricsFieldId,
+                        a.PlannedYear,
+                        m.Code,
+                        m.Name
+                    ORDER BY 
+                        a.Id,
+                        a.CourtId,
+                        m.Code;";
+                var parameters = new Dictionary<string, object>
+                {
+                    { "@appId", appId },
+                    { "@nYear", nYear }
+                };
+                return await _sjcService.QueryRawList<AppInputSummarizedCommonVm>(sql, parameters);
+            }
+            else
+            {
+                sql = $@"SELECT 
+                        a.Id,
+                        a.CreatedByInstTypeId as CourtId,
                         a.MetricsFieldId,
                         m.Code AS MetricsFieldCode,
                         m.Name AS MetricsFieldName,
@@ -142,12 +200,14 @@ namespace CielaDocs.SjcWeb.Controllers
                         a.Id,
                         a.CreatedByInstTypeId,
                         m.Code;";
-            var parameters = new Dictionary<string, object>
+                var parameters = new Dictionary<string, object>
                 {
                     { "@appId", appId },
                     { "@nYear", nYear }
                 };
-            return await _sjcService.QueryRawList<AppInputSummarizedCommonVm>(sql, parameters);
+                return await _sjcService.QueryRawList<AppInputSummarizedCommonVm>(sql, parameters);
+            }
+
         }
         private async Task<List<AppDefVm>> GetAppDefaultByAppId(int? appId)
         {
@@ -235,7 +295,8 @@ namespace CielaDocs.SjcWeb.Controllers
                 string[] args = par.Split('|');
                 int.TryParse(args[0], out int appId);
                 int.TryParse(args[1], out int nYear);
-         int nMonth = 12; // For common planned years, we assume the last month of the year
+                int.TryParse(args[2], out int nModelReport);
+                int nMonth = 12; // For common planned years, we assume the last month of the year
                 string resultFile = Guid.NewGuid().ToString("N") + ".xlsx";
                 string excelResultFilePath = System.IO.Path.Combine(_env.WebRootPath + $"/Temp/{resultFile}");
                 string excelFile = System.IO.Path.Combine(_env.WebRootPath + $"/templates/{templateCommonName}");
@@ -248,16 +309,16 @@ namespace CielaDocs.SjcWeb.Controllers
                                    FROM AppRequired a
                                    left join InstitutionType i on a.InstitutionTypeId=i.id
                                    where a.AppId={appId}");
-                var summarizedAppInput = await GetSummarizedAppInputCommon(appId,  nYear);
+                var summarizedAppInput = await GetSummarizedAppInputCommon(appId, nYear, nModelReport);
                 var appDef = await GetAppDefaultByAppId(appId);
-                var activeYears=await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                var activeYears = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
                 int[] activeYearsArray = new int[] { activeYears?.Y1 ?? 0, activeYears?.Y2 ?? 0, activeYears?.Y3 ?? 0, activeYears?.Y4 ?? 0 };
                 StringBuilder sb = new StringBuilder();
                 using (var excelWorkbook = new XLWorkbook(excelFile))
                 {
                     var worksheet = excelWorkbook.Worksheet(1);
-                    worksheet.Cell("B2").Value=programName.Replace("\r\n", "");
-                    worksheet.Cell("B1").Value=appName;
+                    worksheet.Cell("B2").Value = programName.Replace("\r\n", "");
+                    worksheet.Cell("B1").Value = appName;
                     worksheet.Cell("B3").Value = $"Целева стойност";
                     worksheet.Cell("E5").Value = $"Прогноза {activeYears?.Y1 ?? 0} г.";
                     worksheet.Cell("F5").Value = $"Прогноза {activeYears?.Y2 ?? 0} г.";
@@ -268,8 +329,8 @@ namespace CielaDocs.SjcWeb.Controllers
                     {
                         AppDefVm item = appDef[i];
                         rowOffset += 1;
-                       var rez = await CalculateFormulaCommon(item.Formula, summarizedAppInput, nMonth, activeYearsArray, sb);
-                        decimal?[] rezArray= rez.ToArray();
+                        var rez = await CalculateFormulaCommon(item.Formula, summarizedAppInput, nMonth, activeYearsArray, sb);
+                        decimal?[] rezArray = rez.ToArray();
                         if (rezArray.Length == 4)
                         {
 
@@ -313,7 +374,7 @@ namespace CielaDocs.SjcWeb.Controllers
             }
         }
         #endregion
-        private async Task<decimal?> CalculateFormula(string formula, IEnumerable<AppInputSummarizedVm> appInputs, int nMonth, int nYear,StringBuilder sb)
+        private async Task<decimal?> CalculateFormula(string formula, IEnumerable<AppInputSummarizedVm> appInputs, int nMonth, int nYear, StringBuilder sb)
         {
             var parameters = Toolbox.ExtractCalcArgs(formula);
             sb.AppendLine($"Formula:{formula}, Parameters: {string.Join(", ", parameters)}");
@@ -324,7 +385,7 @@ namespace CielaDocs.SjcWeb.Controllers
                 {
                     dic.Add(item, $"{nMonth}");
                 }
-               
+
             }
             var resultForCalc = appInputs
                .Where(item => parameters.Contains(item.MetricsFieldCode, StringComparer.OrdinalIgnoreCase))
@@ -335,7 +396,8 @@ namespace CielaDocs.SjcWeb.Controllers
                    Value = g.Sum(x => x.CalculatedValue)
                })
                .ToList();
-            if (resultForCalc.Any()) { 
+            if (resultForCalc.Any())
+            {
                 foreach (var item in resultForCalc)
                 {
                     if (!dic.ContainsKey(item.Code))
@@ -353,8 +415,8 @@ namespace CielaDocs.SjcWeb.Controllers
                         bool isNaN = Double.IsNaN(res);
                         if (isNaN) res = 0;
                         sb.AppendLine($"Calculation Result: {res}");
-                        return (decimal?)Math.Round(res,2,MidpointRounding.AwayFromZero);
-                        
+                        return (decimal?)Math.Round(res, 2, MidpointRounding.AwayFromZero);
+
                     }
                     catch (Exception ex)
                     {
@@ -369,7 +431,7 @@ namespace CielaDocs.SjcWeb.Controllers
         {
             try
             {
-              
+
                 var returnValues = new List<decimal?>();
                 var parameters = Toolbox.ExtractCalcArgs(formula);
                 sb.AppendLine($"Formula:{formula}, Parameters: {string.Join(", ", parameters)}");
@@ -564,9 +626,24 @@ namespace CielaDocs.SjcWeb.Controllers
 
             foreach (var token in tokens)
             {
-                string replacement = "0"; // default if missing
-                if (dic.TryGetValue(token, out var val) && !string.IsNullOrWhiteSpace(val))
-                    replacement = val;
+                string replacement = "0";
+
+                // If token contains only digits, use it directly
+                if (Regex.IsMatch(token, @"^\d+$"))
+                {
+                    replacement = token;
+                }
+                else
+                {
+                    // Otherwise, look in dictionary
+                    if (dic.TryGetValue(token, out var val) &&
+                        !string.IsNullOrWhiteSpace(val) &&
+                        decimal.TryParse(val, out var number) &&
+                        number != 0)
+                    {
+                        replacement = val;
+                    }
+                }
 
                 var pattern = $@"\b{Regex.Escape(token)}\b";
                 Source = Regex.Replace(Source, pattern, replacement, RegexOptions.IgnoreCase);
@@ -585,6 +662,60 @@ namespace CielaDocs.SjcWeb.Controllers
                 }
             }
             return true;
+        }
+        public async Task<JsonResult> GenerateCourtStatistics(string par)
+        {
+            try
+            {
+                string[] args = par.Split('|');
+                int.TryParse(args[0], out int appId);
+                int.TryParse(args[1], out int nYear);
+              
+                int nMonth = 12; // For common planned years, we assume the last month of the year
+                string resultFile = Guid.NewGuid().ToString("N") + ".xlsx";
+                string excelResultFilePath = System.IO.Path.Combine(_env.WebRootPath + $"/Temp/{resultFile}");
+                string excelFile = System.IO.Path.Combine(_env.WebRootPath + $"/templates/AppCourtsCheck.xlsx");
+                var (appName, programName) = await GetProgramNameByAppId(appId);
+                var activeYears = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                var appRequired = await _sjcService.QueryRawList<IdName>($@"SELECT c.Id,concat(c.Name,'  (',i.Name,')')  as Name
+                                  
+	                              
+                                   FROM AppRequired a
+                                   left join InstitutionType i on a.InstitutionTypeId=i.id
+								   left join CourtType t on i.Id=t.InstitutionTypeId
+								   left join Court c on t.id=c.CourtTypeId
+                                   where a.AppId={appId}");
+                var filledCourts = await _sjcService.QueryRawList<int>($@"SELECT distinct courtId from AppInputCourt where appID={appId} and PlannedYear between {activeYears.Y1} and {activeYears?.Y4}");
+                var bIDs = new HashSet<int>(filledCourts);
+                var result = appRequired.Select(x => $"{x.Name} - {(bIDs.Contains(x.Id) ? "Подадени данни" : "Не са подадени данни")}")
+               .ToList();
+              
+                
+
+                using (var excelWorkbook = new XLWorkbook(excelFile))
+                {
+                    var worksheet = excelWorkbook.Worksheet(1);
+                    worksheet.Cell("C4").Value = appName;
+                    
+                    int rowOffset = 5;
+                    for (int i = 0; i < result.Count; i++)
+                    {
+                        string item = result[i];
+                        rowOffset += 1;
+
+                            worksheet.Cell("C" + rowOffset).Value = item;
+                        
+                    }
+                    excelWorkbook.SaveAs(excelResultFilePath);
+                }
+              
+                return Json(new { success = true, msg = "ok", resultFile = resultFile });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in AppResultController.Index");
+                return Json(new { success = false, msg = ex.Message });
+            }
         }
     }
 }

@@ -289,10 +289,7 @@
             type: 'normal',
             width: 120,
             onClick() {
-                if (functionalSubAreaId == 0)  {
-                    DevExpress.ui.dialog.alert('Изберете задължително бюджетна програма', 'Внимание');
-                    return;
-                }
+               
                 window.parent.OnClosePopupEventHandlerEx('importKontoFilterOk', ''.concat(functionalSubAreaId,"|",institutionTypeId, "|", courtTypeId,"|", courtId, "|",nm, "|", ny,"|",$('#kontoCode').val()));
             },
         });

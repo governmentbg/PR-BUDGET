@@ -15,6 +15,7 @@
 <div class="spacer_5"></div>
 <div style="display:inline-block;padding-left:10px;" id="menu"></div>
 <div class="spacer_5"></div>
+<input type="file" id="fileUploader" style="display: none;" />
 <div id="grid"></div>
 @Html.Hidden("CourtId", @court?.Id)
 @Html.Hidden("month", (int)ViewBag.Month)
@@ -23,12 +24,7 @@
     <script>
         var selectedId = 0;
 
-
-
-
         $(() => {
-
-            
 
             $('#grid').dxDataGrid({
                 dataSource: new DevExpress.data.DataSource({
@@ -160,7 +156,32 @@
 
             return false;
         }
+        $("#fileUploader").on("change", function (event) {
+            var file = event.target.files[0];
+            if (!file) return;
 
+            var formData = new FormData();
+            formData.append("file", file);
+
+            $.ajax({
+                url:  "@Url.Action("UploadFile", "BufferedFileUpload", new { area = "" })",
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function(result) {
+                    if (result.success != true) {
+                                DevExpress.ui.notify(result.msg, 'Внимание', 2000);
+                            }
+                            else {
+                                loadCustomAppInputExcelFile(result.filename);
+                            }
+                },
+                error: function() {
+                    DevExpress.ui.notify("Upload failed.", "error", 2000);
+                }
+            });
+        });
         const menuData = [{
             id: '1',
             name: 'Начало',
@@ -177,7 +198,20 @@
                 name: 'Обнови',
                 icon: Ciela.baseUrl+'images/refresh.png',
 
-            }];
+           }, {
+          id: '5',
+          name: 'Импорт',
+          items: [{
+            id: '5_1',
+            name: 'Изтегли образец за попълване',
+            icon: Ciela.baseUrl+'images/download.png',
+
+          }, {
+            id: '5_2',
+            name: 'Зареди данни от образец',
+            icon: Ciela.baseUrl+'images/Upload.png',
+          }],
+        },];
         const dxMenu = $('#menu').dxMenu({
             dataSource: menuData,
             hideSubmenuOnMouseLeave: false,
@@ -194,8 +228,21 @@
                         case '4':
                             $("#grid").dxDataGrid("instance").refresh();
                             break;
+                            case '5_1':
+                            var workbook = new ExcelJS.Workbook();
+                            var worksheet = workbook.addWorksheet("AppInput");
 
-                      
+                            DevExpress.excelExporter.exportDataGrid({
+                                component: $("#grid").dxDataGrid("instance"),
+                                worksheet: worksheet
+                            }).then(function () {
+                                workbook.xlsx.writeBuffer().then(function (buffer) {
+                                    saveAs(new Blob([buffer], { type: "application/octet-stream" }), "AppInputData.xlsx");
+                                });
+                            });
+                            break;
+                      case '5_2': $("#fileUploader").click();
+                      break;
                         case '6_1':
                             var workbook = new ExcelJS.Workbook();
                             var worksheet = workbook.addWorksheet("AppInput");
@@ -221,6 +268,29 @@
             name: 'onClick',
             delay: { show: 0, hide: 300 },
         }];
+       function loadCustomAppInputExcelFile(id) {
 
+            var inputData={id: id,
+                 courtId:$('#CourtId').val(),
+                  ny:$('#year').val(),
+                  nm:$('#month').val(),};
+             $.ajax(
+                 {
+                 beforeSend: function (request) {
+                     request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+                 },
+                 url: "@Url.Action("LoadCustomAppInputExcelFile", "AppInput", new { area = "" })", method: 'POST', data: inputData
+
+            })
+                .done(function (result) {
+                       $("#grid").dxDataGrid("instance").refresh();
+                        DevExpress.ui.notify(result.msg,'success',2000);
+                })
+                .fail(function (e) {
+                        DevExpress.ui.notify("Upload failed.", "error",2000);
+                });
+
+
+        };
     </script>
 }

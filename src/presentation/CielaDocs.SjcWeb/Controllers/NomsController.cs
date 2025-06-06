@@ -375,7 +375,20 @@ namespace CielaDocs.SjcWeb.Controllers
                 return Json(new List<CourtsVm>());
             }
         }
-
+        [HttpGet]
+        public async Task<JsonResult> GetInstitutionTypesByAppId(int appId)
+        {
+            try
+            {
+                var listOfApp=await _sjcService.QueryRawList<int>($@"select distinct a.InstitutionTypeId from AppRequired a  where a.AppId={appId}");
+                var data = await _sjcRepo.GetInstitutionsAsync();
+                return Json(data.Where(x=>listOfApp.Contains(x.Id)).ToList());
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<CourtsVm>());
+            }
+        }
         [HttpGet]
         public async Task<JsonResult> GetAllCourts()
         {

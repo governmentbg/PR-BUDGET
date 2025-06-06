@@ -364,7 +364,7 @@ namespace CielaDocs.SjcWeb.Controllers
             }
         }
         [HttpPost]
-        public async Task<JsonResult> SetAppInputCommonFilter(int? appId, int? ny, int? currencyId, int? currencyMeasureId, bool? isLocked)
+        public async Task<JsonResult> SetAppInputCommonFilter(int? appId, int? ny, int? currencyId,int? courtId, int? currencyMeasureId, bool? isLocked)
         {
             try
             {
@@ -375,7 +375,7 @@ namespace CielaDocs.SjcWeb.Controllers
 
                 HttpContext.Session.Remove("FilterAppInputCommonSess");
                 //CreatedByInstTypeId=4 means VSS user creator
-                HttpContext.Session.Set<FilterAppInputCommonVm>("FilterAppInputCommonSess", new FilterAppInputCommonVm { CreatedByInstTypeId=4, AppId = appId ?? 0, Nyear = ny ?? 0, CurrencyId = currencyId ?? 0, CurrencyMeasureId = currencyMeasureId ?? 0, IsLocked = isLocked ?? false });
+                HttpContext.Session.Set<FilterAppInputCommonVm>("FilterAppInputCommonSess", new FilterAppInputCommonVm { CreatedByInstTypeId=4, AppId = appId ?? 0, Nyear = ny ?? 0, CurrencyId = currencyId ?? 0,CourtId=courtId??0, CurrencyMeasureId = currencyMeasureId ?? 0, IsLocked = isLocked ?? false });
                 var empl = await _mediator.Send(new GetUserByAspNetUserIdQuery { AspNetUserId = User.GetUserIdValue() });
 
                

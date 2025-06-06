@@ -21,6 +21,17 @@
                 </div>
             </div>
             <div class="row">
+
+                <label>
+                    &nbsp; <input type="radio" name="option" value="0" checked>
+                    &nbsp;Експертен модел
+                </label>
+                <label>
+                    &nbsp; <input type="radio" name="option" value="1">
+                    &nbsp;Сумирани данни от отчетни единици
+                </label>
+            </div>
+            <div class="row">
                 <div class="col-md-12">
                     <div class="form-group">
                         <label for="cbApps">Приложение</label>
@@ -34,25 +45,44 @@
         <div id="image-indicator"></div>
         <div class="spacer_10"></div>
         <div style="float:right;margin-right:10px;margin-bottom:10px;">
+            <div id="courtReportBtn"></div>
             <div id="okAppInputBtn"></div>
             <div id="closeAppInputBtn"></div>
         </div>
     </div>
 </form>
 <script>
-
-    $(() => {
-
-        let appId = 0;
-
-         let loadIndicator;
+     let loadIndicator;
         $('#image-indicator').dxLoadIndicator({
             indicatorSrc: "@Url.Content("~/images/ajax_loader.gif")",
         });
+        let appId=0;
+    $(() => {
+
+        
+        
+        
          loadIndicator = $('#image-indicator').dxLoadIndicator({
                 visible: false,
             }).dxLoadIndicator('instance');
             loadIndicator.option('visible', false);
+
+            $('#courtReportBtn').dxButton({
+                 
+            text: 'Справка за попълнени данни',
+            onClick() {
+                if (appId == 0)  {
+                    DevExpress.ui.notify('Изберете задължително Приложение ', 'warning',2000);
+                    return;
+                }
+                 let selectedValue = $('input[name="option"]:checked').val();
+                  if(selectedValue==1){
+                    generateCourtStatistics();
+                  }
+                  else  DevExpress.ui.notify('Справката е достъпна само при избор на Сумирани данни от отчетни единици! ','error',2000);
+            },
+        });
+
         let activePeriod= fetchDataAsync(Ciela.baseUrl + "Noms/GetActiveBudgetPeriod", { })
              .then(data =>{
                 if(!isEmpty(data)){
@@ -106,26 +136,27 @@
                     DevExpress.ui.dialog.alert('Изберете задължително Приложение ', 'Внимание');
                     return;
                 }
+                let selectedValue = $('input[name="option"]:checked').val();
                  loadIndicator.option('visible', true);
                   $.ajax({
 
 
-                url: "@Url.Action("PlannedResult", "AppResult")", method: 'POST', data: { par: ''.concat(appId, "|",activeYear)}
+                url: "@Url.Action("PlannedResult", "AppResult")", method: 'POST', data: { par: ''.concat(appId, "|",activeYear,"|",selectedValue)}
 
-            }).done(function (result) {
-                 loadIndicator.option('visible', false);
-                if (result.success === true) {
-                    window.location = "@Url.Action("DownloadFile", "ExcelViewer")" + '?id=' + result.logFile;
-                    redirectme2New("@Url.Action("Index", "ExcelReport")", "id", "0","filePath",`${result.resultFile}`);
-                }
-                else {
-                    DevExpress.ui.dialog.alert(result.msg, 'Внимание');
-                }
-            })
-                .fail(function (e) {
+                }).done(function (result) {
                      loadIndicator.option('visible', false);
-                    DevExpress.ui.notify('Failed to generate report! ' + e);
-                });
+                    if (result.success === true) {
+                        window.location = "@Url.Action("DownloadFile", "ExcelViewer")" + '?id=' + result.logFile;
+                        redirectme2New("@Url.Action("Index", "ExcelReport")", "id", "0","filePath",`${result.resultFile}`);
+                    }
+                    else {
+                        DevExpress.ui.dialog.alert(result.msg, 'Внимание');
+                    }
+                })
+                    .fail(function (e) {
+                         loadIndicator.option('visible', false);
+                        DevExpress.ui.notify('Failed to generate report! ' + e);
+                    });
 
             },
         });
@@ -140,5 +171,25 @@
         });
 
     });
+    function generateCourtStatistics(){
+                         loadIndicator.option('visible', true);
+                  $.ajax({
 
+
+                url: "@Url.Action("GenerateCourtStatistics", "AppResult")", method: 'POST', data: { par: ''.concat(appId, "|",activeYear)}
+
+                }).done(function (result) {
+                     loadIndicator.option('visible', false);
+                    if (result.success === true) {
+                         redirectme2New("@Url.Action("Index", "ExcelReport")", "id", "0","filePath",`${result.resultFile}`);
+                    }
+                    else {
+                        DevExpress.ui.notify(result.msg, 'error',2000);
+                    }
+                })
+                    .fail(function (e) {
+                         loadIndicator.option('visible', false);
+                        DevExpress.ui.notify('Failed to generate report! ' + e,'error',2000);
+                    });
+    }
 </script>

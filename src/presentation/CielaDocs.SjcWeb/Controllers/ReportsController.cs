@@ -5,6 +5,7 @@ using CielaDocs.Application.Common.Constants;
 using CielaDocs.Application.Dtos;
 using CielaDocs.Application.Models;
 using CielaDocs.Domain.Entities;
+using CielaDocs.Domain.Entities.v2;
 using CielaDocs.Shared.Repository;
 using CielaDocs.Shared.Services;
 using CielaDocs.SjcWeb.Constants;
@@ -13,10 +14,12 @@ using CielaDocs.SjcWeb.Models;
 
 using ClosedXML.Excel;
 
+using DevExpress.CodeParser;
 using DevExpress.Export.Xl;
 
 using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Drawing.Charts;
+using DocumentFormat.OpenXml.Office2016.Drawing.ChartDrawing;
 
 using FluentValidation.Internal;
 
@@ -62,7 +65,7 @@ namespace CielaDocs.SjcWeb.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly ISjcService _sjcService;
         private readonly ISjcServiceV2 _sjcServiceV2;
-
+        private const string templateName = "SummarizedImportedKontoCodes.xlsx";
         public ReportsController(ILogger<HomeController> logger, IConfiguration configuration, ISendGridMailer emailSender,
                         IMediator mediator, IHttpContextAccessor httpContextAccessor, ILogRepository logRepo,
                         ISjcBudgetRepository sjcRepo, IWebHostEnvironment env, ISjcService sjcService, ISjcServiceV2 sjcServiceV2)
@@ -182,7 +185,7 @@ namespace CielaDocs.SjcWeb.Controllers
             var cfg = await _sjcRepo.GetCfgAsync();
             ViewBag.Month = cfg?.CurrentAppMonth ?? 0;
             ViewBag.Year = cfg?.CurrentYear ?? 0;
-            return  PartialView(nameof(AddMainDataFilterPartial));
+            return PartialView(nameof(AddMainDataFilterPartial));
         }
         public IActionResult AddImportKontoFilterPartial() => PartialView(nameof(AddImportKontoFilterPartial));
         public IActionResult SummarizeKontoCodesPartialView() => PartialView(nameof(SummarizeKontoCodesPartialView));
@@ -429,11 +432,11 @@ namespace CielaDocs.SjcWeb.Controllers
                     sql += $" and a.KontoCode in({inClause}) ";
                 }
                 var data = await _sjcService.QueryRaw<decimal?>(sql);
-                return Json(new { success = true, summary = data ?? 0, msg="ok" });
+                return Json(new { success = true, summary = data ?? 0, msg = "ok" });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, summary =  0,msg=ex?.Message });
+                return Json(new { success = false, summary = 0, msg = ex?.Message });
             }
         }
         public async Task<IActionResult> SummarizedAppInput(string par, int? currencyId)
@@ -445,11 +448,11 @@ namespace CielaDocs.SjcWeb.Controllers
             int.TryParse(args[2], out int courtId);
             int.TryParse(args[3], out int nMonth);
             int.TryParse(args[4], out int nYear);
-          
+
             string filterTitle = "Входни данни за показатели";
             if (institutionTypeId > 0)
             {
-               
+
                 filterTitle += $", Орган на съдебна власт: {await _sjcRepo.GetNameByIdFromTable("InstitutionType", institutionTypeId)}";
             }
             if (courtTypeId > 0)
@@ -469,7 +472,7 @@ namespace CielaDocs.SjcWeb.Controllers
             {
                 filterTitle += $" , Година: {nYear}";
             }
-           
+
             ViewBag.InstitutionTypeId = institutionTypeId;
             ViewBag.CourtTypeId = courtTypeId;
             ViewBag.CourtId = courtId;
@@ -479,5 +482,82 @@ namespace CielaDocs.SjcWeb.Controllers
             ViewBag.Currency = await _sjcRepo.GetNameByIdFromTable("Currency", currencyId);
             return View();
         }
+        public async Task<JsonResult> GenerateResultExcelFile(int? functionalSubAreaId, int? courtId, int? nyear, int? nmonth, string? kontoCode, int? displayCurrencyId) {
+            string filterTitle = string.Empty;
+            string sql = $@"Select a.Id,a.CourtId,a.FunctionalSubAreaId,a.Nmonth,a.Nyear,a.Nvalue,a.KontoCode
+           from CourtInKontoCode a  where a.Id>0 ";
+            if (functionalSubAreaId > 0)
+            {
+                sql += $" and a.FunctionalSubAreaId={functionalSubAreaId} ";
+                var fsub = await _mediator.Send(new GetFunctionalSubAreaByIdQuery { Id = functionalSubAreaId??0 });
+                filterTitle += $"Програма: {fsub?.Name}";
+            }
+            if (courtId > 0)
+            {
+                sql += $" and a.CourtId={courtId} ";
+                filterTitle += $" , Съд: {await _sjcRepo.GetNameByIdFromTable("Court", courtId)}";
+            }
+            if (nyear > 0)
+            {
+                sql += $" and a.Nyear={nyear} ";
+                filterTitle += $" , Година: {nyear}";
+            }
+            if (nmonth > 0)
+            {
+                sql += $" and a.Nmonth={nmonth} ";
+                filterTitle += $" , Месец: {nmonth}";
+            }
+            if (!string.IsNullOrWhiteSpace(kontoCode))
+            {
+                sql += $" and a.KontoCode = '{kontoCode}' ";
+                filterTitle += $" , Код: {kontoCode}";
+            }
+            ;
+            var data = await _sjcService.QueryRawList<CourtInKontoCodeVm>(sql);
+            var result = data
+                .GroupBy(item => new { item.KontoCode, item.Nmonth, item.Nyear })
+                .Select(g => new
+                {
+                    Code = g.Key.KontoCode,
+                    Month = g.Key.Nmonth,
+                    Year = g.Key.Nyear,
+                    SumValue = g.Sum(item => item.Nvalue)
+                })
+                .ToList();
+            string resultFile = Guid.NewGuid().ToString("N") + ".xlsx";
+            string excelResultFilePath = System.IO.Path.Combine(_env.WebRootPath + $"/Temp/{resultFile}");
+            string excelFile = System.IO.Path.Combine(_env.WebRootPath + $"/templates/{templateName}");
+            try
+            {
+                using (var excelWorkbook = new XLWorkbook(excelFile))
+                {
+                    var worksheet = excelWorkbook.Worksheet(1);
+                    worksheet.Cell("B3").Value = filterTitle;
+                    int rowOffset = 4;
+                    for (int i = 0; i < result.Count; i++)
+                    {
+                        var item = result[i];
+                        rowOffset += 1;
+
+
+
+                        worksheet.Cell("B" + rowOffset).Value = item.Month;
+                        worksheet.Cell("C" + rowOffset).Value = item.Year;
+                        worksheet.Cell("D" + rowOffset).Value = item.Code;
+                        worksheet.Cell("E" + rowOffset).Value = item.SumValue;
+
+
+                    }
+                    excelWorkbook.SaveAs(excelResultFilePath);
+                }
+                return Json(new { success = true, msg = $"файл:{resultFile} е създаден.", resultfile = resultFile });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating Excel file for summarized app input.");
+                return Json(new { success = false, message = "Грешка при генериране на Excel файл." });
+            }
+        }
+    
+        }
     }
-}

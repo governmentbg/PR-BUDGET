@@ -20,6 +20,16 @@ namespace CielaDocs.Application.Models
     {
         public int CreatedByInstTypeId { get; set; }
         public int AppId { get; set; }
+        public int CourtId { get; set; }
+        public int Nyear { get; set; }
+        public int CurrencyId { get; set; }
+        public int CurrencyMeasureId { get; set; }
+        public bool? IsLocked { get; set; }
+    }
+    public class FilterAppInputCourtVm
+    {
+        public int AppId { get; set; }
+        public int CourtId { get; set; }
         public int Nyear { get; set; }
         public int CurrencyId { get; set; }
         public int CurrencyMeasureId { get; set; }

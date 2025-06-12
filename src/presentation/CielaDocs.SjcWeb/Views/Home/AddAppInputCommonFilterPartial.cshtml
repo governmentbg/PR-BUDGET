@@ -32,13 +32,15 @@
                     &nbsp;Модел за отчетна единица
                 </label>
             </div>
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="form-group">
-                        <label for="cbApps">Приложение</label>
-                        <select class="form-control" style="width:100%" id="cbApps">
-                            <option>Избери... </option>
-                        </select>
+            <div id="div1" class="toggle-div" >
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="cbApps">Приложение</label>
+                            <select class="form-control" style="width:100%" id="cbApps">
+                                <option>Избери... </option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -99,8 +101,10 @@
 
                 if (selectedValue === "1") {
                     $('#div2').show();
+                    $('#div1').hide();
                 } else {
                     $('#div2').hide();
+                     $('#div1').show();
                 }
             });
 
@@ -149,12 +153,11 @@
             placeholder: "Избери...",
             allowClear: true,
             ajax: {
-                url: "@Url.Action("GetInstitutionTypesByAppId", "Noms")",
+                url: "@Url.Action("GetInstitutionTypes", "Noms")",
                 contentType: "application/json; charset=utf-8",
                 data: function (params) {
                     var query =
                     {
-                         appId: appId,
                         term: params.term,
                     };
                     return query;
@@ -249,12 +252,13 @@
             type: 'normal',
             width: 120,
             onClick() {
-                if (appId == 0) {
+               
+                let selectedValue = $('input[name="option"]:checked').val();
+                if(selectedValue==0){
+                     if (appId == 0) {
                     DevExpress.ui.dialog.alert('Изберете задължително приложение', 'Внимание');
                     return;
                 }
-                let selectedValue = $('input[name="option"]:checked').val();
-                if(selectedValue==0){
                 window.parent.OnClosePopupEventHandlerEx('appInputCommonFilterOk', ''.concat(selectedValue,"|",appId, "|",activeYear,"|",officialCurrencyId,"|",courtId,"|",0,"|",isLocked));
                 }
                 else if(selectedValue==1){

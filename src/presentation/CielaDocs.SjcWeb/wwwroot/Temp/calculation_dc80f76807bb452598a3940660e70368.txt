@@ -1,0 +1,45 @@
+﻿Formula:NESERVICES, Parameters: NESERVICES
+Calculation String: 0
+Calculation Result: 0
+Calculation String: 0
+Calculation Result: 0
+Calculation String: 0
+Calculation Result: 0
+Calculation String: 0
+Calculation Result: 0
+Formula:TNOESERVICES/NNOESERVICES, Parameters: TNOESERVICES, NNOESERVICES
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:(NESERVICEUSERSPOS/NESERVICEUSERSANSWERS)*100, Parameters: , NESERVICEUSERSPOS, NESERVICEUSERSANSWERS
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NEDOCS/NDOCS)*100, Parameters: , NEDOCS, NDOCS
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NEBOOKS/NBOOKS)*100, Parameters: , NEBOOKS, NBOOKS
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0

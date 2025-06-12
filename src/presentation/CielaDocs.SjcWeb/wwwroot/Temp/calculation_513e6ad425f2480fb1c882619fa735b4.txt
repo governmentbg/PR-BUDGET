@@ -1,0 +1,117 @@
+﻿Formula:NCASE/NJMANMONTH, Parameters: NCASE, NJMANMONTH
+Calculation String: 10.00/7.00
+Calculation Result: 1.4285714285714286
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NCASENEW/NJMANMONTH, Parameters: NCASENEW, NJMANMONTH
+Calculation String: 80.00/7.00
+Calculation Result: 11.428571428571429
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 580.00/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NCASECOMPL/NJMANMONTH, Parameters: NCASECOMPL, NJMANMONTH
+Calculation String: 14.00/7.00
+Calculation Result: 2
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NPREP/NPMANMONTH, Parameters: NPREP, NPMANMONTH
+Calculation String: 22.00/20.00
+Calculation Result: 1.1
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NPREPNEW/NPMANMONTH, Parameters: NPREPNEW, NPMANMONTH
+Calculation String: 1.00/20.00
+Calculation Result: 0.05
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NPREPCOMPL/NPMANMONTH, Parameters: NPREPCOMPL, NPMANMONTH
+Calculation String: 2.00/20.00
+Calculation Result: 0.1
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NPRECASE/NPMANMONTH, Parameters: NPRECASE, NPMANMONTH
+Calculation String: 22.00/20.00
+Calculation Result: 1.1
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NPRECASENEW/NPMANMONTH, Parameters: NPRECASENEW, NPMANMONTH
+Calculation String: 10.00/20.00
+Calculation Result: 0.5
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NPRECASECOMPL/NPMANMONTH, Parameters: NPRECASECOMPL, NPMANMONTH
+Calculation String: 30.00/20.00
+Calculation Result: 1.5
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NACT/NPMANMONTH, Parameters: NACT, NPMANMONTH
+Calculation String: 4.00/20.00
+Calculation Result: 0.2
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NINVPRECASE/NIMANMONTH, Parameters: NINVPRECASE, NIMANMONTH
+Calculation String: 22.00/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:(NMAGREAL/NEMPLREAL)*100, Parameters: , NMAGREAL, NEMPLREAL
+Calculation String: (7.00/44.00)*100
+Calculation Result: 15.909090909090908
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NMAGATESTREAL/NMAGATESTTO)*100, Parameters: , NMAGATESTREAL, NMAGATESTTO
+Calculation String: (55.00/12.00)*100
+Calculation Result: 458.3333333333333
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0

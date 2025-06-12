@@ -5,6 +5,8 @@ using CielaDocs.Shared.DataAccess;
 
 using Dapper;
 
+using DocumentFormat.OpenXml.Spreadsheet;
+
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -3547,16 +3549,33 @@ namespace CielaDocs.Shared.Repository
                 var r2 = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault();
                 var r3 = ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault();
 
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r15 = ret.Where(x => x.RowNum == 15).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r19 = ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault();
+                var r20 = ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault();
+                var r22 = ret.Where(x => x.RowNum == 22).Select(x => x.Nvalue).FirstOrDefault();
+
+                var row21= ret.FirstOrDefault(p => p.RowNum == 21);
+                if (row21 != null) row21.Nvalue = r22;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18+r19+r20;
+
+
                 var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
-                if (row12 != null) row12.Nvalue = r13;
+                if (row12 != null) row12.Nvalue = r13+r14+r15+r16;
+
                 var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
                 if (row9 != null) row9.Nvalue = r10+r11;
+
                 var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
                 if (row4 != null) row4.Nvalue = r8 + r7+r6+r5;
+
                 var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
-                if (row2 != null) row2.Nvalue = r8 + r7 + r6 + r5+r10+r11+r13;
+                if (row2 != null) row2.Nvalue = r13+r14+r15+r16+r18+r19+r20;
                 var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
-                if (row1 != null) row1.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13+r3;
+                if (row1 != null) row1.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13 + r3 + r14 + r15 + r16 + r18 + r19 + r20 + r22;
 
             }
             return ret;
@@ -4219,26 +4238,43 @@ namespace CielaDocs.Shared.Repository
                     rec.CourtName = item?.CourtName ?? string.Empty;
                     ret.Add(rec);
                 }
-                var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
-                var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
-                var r11 = ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
-                var r8 = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault();
-                var r7 = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault();
-                var r6 = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault();
-                var r5 = ret.Where(x => x.RowNum == 5).Select(x => x.Nvalue).FirstOrDefault();
-                var r2 = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault();
-                var r3 = ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault();
+                 var r13 = ret.Where(x => x.RowNum == 13).Select(x => x.Nvalue).FirstOrDefault();
+                 var r10 = ret.Where(x => x.RowNum == 10).Select(x => x.Nvalue).FirstOrDefault();
+                 var r11= ret.Where(x => x.RowNum == 11).Select(x => x.Nvalue).FirstOrDefault();
+                 var r8 = ret.Where(x => x.RowNum == 8).Select(x => x.Nvalue).FirstOrDefault();
+                 var r7 = ret.Where(x => x.RowNum == 7).Select(x => x.Nvalue).FirstOrDefault();
+                 var r6 = ret.Where(x => x.RowNum == 6).Select(x => x.Nvalue).FirstOrDefault();
+                 var r5 = ret.Where(x => x.RowNum == 5).Select(x => x.Nvalue).FirstOrDefault();
+                 var r2 = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault();
+                 var r3 = ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault();
 
-                var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
-                if (row12 != null) row12.Nvalue = r13;
-                var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
-                if (row9 != null) row9.Nvalue = r10 + r11;
-                var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
-                if (row4 != null) row4.Nvalue = r8 + r7 + r6 + r5;
-                var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
-                if (row2 != null) row2.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13;
-                var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
-                if (row1 != null) row1.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13 + r3;
+                 var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                 var r15 = ret.Where(x => x.RowNum == 15).Select(x => x.Nvalue).FirstOrDefault();
+                 var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                 var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                 var r19 = ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault();
+                 var r20 = ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault();
+                 var r22 = ret.Where(x => x.RowNum == 22).Select(x => x.Nvalue).FirstOrDefault();
+
+                 var row21= ret.FirstOrDefault(p => p.RowNum == 21);
+                 if (row21 != null) row21.Nvalue = r22;
+                 var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                 if (row17 != null) row17.Nvalue = r18+r19+r20;
+
+
+                 var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
+                 if (row12 != null) row12.Nvalue = r13+r14+r15+r16;
+
+                 var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
+                 if (row9 != null) row9.Nvalue = r10+r11;
+
+                 var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
+                 if (row4 != null) row4.Nvalue = r8 + r7+r6+r5;
+
+                 var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
+                 if (row2 != null) row2.Nvalue = r13+r14+r15+r16+r18+r19+r20;
+                 var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
+                 if (row1 != null) row1.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13 + r3 + r14 + r15 + r16 + r18 + r19 + r20 + r22;
             }
             return ret;
         }
@@ -4898,16 +4934,33 @@ namespace CielaDocs.Shared.Repository
                 var r2 = ret.Where(x => x.RowNum == 2).Select(x => x.Nvalue).FirstOrDefault();
                 var r3 = ret.Where(x => x.RowNum == 3).Select(x => x.Nvalue).FirstOrDefault();
 
+                var r14 = ret.Where(x => x.RowNum == 14).Select(x => x.Nvalue).FirstOrDefault();
+                var r15 = ret.Where(x => x.RowNum == 15).Select(x => x.Nvalue).FirstOrDefault();
+                var r16 = ret.Where(x => x.RowNum == 16).Select(x => x.Nvalue).FirstOrDefault();
+                var r18 = ret.Where(x => x.RowNum == 18).Select(x => x.Nvalue).FirstOrDefault();
+                var r19 = ret.Where(x => x.RowNum == 19).Select(x => x.Nvalue).FirstOrDefault();
+                var r20 = ret.Where(x => x.RowNum == 20).Select(x => x.Nvalue).FirstOrDefault();
+                var r22 = ret.Where(x => x.RowNum == 22).Select(x => x.Nvalue).FirstOrDefault();
+
+                var row21 = ret.FirstOrDefault(p => p.RowNum == 21);
+                if (row21 != null) row21.Nvalue = r22;
+                var row17 = ret.FirstOrDefault(p => p.RowNum == 17);
+                if (row17 != null) row17.Nvalue = r18 + r19 + r20;
+
+
                 var row12 = ret.FirstOrDefault(p => p.RowNum == 12);
-                if (row12 != null) row12.Nvalue = r13;
+                if (row12 != null) row12.Nvalue = r13 + r14 + r15 + r16;
+
                 var row9 = ret.FirstOrDefault(p => p.RowNum == 9);
                 if (row9 != null) row9.Nvalue = r10 + r11;
+
                 var row4 = ret.FirstOrDefault(p => p.RowNum == 4);
                 if (row4 != null) row4.Nvalue = r8 + r7 + r6 + r5;
+
                 var row2 = ret.FirstOrDefault(p => p.RowNum == 2);
-                if (row2 != null) row2.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13;
+                if (row2 != null) row2.Nvalue = r13 + r14 + r15 + r16 + r18 + r19 + r20;
                 var row1 = ret.FirstOrDefault(p => p.RowNum == 1);
-                if (row1 != null) row1.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13 + r3;
+                if (row1 != null) row1.Nvalue = r8 + r7 + r6 + r5 + r10 + r11 + r13 + r3 + r14 + r15 + r16 + r18 + r19 + r20 + r22;
             }
             return ret;
         }

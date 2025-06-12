@@ -1,0 +1,189 @@
+﻿Formula:(NCASEOLD12/NCASEEP)*100, Parameters: , NCASEOLD12, NCASEEP
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NTIMECASE/NCASEEP), Parameters: , NTIMECASE, NCASEEP
+Calculation String: (0/0)
+Calculation Result: 0
+Calculation String: (0/0)
+Calculation Result: 0
+Calculation String: (0/0)
+Calculation Result: 0
+Calculation String: (0/0)
+Calculation Result: 0
+Formula:(NCASENEW/NCASEEP)*100, Parameters: , NCASENEW, NCASEEP
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (20.00/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NCASEEP/NCASE)*100, Parameters: , NCASEEP, NCASE
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NCASECOMPL/NCASENEW)*100, Parameters: , NCASECOMPL, NCASENEW
+Calculation String: (10.00/0)*100
+Calculation Result: 0
+Calculation String: (0/20.00)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NCASECOMPLREAL/NCASECOMPL)*100, Parameters: , NCASECOMPLREAL, NCASECOMPL
+Calculation String: (0/10.00)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NTIMECASECOMPLREAL/NCASECOMPLREAL)*100, Parameters: , NTIMECASECOMPLREAL, NCASECOMPLREAL
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NCASETERM/NCASECOMPL)*100, Parameters: , NCASETERM, NCASECOMPL
+Calculation String: (0/10.00)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NPREPNEW/NPREP)*100, Parameters: , NPREPNEW, NPREP
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NPREPCOMPL/NPREPNEW)*100, Parameters: , NPREPCOMPL, NPREPNEW
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NPREPNOTC/NPREP)*100, Parameters: , NPREPNOTC, NPREP
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:NTIMEPREPNOTS/NPREPNOTC, Parameters: NTIMEPREPNOTS, NPREPNOTC
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:(NPRECASENEW/NPRECASE)*100, Parameters: , NPRECASENEW, NPRECASE
+Calculation String: (0/50.00)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NPRECASENOTENDEDINTIME/NPRECASE)*100, Parameters: , NPRECASENOTENDEDINTIME, NPRECASE
+Calculation String: (0/50.00)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NPRECASENOTENDED/NPRECASE)*100, Parameters: , NPRECASENOTENDED, NPRECASE
+Calculation String: (0/50.00)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NPRECASENOTENDEDINTIME/NPRECASENOTENDED)*100, Parameters: , NPRECASENOTENDEDINTIME, NPRECASENOTENDED
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NPRECASECOMPL/NPRECASENEW)*100, Parameters: , NPRECASECOMPL, NPRECASENEW
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (1000.00/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:NTIMEPRECASECOMPLREAL/NPRECASECOMPLREAL, Parameters: NTIMEPRECASECOMPLREAL, NPRECASECOMPLREAL
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:(NPRECASENOTCOMPL/NPRECASE)*100, Parameters: , NPRECASENOTCOMPL, NPRECASE
+Calculation String: (0/50.00)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:NTIMEPRECASENOTCOMPL/PRECASENOTCOMPL, Parameters: NTIMEPRECASENOTCOMPL, PRECASENOTCOMPL
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:(NPRECASENOTCOMPLINTIME/NPRECASENOTCOMPL)*100, Parameters: , NPRECASENOTCOMPLINTIME, NPRECASENOTCOMPL
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0

@@ -65,6 +65,7 @@
                         <div id="button"></div>
                         <div id="buttonExcelViewer"></div>
                         <div id="autoLoad"></div>
+                        <div id="autoSummarize"></div>
                         <div class="content" id="selected-files">
                         </div>
                     </div>
@@ -147,7 +148,13 @@
                 loadFromFolderKontoFile();
             },
         });
-
+         $('#autoSummarize').dxButton({
+            text: 'Обобщен анализ',
+            type: 'success',
+            onClick() {
+                summarizeFromFolderKontoFile();
+            },
+        });
         function uploadFile() {
             var files = document.getElementById('uploadBtn').files;
             if (files.length > 0) {
@@ -399,6 +406,41 @@
                 else {
                     $('#divUploading').hide();
                   
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+
+            })
+            .fail(function (e) {
+
+                $('#divUploading').hide();
+                DevExpress.ui.dialog.alert('Failed to load! ' + e);
+            });
+
+    };
+     function summarizeFromFolderKontoFile() {
+
+
+
+        $('#divUploading').show();
+
+        $.ajax({
+            beforeSend: function (request) {
+                request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
+            },
+            url: "@Url.Action("SummarizeFromFolderKontoFile", "ImportKonto")", method: 'POST',data: {isWriteLog: $('#cbWriteLog').dxCheckBox('instance').option('value') }
+
+        })
+            .done(function (result) {
+                if (result.success === true) {
+
+                    $('#divUploading').hide();
+                       window.location = "@Url.Action("DownloadFile", "ExcelViewer")" + '?id=' + result.resultfile;
+                       window.location = "@Url.Action("DownloadFile", "ExcelViewer")" + '?id=' + result.resultExcelFile;
+                    DevExpress.ui.dialog.alert(result.msg);
+                }
+                else {
+                    $('#divUploading').hide();
+
                     DevExpress.ui.dialog.alert(result.msg);
                 }
 

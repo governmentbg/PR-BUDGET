@@ -364,13 +364,22 @@ namespace CielaDocs.SjcWeb.Controllers
             }
         }
         [HttpPost]
-        public async Task<JsonResult> SetAppInputCommonFilter(int? appId, int? ny, int? currencyId,int? courtId, int? currencyMeasureId, bool? isLocked)
+        public async Task<JsonResult> SetAppInputCommonFilter(int? typeofinput, int? appId, int? ny, int? currencyId,int? courtId, int? currencyMeasureId, bool? isLocked)
         {
             try
             {
-                if ((appId == null) || (appId < 1) || (ny == null) || (ny < 2022))
+                if (typeofinput == 0)
                 {
-                    return Json(new { success = false, msg = "Не сте избрали коректни условия! " });
+                    if ((appId == null) || (appId < 1) || (ny == null) || (ny < 2022))
+                    {
+                        return Json(new { success = false, msg = "Не сте избрали коректни условия! " });
+                    }
+                }
+                if (typeofinput == 1) {
+                    if ((courtId == null) || (courtId < 1) || (ny == null) || (ny < 2022))
+                    {
+                        return Json(new { success = false, msg = "Не сте избрали отчетна единица! " });
+                    }
                 }
 
                 HttpContext.Session.Remove("FilterAppInputCommonSess");

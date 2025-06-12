@@ -1,0 +1,163 @@
+﻿Formula:(NCASECOMPL/NCASE)*100, Parameters: , NCASECOMPL, NCASE
+Calculation String: (20.00/100.00)*100
+Calculation Result: 20
+Calculation String: (30.00/90.00)*100
+Calculation Result: 33.33333333333333
+Calculation String: (10.00/30.00)*100
+Calculation Result: 33.33333333333333
+Calculation String: (25.00/40.00)*100
+Calculation Result: 62.5
+Formula:(NTIMECASECOMPL/NCASECOMPL), Parameters: , NTIMECASECOMPL, NCASECOMPL
+Calculation String: (0/20.00)
+Calculation Result: 0
+Calculation String: (0/30.00)
+Calculation Result: 0
+Calculation String: (0/10.00)
+Calculation Result: 0
+Calculation String: (0/25.00)
+Calculation Result: 0
+Formula:(NCASECOMPLINTIME/NCASECOMPL)*100, Parameters: , NCASECOMPLINTIME, NCASECOMPL
+Calculation String: (0/20.00)*100
+Calculation Result: 0
+Calculation String: (0/30.00)*100
+Calculation Result: 0
+Calculation String: (0/10.00)*100
+Calculation Result: 0
+Calculation String: (0/25.00)*100
+Calculation Result: 0
+Formula:(NPREPCOMPL/NPREP)*100, Parameters: , NPREPCOMPL, NPREP
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:NTIMEPREPCOMPL/NPREPCOMPL, Parameters: NTIMEPREPCOMPL, NPREPCOMPL
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:(NPREPCOMPLINTIME/NPREPCOMPL)*100, Parameters: , NPREPCOMPLINTIME, NPREPCOMPL
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NPRECASEENDED/NPRECASE)*100, Parameters: , NPRECASEENDED, NPRECASE
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NPRECASEENDEDINTIME/NPRECASEENDED)*100, Parameters: , NPRECASEENDEDINTIME, NPRECASEENDED
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NPRECASECOMPL/NPRECASE)*100, Parameters: , NPRECASECOMPL, NPRECASE
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NPRECASECOMPLREALINTIME/NPRECASECOMPLREAL)*100, Parameters: , NPRECASECOMPLREALINTIME, NPRECASECOMPLREAL
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NACT/NPRECASECOMPL)*100, Parameters: , NACT, NPRECASECOMPL
+Calculation String: (10.00/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:, Parameters: 
+Formula:(NCOURTACTEXEC/NCOURTACT)*100, Parameters: , NCOURTACTEXEC, NCOURTACT
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NCOURTACTEXECCOMPL/NCOURTACT)*100, Parameters: , NCOURTACTEXECCOMPL, NCOURTACT
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NTIMECOURTACTEXEC/NCOURTACTEXECCOMPL)*100, Parameters: , NTIMECOURTACTEXEC, NCOURTACTEXECCOMPL
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NUMCASECLOSEDINV/NINVPRECASE)*100, Parameters: , NUMCASECLOSEDINV, NINVPRECASE
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:NMAGSANCT, Parameters: NMAGSANCT
+Calculation String: 20.00
+Calculation Result: 20
+Calculation String: 30.00
+Calculation Result: 30
+Calculation String: 40.00
+Calculation Result: 40
+Calculation String: 50.00
+Calculation Result: 50
+Formula:NEMPLSANCT, Parameters: NEMPLSANCT
+Calculation String: 5.00
+Calculation Result: 5
+Calculation String: 10.00
+Calculation Result: 10
+Calculation String: 15.00
+Calculation Result: 15
+Calculation String: 20.00
+Calculation Result: 20
+Formula:NMAGSANCTPROP, Parameters: NMAGSANCTPROP
+Calculation String: 30.00
+Calculation Result: 30
+Calculation String: 40.00
+Calculation Result: 40
+Calculation String: 50.00
+Calculation Result: 50
+Calculation String: 60.00
+Calculation Result: 60

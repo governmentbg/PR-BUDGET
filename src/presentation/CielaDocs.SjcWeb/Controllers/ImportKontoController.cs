@@ -27,6 +27,7 @@ using Newtonsoft.Json.Linq;
 
 using NuGet.Configuration;
 
+using System.ComponentModel;
 using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -254,6 +255,159 @@ namespace CielaDocs.SjcWeb.Controllers
             catch (Exception ex )
             {
                 return Json(new { msg = "Грешка при импорт на файлове: " + ex?.Message, success = false });
+            }
+        }
+        public async Task<JsonResult> SummarizeFromFolderKontoFile(bool? isWriteLog)
+        {
+           
+            try
+            {
+                var summary = new Dictionary<string, KontoRowData>(StringComparer.OrdinalIgnoreCase);
+                int nCnt = 0; int fileCnt = 0; StringBuilder sb = new StringBuilder();
+                string[] filePaths = System.IO.Directory.GetFiles(System.IO.Path.Combine(_env.WebRootPath + "/uploads/"));
+                foreach (string filePath in filePaths)
+                {
+
+                    var res = await SummarizeKontoFile(System.IO.Path.GetFileName(filePath), summary);
+                    fileCnt += res.Item1;
+                    nCnt += res.Item2;
+                    if (res.Item4 != null)
+                    {
+                        foreach (var row in res.Item4) {
+                            if (summary.ContainsKey(row.Code))
+                            {
+                                summary[row.Code].Value += row.Value;
+                            }
+                            else
+                            {
+                                summary[row.Code] = new KontoRowData
+                                {
+                                    Code = row.Code,
+                                    Name = row.Name,
+                                    Value = row.Value
+                                };
+                            }
+                        }
+                    }
+                    sb.AppendLine(res.Item3);
+
+                }
+
+                var resultExcelfile = $"Summarized_konto{Guid.NewGuid().ToString("N")}.xlsx";
+                string resultExcelfilepath = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", resultExcelfile);
+                using var workbook = new XLWorkbook();
+                var sheet = workbook.AddWorksheet("Summary");
+                sheet.Cell(1, 1).Value = "Code";
+                sheet.Cell(1, 2).Value = "Name";
+                sheet.Cell(1, 3).Value = "Value";
+
+                int rowIndex = 2;
+                foreach (var row in summary.Values)
+                {
+                    sheet.Cell(rowIndex, 1).Value = row.Code;
+                    sheet.Cell(rowIndex, 2).Value = row.Name;
+                    sheet.Cell(rowIndex, 3).Value = row.Value;
+                    rowIndex++;
+                }
+
+                workbook.SaveAs(resultExcelfilepath);
+
+                var resultfile = $"import_konto{Guid.NewGuid().ToString("N")}.txt";
+                string resultfilepath = System.IO.Path.Combine(_env.WebRootPath + "/Temp/", resultfile);
+                using (StreamWriter writer = new StreamWriter(resultfilepath, false, Encoding.UTF8))
+                {
+                    writer.Write(sb.ToString());
+                }
+                return Json(new { msg = $"Процедурата по анализ на месечни данни от Конто приключи. Файлове с данни {fileCnt}, анализирани записи: {nCnt}", success = true, resultfile = resultfile ,resultExcelFile=resultExcelfile});
+            }
+            catch (Exception ex)
+            {
+                return Json(new { msg = "Грешка при импорт на файлове: " + ex?.Message, success = false });
+            }
+        }
+        private async Task<(int, int, string,IEnumerable<KontoRowData>?)> SummarizeKontoFile(string fileName, Dictionary<string,KontoRowData> data)
+        {
+            try
+            {
+
+                // Check the File is received
+
+                if (string.IsNullOrWhiteSpace(fileName))
+                    return (0, 0, "Липсва име на файл",null);
+
+                string file = System.IO.Path.Combine(_env.WebRootPath + "/uploads/", fileName);
+                var supportedTypes = new[] { "xlsm", "xls", "xlsx" };
+                var fileExt = System.IO.Path.GetExtension(fileName).Substring(1);
+                if (!supportedTypes.Contains(fileExt))
+                {
+                    return (0, 0, $"Невалиден файл за зареждане на данни {fileName}",null);
+                }
+                string sFileNameOnly = System.IO.Path.GetFileNameWithoutExtension(fileName);
+                string[] par = sFileNameOnly.Split('_');
+                string nm = par[2].Substring(0, 2);
+                string ny = par[2].Substring(2, 2);
+
+                string kontoCode = par[3];
+                int.TryParse(nm, out int nMonth);
+                int.TryParse("20" + ny, out int nYear);
+                if ((nMonth < 1) && (nMonth > 12) && (nYear < 2022) && (nYear > 2050))
+                {
+                    return (0, 0, $"Неразпознат месец: {nm} от формата на файла или година:{ny} файл:{fileName}",null);
+                }
+                //===========check active period restriction========================
+                var currentY = await _sjcServiceV2.GetCurrentYearAsync();
+                if ((nYear < currentY) || (nYear > currentY))
+                {
+                    return (0, 0, $"Година {nYear} е извън обхвата на текущия период! Моля проверете! файл:{fileName}",null);
+                }
+             
+                //-------end check locked period------------------------
+                var court = await _sjcRepo.GetCourtByKontoCodeAsync(kontoCode);
+                if (court == null)
+                {
+                    return (0, 0, $"Неоткрит код {kontoCode} на отчетна единица,файл:{fileName}",null);
+                }
+                int nCnt = 0;
+                List<KontoRowData> dic = new();
+                using (var excelWorkbook = new XLWorkbook(file))
+                {
+                    var nonEmptyDataRows = excelWorkbook.Worksheet(1).RowsUsed();
+                    var rowCount = excelWorkbook.Worksheet(1).LastRowUsed().RowNumber();
+                    var columnCount = excelWorkbook.Worksheet(1).LastColumnUsed().ColumnNumber();
+                    int row = 12;
+                    string name = string.Empty;
+                    string code = string.Empty;
+                    string value = string.Empty;
+
+                    while (row <= rowCount)
+                    {
+                        name = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 2).GetString();
+                        code = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 3).GetString();
+                        value = excelWorkbook.Worksheets.Worksheet(1).Cell(row, 4).GetString();
+                        if (!string.IsNullOrWhiteSpace(value))
+                        {
+                            if (decimal.TryParse(value, out decimal d))
+                            {
+
+                                dic.Add(new KontoRowData { Name = name, Code = Regex.Replace(code, @"\s+", ""), Value = d });
+                            }
+                        }
+
+                        row++;
+                        nCnt++;
+
+                    }
+                }
+               
+               
+
+                return (1, nCnt, $"Обработен файл {fileName}",dic);
+
+
+            }
+            catch (Exception ex)
+            {
+                return (0, 0, $"Грешка при обработка на файл:{fileName}, грешка:{ex?.ToString()}",null);
             }
         }
         private async Task<(int,int,string)> LoadKontoFile(string fileName, bool? isWriteLog)

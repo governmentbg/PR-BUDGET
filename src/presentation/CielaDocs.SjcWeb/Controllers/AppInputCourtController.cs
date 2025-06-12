@@ -1,11 +1,13 @@
 ﻿using CielaDocs.Application.Models;
 using CielaDocs.Shared.Services;
 using CielaDocs.SjcWeb.Extensions;
+using CielaDocs.SjcWeb.Models;
 
 using ClosedXML.Excel;
 
 using Microsoft.AspNetCore.Mvc;
 
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using System.Text;
@@ -32,7 +34,7 @@ namespace CielaDocs.SjcWeb.Controllers
         public async Task<IActionResult> IndexAsync()
         {
             var filterData = HttpContext.Session.Get<FilterAppInputCommonVm>("FilterAppInputCommonSess") ?? new FilterAppInputCommonVm();
-            var app = await _sjcService.QueryRaw<AppVm>("SELECT * FROM App WHERE Id=@Id", new { Id = filterData.AppId });
+           // var app = await _sjcService.QueryRaw<AppVm>("SELECT * FROM App WHERE Id=@Id", new { Id = filterData.AppId });
             var activeYears = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
             
             int[] years = new int[] { activeYears?.Y1 ?? 0, activeYears?.Y2 ?? 0, activeYears?.Y3 ?? 0, activeYears?.Y4 ?? 0 };
@@ -48,7 +50,6 @@ namespace CielaDocs.SjcWeb.Controllers
             ViewBag.CourtId = filterData?.CourtId;
             ViewBag.Year = filterData?.Nyear;
             ViewBag.CourtName= await _sjcService.QueryRaw<string>("SELECT Name FROM Court WHERE Id=@Id", new { Id = filterData?.CourtId });
-            ViewBag.AppName = app?.Name ?? string.Empty;
             ViewBag.IsLocked = filterData?.IsLocked ?? false;
             return View();
         }
@@ -58,38 +59,38 @@ namespace CielaDocs.SjcWeb.Controllers
         {
 
             var inp = HttpContext.Session.Get<FilterAppInputCourtVm>("FilterAppInputCommonSess") ?? new FilterAppInputCourtVm();
-            string sql = $@"select a.Id,a.AppId,a.CourtId,a.MetricsFieldId,a.PlannedYear,a.EnteredDate, m.Code as MetricsFieldCode,m.Name as MetricsFieldName,a.Nvalue as nval1,b.nvalue as nval2,c.Nvalue as nval3,d.Nvalue as nval4
-                                   from AppInputCourt a
-                                    left join AppInputCourt b on a.AppId=b.AppId and a.CourtId=b.CourtId and a.MetricsFieldId=b.MetricsFieldId and b.PlannedYear=a.PlannedYear+1
-                                    left join AppInputCourt c on a.AppId=c.AppId and a.CourtId=c.CourtId and a.MetricsFieldId=c.MetricsFieldId and c.PlannedYear=a.PlannedYear+2
-                                    left join AppInputCourt d on a.AppId=d.AppId and a.CourtId=d.CourtId and a.MetricsFieldId=d.MetricsFieldId and d.PlannedYear=a.PlannedYear+3
-                                    left join MetricsField m on a.MetricsFieldId=m.id
-                                 AND m.Id IN (
-                                     SELECT DISTINCT admf.MetricsFieldId
-                                     FROM AppDefMetricsField admf
-                                     WHERE admf.AppDefId IN (
-                                         SELECT ad.Id FROM AppDef ad WHERE ad.AppId ={inp?.AppId ?? 0}
-                                     )
-                                 )
-                                    where a.id>0 and a.AppId={inp?.AppId ?? 0} and a.CourtId={inp?.CourtId} and a.plannedYear={inp?.Nyear ?? 0} and m.code is not null
-                                GROUP BY 
-                                    a.Id,
-                                    a.AppId,
+          
+
+            string sql = $@"SELECT 
+                                  CAST(
+                                        CONCAT(
+                                            a.CourtId, '-', 
+                                            a.MetricsFieldId
+                                        ) AS VARCHAR(100)
+                                    ) AS Id,
                                     a.CourtId,
                                     a.MetricsFieldId,
-                                    a.PlannedYear,
-	                                a.EnteredDate,
-                                    m.Code,
-                                    m.Name,
-	                                a.Nvalue,
-	                                b.Nvalue,
-	                                c.Nvalue,
-	                                d.Nvalue
-                                ORDER BY 
-                                    a.Id,
-                                    a.AppId,
+                                    m.Code AS MetricsFieldCode,
+                                    m.Name AS MetricsFieldName,
+                                    MAX(CASE WHEN a.PlannedYear = {inp?.Nyear} THEN a.Nvalue END) AS nval1,
+                                    MAX(CASE WHEN a.PlannedYear = {inp?.Nyear + 1} THEN a.Nvalue END) AS nval2,
+                                    MAX(CASE WHEN a.PlannedYear = {inp?.Nyear + 2} THEN a.Nvalue END) AS nval3,
+                                    MAX(CASE WHEN a.PlannedYear = {inp?.Nyear + 3} THEN a.Nvalue END) AS nval4
+                                FROM AppInputCourt a
+                                LEFT JOIN MetricsField m ON a.MetricsFieldId = m.Id
+                                WHERE 
+                                    a.CourtId = {inp?.CourtId}
+                                    AND a.PlannedYear IN ({inp?.Nyear}, {inp?.Nyear + 1}, {inp?.Nyear + 2}, {inp?.Nyear + 3})
+                                    AND m.Code IS NOT NULL
+                                GROUP BY 
                                     a.CourtId,
-                                    m.Code";
+                                    a.MetricsFieldId,
+                                    m.Code,
+                                    m.Name
+                                ORDER BY 
+                                    a.CourtId,
+	                                a.MetricsFieldId,
+                                    m.Code;";
             try
             {
                 var data = await _sjcService.QueryRawList<AppInputCourt3YVm>(sql);
@@ -103,8 +104,29 @@ namespace CielaDocs.SjcWeb.Controllers
         }
 
         [HttpPost]
-        public async Task<JsonResult> UpdateAppInputDataItem(int key, string values)
+        public async Task<JsonResult> UpdateAppInputDataItem(string key, string values)
         {
+            //dynamic objval = Newtonsoft.Json.JsonConvert.DeserializeObject(values);
+            //var dtype1 = objval.GetType();
+            //decimal n = 0;
+            //string name = string.Empty;
+            //if (objval.GetType() == typeof(JObject))
+            //{
+            //    foreach (var oelem in objval)
+            //    {
+            //        name = oelem.Name;
+            //        decimal.TryParse(oelem.Value.ToString(), out n);
+            //    }
+            //}
+            //if (!string.IsNullOrWhiteSpace(name))
+            //{
+            //    // _ = await _sjcRepo.UpdateProgramDataValueByIdAsync(key,name, n);
+
+            //    _ = await UpdateAppInputCourtData3YValueByIdAsync(key, name, n);
+
+
+
+            //}
             dynamic objval = Newtonsoft.Json.JsonConvert.DeserializeObject(values);
             var dtype1 = objval.GetType();
             decimal n = 0;
@@ -117,29 +139,36 @@ namespace CielaDocs.SjcWeb.Controllers
                     decimal.TryParse(oelem.Value.ToString(), out n);
                 }
             }
-            if (!string.IsNullOrWhiteSpace(name))
+            var parts = key.Split('-');
+            var courtId = int.Parse(parts[0]);
+            var metricsFieldId = int.Parse(parts[1]);
+
+            var updatedValues = JsonConvert.DeserializeObject<Dictionary<string, object>>(values);
+            var activeYears = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+            foreach (var entry in updatedValues)
             {
-                // _ = await _sjcRepo.UpdateProgramDataValueByIdAsync(key,name, n);
+                var field = entry.Key; // "nval2", etc.
+                var value = entry.Value;
 
-                _ = await UpdateAppInputCourtData3YValueByIdAsync(key, name, n);
+                int offset = field.ToLower() switch
+                {
+                    "nval1" => 0,
+                    "nval2" => 1,
+                    "nval3" => 2,
+                    "nval4" => 3,
+                    _ => throw new InvalidOperationException("Invalid column name.")
+                };
 
+                int plannedYear = (activeYears?.Y1??0) + offset;
 
-
+              _= await UpdateAppInputCourtData3YValueByIdAsync(courtId, metricsFieldId, plannedYear, n);
             }
             return Json(string.Empty);
         }
-        private async Task<int> UpdateAppInputCourtData3YValueByIdAsync(int? id, string fieldName, decimal? val)
+        private async Task<int> UpdateAppInputCourtData3YValueByIdAsync(int? courtId, int? metricsFieldId,int? plannedYear, decimal? val)
         {
-            var activePeriod = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
-            int currentYear = activePeriod?.Y1 ?? 0;
-            var rec = await _sjcService.QueryRaw<AppInputCourtMinVm>("SELECT * FROM AppInputCourt WHERE Id=@Id", new { Id = id });
-            switch (fieldName.ToLower())
-            {
-                case "nval2": currentYear = currentYear + 1; break;
-                case "nval3": currentYear = currentYear + 2; break;
-                case "nval4": currentYear = currentYear + 3; break;
-            }
-            var sql = $@"UPDATE AppInputCourt SET Nvalue = {val}, EnteredDate=getDate() WHERE AppId={rec?.AppId ?? 0} and CourtId={rec?.CourtId} and MetricsFieldId={rec?.MetricsFieldId ?? 0} and PlannedYear={currentYear}";
+     
+            var sql = $@"UPDATE AppInputCourt SET Nvalue = {val}, EnteredDate=getDate() WHERE CourtId={courtId} and MetricsFieldId={metricsFieldId ?? 0} and PlannedYear={plannedYear}";
             _ = await _sjcService.ExecuteRawSql(sql);
             return 1;
         }
@@ -201,7 +230,7 @@ namespace CielaDocs.SjcWeb.Controllers
                         decimal.TryParse(value4, out nv4);
                         if (!string.IsNullOrEmpty(code))
                         {
-                            dic.Add(new AppInputCourt3YVm {AppId=appId,CourtId=courtId,MetricsFieldCode=Regex.Replace(code, @"\s+", ""), Nval1=nv1, Nval2=nv2, Nval3=nv3, Nval4=nv4});
+                            dic.Add(new AppInputCourt3YVm {CourtId=courtId,MetricsFieldCode=Regex.Replace(code, @"\s+", ""), Nval1=nv1, Nval2=nv2, Nval3=nv3, Nval4=nv4});
                         }
                         row++;
                     }
@@ -211,7 +240,7 @@ namespace CielaDocs.SjcWeb.Controllers
                 {
                     
                     nMetricsFieldId = await _sjcService.QueryRaw<int?>($"SELECT top 1 id FROM MetricsField WHERE code='{item.MetricsFieldCode}'") ?? 0;
-                    int foundId1 = await _sjcService.QueryRaw<int?>($"SELECT top 1 id FROM AppInputCourt WHERE AppId={item.AppId} and courtId={courtId ?? 0} and MetricsFieldId={nMetricsFieldId} and PlannedYear={currentYear}") ?? 0;
+                    int foundId1 = await _sjcService.QueryRaw<int?>($"SELECT top 1 id FROM AppInputCourt WHERE courtId={courtId ?? 0} and MetricsFieldId={nMetricsFieldId} and PlannedYear={currentYear}") ?? 0;
                     if (foundId1 == 0)
                     {
                         _ = await _sjcService.ExecuteRawSql($@"INSERT INTO [dbo].[AppInputCourt]([AppId],[CourtId],[MetricsFieldId],[PlannedYear],[Nvalue],[EnteredDate])
@@ -222,7 +251,7 @@ namespace CielaDocs.SjcWeb.Controllers
                         _ = await _sjcService.ExecuteRawSql($@"Update [dbo].[AppInputCourt] set Nvalue={item.Nval1},EnteredDate=getDate() WHERE Id={foundId1}");
 
                     }
-                    int foundId2 = await _sjcService.QueryRaw<int?>($"SELECT top 1 id FROM AppInputCourt WHERE AppId={item.AppId} and courtId={courtId ?? 0} and MetricsFieldId={nMetricsFieldId} and PlannedYear={currentYear + 1}") ?? 0;
+                    int foundId2 = await _sjcService.QueryRaw<int?>($"SELECT top 1 id FROM AppInputCourt WHERE courtId={courtId ?? 0} and MetricsFieldId={nMetricsFieldId} and PlannedYear={currentYear + 1}") ?? 0;
                     if (foundId2 == 0)
                     {
                         _ = await _sjcService.ExecuteRawSql($@"INSERT INTO [dbo].[AppInputCourt]([AppId],[CourtId],[MetricsFieldId],[PlannedYear],[Nvalue],[EnteredDate])
@@ -233,7 +262,7 @@ namespace CielaDocs.SjcWeb.Controllers
                         _ = await _sjcService.ExecuteRawSql($@"Update [dbo].[AppInputCourt] set Nvalue={item.Nval2},EnteredDate=getDate() WHERE Id={foundId2}");
 
                     }
-                    int foundId3 = await _sjcService.QueryRaw<int?>($"SELECT top 1 id FROM AppInputCourt WHERE AppId={item.AppId} and courtId={courtId ?? 0} and MetricsFieldId={nMetricsFieldId} and PlannedYear={currentYear + 2}") ?? 0;
+                    int foundId3 = await _sjcService.QueryRaw<int?>($"SELECT top 1 id FROM AppInputCourt WHERE  courtId={courtId ?? 0} and MetricsFieldId={nMetricsFieldId} and PlannedYear={currentYear + 2}") ?? 0;
                     if (foundId3 == 0)
                     {
                         _ = await _sjcService.ExecuteRawSql($@"INSERT INTO [dbo].[AppInputCourt]([AppId],[CourtId],[MetricsFieldId],[PlannedYear],[Nvalue],[EnteredDate])
@@ -244,7 +273,7 @@ namespace CielaDocs.SjcWeb.Controllers
                         _ = await _sjcService.ExecuteRawSql($@"Update [dbo].[AppInputCourt] set Nvalue={item.Nval3},EnteredDate=getDate() WHERE Id={foundId3}");
 
                     }
-                    int foundId4 = await _sjcService.QueryRaw<int?>($"SELECT top 1 id FROM AppInputCourt WHERE AppId={item.AppId} and courtId={courtId ?? 0} and MetricsFieldId={nMetricsFieldId} and PlannedYear={currentYear + 3}") ?? 0;
+                    int foundId4 = await _sjcService.QueryRaw<int?>($"SELECT top 1 id FROM AppInputCourt WHERE  courtId={courtId ?? 0} and MetricsFieldId={nMetricsFieldId} and PlannedYear={currentYear + 3}") ?? 0;
                     if (foundId4 == 0)
                     {
                         _ = await _sjcService.ExecuteRawSql($@"INSERT INTO [dbo].[AppInputCourt]([AppId],[CourtId],[MetricsFieldId],[PlannedYear],[Nvalue],[EnteredDate])

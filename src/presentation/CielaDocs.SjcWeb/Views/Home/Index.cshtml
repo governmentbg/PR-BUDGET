@@ -98,14 +98,14 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-3" id="importKonto">
                 <div class="capsule-at">
-                    <div id="currentAppResultFilter" style="margin-top:10px;">
-                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Bar.png")" alt="." />
-                        <p class="button_text-at">Отчитане на показатели по програми</p>
-                        <p>Резултати за показатели по програми...</p>
-                    </div>
+                    <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Excel-Import.png")" alt="." />
+                    <p class="button_text-at">Импорт на месечни данни от Конто</p>
+                    <p>Импорт на месечни данни от Конто...</p>
+
                 </div>
+
             </div>
              <div class="col-md-3">
                 <div class="capsule-at">
@@ -116,17 +116,15 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3" id="importKonto">
+            <div class="col-md-3">
                 <div class="capsule-at">
-
-                    <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Excel-Import.png")" alt="." />
-                    <p class="button_text-at">Импорт на месечни данни от Конто</p>
-                    <p>Импорт на месечни данни от Конто...</p>
-
+                    <div id="currentAppResultFilter" style="margin-top:10px;">
+                        <img class="imgCapsule-at img-responsive" src="@Url.Content("~/images/Bar.png")" alt="." />
+                        <p class="button_text-at">Отчитане на показатели по програми</p>
+                        <p>Резултати за показатели по програми...</p>
+                    </div>
                 </div>
-
             </div>
-         
         </div>
         <div class="row">
             <div class="col-md-3" id="reports">
@@ -640,7 +638,7 @@ $('#btnAnySave').on('click', function() {
                         request.setRequestHeader('@tokenSet.HeaderName', '@tokenSet.RequestToken')
                     },
 
-                         url: "@Url.Action("SetAppInputCommonFilter", "Home")", method: 'POST', data: { appId: itm[1], ny: itm[2],currencyId:itm[3],courtId:itm[4],currencyMeasureId:itm[5],isLocked:itm[6] }
+                                 url: "@Url.Action("SetAppInputCommonFilter", "Home")", method: 'POST', data: {typeofinput:itm[0], appId: itm[1], ny: itm[2],currencyId:itm[3],courtId:itm[4],currencyMeasureId:itm[5],isLocked:itm[6] }
 
                 }).done(function (result) {
                     if (result.success === true) {

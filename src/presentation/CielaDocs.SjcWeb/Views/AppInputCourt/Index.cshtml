@@ -5,7 +5,6 @@
 @{
     Layout = "~/Views/Shared/_LayoutMax.cshtml";
     var tokenSet = antiforgery.GetAndStoreTokens(Context);
-    var title = $" година: {ViewBag.Year}";
 
 }
 <div class="spacer_5"></div>
@@ -55,7 +54,7 @@
                                update(key, values) {
                                    return sendRequest(Ciela.baseUrl + "AppInputCourt/UpdateAppInputDataItem", 'Post', {
                                        key: key,
-                                       values: JSON.stringify(values),
+                                       values: JSON.stringify(values)
                                    });
                                },
                            }),

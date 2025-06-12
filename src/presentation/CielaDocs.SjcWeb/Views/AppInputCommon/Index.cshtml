@@ -5,11 +5,10 @@
 @{
     Layout = "~/Views/Shared/_LayoutMax.cshtml";
     var tokenSet = antiforgery.GetAndStoreTokens(Context);
-    var title = $" година: {ViewBag.Year}";
 
 }
 <div class="spacer_5"></div>
-<h4>Прогнозни стойности за входни данни за приложение:@ViewBag.AppName</h4>
+<h4>Прогнозни стойности за входни данни за :@ViewBag.CourtName</h4>
 
 <div class="row">
     <div class="col-3">
@@ -24,7 +23,7 @@
 <div class="spacer_5"></div>
 <div id="image-indicator"></div>
 <div id="grid"></div>
-@Html.Hidden("AppId", (int)ViewBag.AppId)
+
 @Html.Hidden("nYear", (int)ViewBag.Year)
 @section scripts {
     <script>

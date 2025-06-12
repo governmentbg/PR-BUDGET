@@ -100,8 +100,8 @@ namespace CielaDocs.SjcWeb.Controllers
             if (modelReport == 1)
             {
                 sql = $@"SELECT 
-                        a.Id,
-                        a.CourtId,
+                        a.MetricsFieldId as Id,
+                        0 as CourtId,
                         a.MetricsFieldId,
                         m.Code AS MetricsFieldCode,
                         m.Name AS MetricsFieldName,
@@ -135,15 +135,11 @@ namespace CielaDocs.SjcWeb.Controllers
                             )
                         )
                     GROUP BY 
-                        a.Id,
-                        a.CourtId,
                         a.MetricsFieldId,
                         a.PlannedYear,
                         m.Code,
                         m.Name
                     ORDER BY 
-                        a.Id,
-                        a.CourtId,
                         m.Code;";
                 var parameters = new Dictionary<string, object>
                 {
@@ -335,9 +331,9 @@ namespace CielaDocs.SjcWeb.Controllers
                         {
 
 
-                            worksheet.Cell("B" + rowOffset).Value = item.RowCode;
-                            worksheet.Cell("C" + rowOffset).Value = item.Name;
-                            worksheet.Cell("D" + rowOffset).Value = item.MeasureName;
+                            worksheet.Cell("B" + rowOffset).Value = item.RowCode?.Trim();
+                            worksheet.Cell("C" + rowOffset).Value = item.Name?.Trim();
+                            worksheet.Cell("D" + rowOffset).Value = item?.MeasureName?.Trim();
                             if (rezArray[0] != null)
                             {
                                 worksheet.Cell("E" + rowOffset).Value = (decimal)rezArray[0];
@@ -354,6 +350,15 @@ namespace CielaDocs.SjcWeb.Controllers
                             {
                                 worksheet.Cell("H" + rowOffset).Value = (decimal)rezArray[3];
                             }
+                        }
+                        else {
+                            worksheet.Cell("B" + rowOffset).Value = item.RowCode?.Trim();
+                            worksheet.Cell("C" + rowOffset).Value = item.Name?.Trim();
+                            worksheet.Cell("D" + rowOffset).Value = item?.MeasureName?.Trim();
+                            worksheet.Cell("E" + rowOffset).Value = 0;
+                            worksheet.Cell("F" + rowOffset).Value = 0;
+                            worksheet.Cell("G" + rowOffset).Value = 0;
+                            worksheet.Cell("H" + rowOffset).Value = 0;
                         }
                     }
                     excelWorkbook.SaveAs(excelResultFilePath);
@@ -376,6 +381,7 @@ namespace CielaDocs.SjcWeb.Controllers
         #endregion
         private async Task<decimal?> CalculateFormula(string formula, IEnumerable<AppInputSummarizedVm> appInputs, int nMonth, int nYear, StringBuilder sb)
         {
+            if(string.IsNullOrWhiteSpace(formula)) return null;
             var parameters = Toolbox.ExtractCalcArgs(formula);
             sb.AppendLine($"Formula:{formula}, Parameters: {string.Join(", ", parameters)}");
             var dic = new Dictionary<string, string>();
@@ -400,6 +406,7 @@ namespace CielaDocs.SjcWeb.Controllers
             {
                 foreach (var item in resultForCalc)
                 {
+                    if(item?.Code is null) continue;
                     if (!dic.ContainsKey(item.Code))
                     {
                         dic.Add(item.Code, item.Value?.ToString() ?? "0");
@@ -679,7 +686,6 @@ namespace CielaDocs.SjcWeb.Controllers
                 var activeYears = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
                 var appRequired = await _sjcService.QueryRawList<IdName>($@"SELECT c.Id,concat(c.Name,'  (',i.Name,')')  as Name
                                   
-	                              
                                    FROM AppRequired a
                                    left join InstitutionType i on a.InstitutionTypeId=i.id
 								   left join CourtType t on i.Id=t.InstitutionTypeId
@@ -687,10 +693,13 @@ namespace CielaDocs.SjcWeb.Controllers
                                    where a.AppId={appId}");
                 var filledCourts = await _sjcService.QueryRawList<int>($@"SELECT distinct courtId from AppInputCourt where appID={appId} and PlannedYear between {activeYears.Y1} and {activeYears?.Y4}");
                 var bIDs = new HashSet<int>(filledCourts);
-                var result = appRequired.Select(x => $"{x.Name} - {(bIDs.Contains(x.Id) ? "Подадени данни" : "Не са подадени данни")}")
-               .ToList();
-              
-                
+                var result = appRequired.Select(x => new CourtStatus
+                {
+                    Name = x.Name,
+                    Status = bIDs.Contains(x.Id) ? "Подадени данни" : "Неподадени данни"
+                }).ToList();
+
+
 
                 using (var excelWorkbook = new XLWorkbook(excelFile))
                 {
@@ -700,15 +709,74 @@ namespace CielaDocs.SjcWeb.Controllers
                     int rowOffset = 5;
                     for (int i = 0; i < result.Count; i++)
                     {
-                        string item = result[i];
+                       var item = result[i];
                         rowOffset += 1;
 
-                            worksheet.Cell("C" + rowOffset).Value = item;
-                        
+                        worksheet.Cell("C" + rowOffset).Value = item.Name;
+                        worksheet.Cell("D" + rowOffset).Value = item.Status;
+
                     }
                     excelWorkbook.SaveAs(excelResultFilePath);
                 }
               
+                return Json(new { success = true, msg = "ok", resultFile = resultFile });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in AppResultController.Index");
+                return Json(new { success = false, msg = ex.Message });
+            }
+        }
+        public async Task<JsonResult> GenerateCourtCurrentStatistics(string par)
+        {
+            try
+            {
+                string[] args = par.Split('|');
+                int.TryParse(args[0], out int appId);
+                int.TryParse(args[1], out int nMonth);
+                int.TryParse(args[2], out int nYear);
+
+               
+                string resultFile = Guid.NewGuid().ToString("N") + ".xlsx";
+                string excelResultFilePath = System.IO.Path.Combine(_env.WebRootPath + $"/Temp/{resultFile}");
+                string excelFile = System.IO.Path.Combine(_env.WebRootPath + $"/templates/AppCourtsCheck.xlsx");
+                var (appName, programName) = await GetProgramNameByAppId(appId);
+                var activeYears = await _sjcServiceV2.GetActiveBudgetPeriodAsync();
+                var appRequired = await _sjcService.QueryRawList<IdName>($@"SELECT c.Id,concat(c.Name,'  (',i.Name,')')  as Name
+                                  
+                                   FROM AppRequired a
+                                   left join InstitutionType i on a.InstitutionTypeId=i.id
+								   left join CourtType t on i.Id=t.InstitutionTypeId
+								   left join Court c on t.id=c.CourtTypeId
+                                   where a.AppId={appId}");
+                var filledCourts = await _sjcService.QueryRawList<int>($@"SELECT distinct courtId from AppInput where  PlannedYear = {nYear} and Nmonth={nMonth}");
+                var bIDs = new HashSet<int>(filledCourts);
+                var result = appRequired.Select(x => new CourtStatus
+                {
+                    Name = x.Name,
+                    Status = bIDs.Contains(x.Id) ? "Подадени данни" : "Неподадени данни"
+                }).ToList();
+
+
+
+                using (var excelWorkbook = new XLWorkbook(excelFile))
+                {
+                    var worksheet = excelWorkbook.Worksheet(1);
+                    worksheet.Cell("C4").Value = $"За приложение:{appName} за {nMonth}/{nYear}г.";
+
+                    int rowOffset = 5;
+                    for (int i = 0; i < result.Count; i++)
+                    {
+                        var item = result[i];
+                        rowOffset += 1;
+
+                        worksheet.Cell("C" + rowOffset).Value = item.Name;
+                        worksheet.Cell("D" + rowOffset).Value = item.Status;
+
+                    }
+                    excelWorkbook.SaveAs(excelResultFilePath);
+                }
+
                 return Json(new { success = true, msg = "ok", resultFile = resultFile });
             }
             catch (Exception ex)

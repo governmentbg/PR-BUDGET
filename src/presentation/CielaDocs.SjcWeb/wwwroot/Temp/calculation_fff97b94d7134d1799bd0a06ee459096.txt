@@ -1,0 +1,53 @@
+﻿Formula:NCASE/NJMANMONTH, Parameters: NCASE, NJMANMONTH
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NCASENEW/NJMANMONTH, Parameters: NCASENEW, NJMANMONTH
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NCASECOMPL/NJMANMONTH, Parameters: NCASECOMPL, NJMANMONTH
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Calculation String: 0/0
+Calculation Result: 0
+Formula:NPREP/NPMANMONTH, Parameters: NPREP, NPMANMONTH
+Formula:NPREPNEW/NPMANMONTH, Parameters: NPREPNEW, NPMANMONTH
+Formula:NPREPCOMPL/NPMANMONTH, Parameters: NPREPCOMPL, NPMANMONTH
+Formula:NPRECASE/NPMANMONTH, Parameters: NPRECASE, NPMANMONTH
+Formula:NPRECASENEW/NPMANMONTH, Parameters: NPRECASENEW, NPMANMONTH
+Formula:NPRECASECOMPL/NPMANMONTH, Parameters: NPRECASECOMPL, NPMANMONTH
+Formula:NACT/NPMANMONTH, Parameters: NACT, NPMANMONTH
+Formula:NINVPRECASE/NIMANMONTH, Parameters: NINVPRECASE, NIMANMONTH
+Formula:(NMAGREAL/NEMPLREAL)*100, Parameters: , NMAGREAL, NEMPLREAL
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Formula:(NMAGATESTREAL/NMAGATESTTO)*100, Parameters: , NMAGATESTREAL, NMAGATESTTO
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
+Calculation String: (0/0)*100
+Calculation Result: 0
